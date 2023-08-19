@@ -1,8 +1,10 @@
 package xyz.qy.implatform.strategy.impl;
 
+import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import xyz.qy.implatform.exception.GlobalException;
 import xyz.qy.implatform.vo.UploadImageVO;
 
 import java.io.File;
@@ -16,7 +18,6 @@ import java.io.IOException;
  */
 @Service("localUploadStrategyImpl")
 public class LocalUploadStrategyImpl extends AbstractUploadStrategyImpl {
-
     /**
      * 本地路径
      */
@@ -36,11 +37,39 @@ public class LocalUploadStrategyImpl extends AbstractUploadStrategyImpl {
 
     @Override
     public UploadImageVO uploadImage(String path, String fileName, MultipartFile file) throws IOException {
-        return null;
+        // 判断目录是否存在
+        createDirectory(localPath + path);
+        UploadImageVO uploadImageVO = new UploadImageVO();
+        File targetFile = new File(localPath + path, fileName);
+        if (targetFile.createNewFile()) {
+            FileUtils.writeByteArrayToFile(targetFile, file.getBytes());
+            String url = localUrl + path + fileName;
+            uploadImageVO.setOriginUrl(url);
+            uploadImageVO.setThumbUrl(url);
+        }
+        return uploadImageVO;
     }
 
     @Override
     public String uploadFile(String path, String fileName, MultipartFile file) throws IOException {
-        return null;
+        // 判断目录是否存在
+        String url = null;
+        createDirectory(localPath + path);
+        UploadImageVO uploadImageVO = new UploadImageVO();
+        File targetFile = new File(localPath + path, fileName);
+        if (targetFile.createNewFile()) {
+            FileUtils.writeByteArrayToFile(targetFile, file.getBytes());
+            url = localUrl + path + fileName;
+        }
+        return url;
+    }
+
+    private void createDirectory(String dirPath) {
+        File directory = new File(dirPath);
+        if (!directory.exists()) {
+            if (!directory.mkdirs()) {
+                throw new GlobalException("创建目录失败");
+            }
+        }
     }
 }

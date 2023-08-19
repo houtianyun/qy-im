@@ -210,7 +210,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         // 查询聊天记录，只查询加入群聊时间之后的消息
         QueryWrapper<GroupMessage> wrapper = new QueryWrapper<>();
         wrapper.lambda().eq(GroupMessage::getGroupId,groupId)
-                .gt(GroupMessage::getSendTime,member.getCreatedTime())
+                .ge(GroupMessage::getSendTime,member.getCreatedTime())
                 .ne(GroupMessage::getStatus, MessageStatus.RECALL.code())
                 .orderByDesc(GroupMessage::getId)
                 .last("limit "+stIdx + ","+size);
