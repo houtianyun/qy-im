@@ -160,7 +160,57 @@ wsApi.onmessage((cmd,messageInfo) => {
 
 #### 界面截图
 
-##### 登录页
+登录页
+
+![QQ图片2023081916123](https://gitee.com/gamma-ray/typora-img/raw/master/images/QQ图片2023081916123.png)
+
+
+
+私聊
+
+![image-20230819162145102](https://gitee.com/gamma-ray/typora-img/raw/master/images/image-20230819162145102.png)
+
+
+
+普通群聊
+
+![image-20230819162323163](https://gitee.com/gamma-ray/typora-img/raw/master/images/image-20230819162323163.png)
+
+
+
+模板群聊聊天界面
+
+![QQ图片20230813093709](https://gitee.com/gamma-ray/typora-img/raw/master/images/QQ图片20230813093709.png)
+
+
+
+模板群聊群
+
+![QQ图片20230813092923](https://gitee.com/gamma-ray/typora-img/raw/master/images/QQ图片20230813092923.png)
+
+
+
+切换模板群聊类型
+
+![QQ图片20230813093949](https://gitee.com/gamma-ray/typora-img/raw/master/images/QQ图片20230813093949.png)
+
+
+
+切换模板人物
+
+![QQ图片20230813094113](https://gitee.com/gamma-ray/typora-img/raw/master/images/QQ图片20230813094113.png)
+
+
+
+切换模板人物头像
+
+![QQ图片20230813094028](https://gitee.com/gamma-ray/typora-img/raw/master/images/QQ图片20230813094028.png)
+
+
+
+新增模板群聊
+
+![image-20230819160921843](https://gitee.com/gamma-ray/typora-img/raw/master/images/image-20230819160921843.png)
 
 
 #### 联系方式
