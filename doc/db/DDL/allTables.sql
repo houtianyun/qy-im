@@ -209,7 +209,8 @@ create table im_user
     province         varchar(50)                               null comment '省份',
     city             varchar(50)                               null comment '城市',
     last_login_time  datetime      default current_timestamp() null on update current_timestamp() comment '最后登录时间',
-    created_time     datetime      default current_timestamp() null comment '创建时间',
+    create_time      datetime      default current_timestamp() null comment '创建时间',
+    update_time      datetime      default current_timestamp() null on update current_timestamp() comment '更新时间',
     constraint idx_user_name
         unique (user_name)
 )

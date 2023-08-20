@@ -5,6 +5,7 @@ import xyz.qy.implatform.dto.LoginDTO;
 import xyz.qy.implatform.dto.RegisterDTO;
 import xyz.qy.implatform.entity.User;
 import xyz.qy.implatform.vo.LoginVO;
+import xyz.qy.implatform.vo.PasswordVO;
 import xyz.qy.implatform.vo.UserVO;
 
 import java.util.List;
@@ -32,4 +33,11 @@ public interface IUserService extends IService<User> {
      * @return 用户名
      */
     String generateRandomUsername();
+
+    /**
+     * 修改密码
+     *
+     * @param passwordVO 密码信息
+     */
+    void modifyPassword(PasswordVO passwordVO);
 }

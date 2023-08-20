@@ -42,6 +42,7 @@ import xyz.qy.implatform.vo.GroupMessageVO;
 import xyz.qy.implatform.vo.IpGeoInfoVO;
 import xyz.qy.implatform.vo.LoginVO;
 import xyz.qy.implatform.vo.PrivateMessageVO;
+import xyz.qy.implatform.vo.PasswordVO;
 import xyz.qy.implatform.vo.UploadImageVO;
 import xyz.qy.implatform.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
@@ -355,5 +356,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             }
         }
         return username;
+    }
+
+    @Override
+    public void modifyPassword(PasswordVO passwordVO) {
+        UserSession session = SessionContext.getSession();
+        Long userId = session.getId();
+
+        User user = baseMapper.selectById(userId);
+        if (!passwordEncoder.matches(passwordVO.getOldPassword(), user.getPassword())) {
+            throw new GlobalException("旧" + ResultCode.PASSWOR_ERROR);
+        }
+        user.setPassword(passwordEncoder.encode(passwordVO.getNewPassWord()));
+        baseMapper.updateById(user);
     }
 }
