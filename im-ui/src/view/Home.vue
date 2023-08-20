@@ -32,6 +32,9 @@
 				<el-menu-item title="设置" @click="showSetting()">
 					<span class="el-icon-setting"></span>
 				</el-menu-item>
+        <el-menu-item title="操作" @click="showOperation()">
+          <span class="el-icon-s-operation"></span>
+        </el-menu-item>
 			</el-menu>
 			<div class="exit-box" @click="handleExit()" title="退出">
 				<span class="el-icon-circle-close"></span>
@@ -41,6 +44,7 @@
 			<router-view></router-view>
 		</el-main>
 		<setting :visible="showSettingDialog" @close="closeSetting()"></setting>
+    <operation :visible="showOperationDialog" @close="closeOperation()"></operation>
 		<user-info v-show="uiStore.userInfo.show" :pos="uiStore.userInfo.pos" :user="uiStore.userInfo.user" @close="$store.commit('closeUserInfoBox')"></user-info>
 		<full-image :visible="uiStore.fullImage.show" :url="uiStore.fullImage.url" @close="$store.commit('closeFullImageBox')"></full-image>
 		<chat-private-video ref="privateVideo" :visible="uiStore.chatPrivateVideo.show" 
@@ -64,7 +68,7 @@
 	import FullImage from '../components/common/FullImage.vue';
 	import ChatPrivateVideo from '../components/chat/ChatPrivateVideo.vue';
 	import ChatVideoAcceptor from '../components/chat/ChatVideoAcceptor.vue';
-	
+	import Operation from "@/components/operation/Operation";
 	
 	export default {
 		components: {
@@ -73,12 +77,13 @@
 			UserInfo,
 			FullImage,
 			ChatPrivateVideo,
-			ChatVideoAcceptor
+			ChatVideoAcceptor,
+      Operation
 		},
 		data() {
 			return {
 				showSettingDialog: false,
-				
+				showOperationDialog: false,
 			}
 		},
 		methods: {
@@ -208,9 +213,15 @@
 			showSetting() {
 				this.showSettingDialog = true;
 			},
+      showOperation() {
+			  this.showOperationDialog = true;
+      },
 			closeSetting() {
 				this.showSettingDialog = false;
-			}
+			},
+      closeOperation() {
+			  this.showOperationDialog = false;
+      },
 		},
 		computed: {
 			uiStore() {
