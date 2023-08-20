@@ -1,6 +1,7 @@
 package xyz.qy.implatform.filter;
 
-import org.apache.commons.compress.utils.IOUtils;
+
+import org.apache.commons.io.IOUtils;
 
 import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
