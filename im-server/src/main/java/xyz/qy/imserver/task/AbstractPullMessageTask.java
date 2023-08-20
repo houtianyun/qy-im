@@ -7,8 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public  abstract class AbstractPullMessageTask{
@@ -30,7 +32,7 @@ public  abstract class AbstractPullMessageTask{
     @PostConstruct
     public void init(){
         // 初始化定时器
-        executorService = Executors.newFixedThreadPool(threadNum);
+        executorService = new ThreadPoolExecutor(threadNum, threadNum,5, TimeUnit.SECONDS,new ArrayBlockingQueue<>(0),new ThreadPoolExecutor.AbortPolicy());
 
         for(int i=0;i<threadNum;i++){
             executorService.execute(new Runnable() {
