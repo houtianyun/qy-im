@@ -5,14 +5,16 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public abstract class AbstractPullMessageTask {
     private int threadNum = 8;
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
+    //private ExecutorService executorService = Executors.newFixedThreadPool(threadNum);
+    ThreadPoolExecutor executorService = new ThreadPoolExecutor(threadNum, threadNum,5, TimeUnit.SECONDS,new ArrayBlockingQueue<>(10),new ThreadPoolExecutor.AbortPolicy());
 
     @PostConstruct
     public void init(){
