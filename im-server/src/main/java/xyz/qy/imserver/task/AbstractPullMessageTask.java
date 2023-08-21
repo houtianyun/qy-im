@@ -7,8 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -32,8 +32,7 @@ public  abstract class AbstractPullMessageTask{
     @PostConstruct
     public void init(){
         // 初始化定时器
-        executorService = new ThreadPoolExecutor(threadNum, threadNum,5, TimeUnit.SECONDS,new ArrayBlockingQueue<>(0),new ThreadPoolExecutor.AbortPolicy());
-
+        executorService = new ThreadPoolExecutor(threadNum, threadNum,0, TimeUnit.SECONDS,new LinkedBlockingQueue<>(20),new ThreadPoolExecutor.AbortPolicy());
         for(int i=0;i<threadNum;i++){
             executorService.execute(new Runnable() {
                 @SneakyThrows
@@ -43,10 +42,10 @@ public  abstract class AbstractPullMessageTask{
                         if(serverGroup.isReady()){
                             pullMessage();
                         }
-                        Thread.sleep(100);
+                        Thread.sleep(2000);
                     }catch (Exception e){
                         log.error("任务调度异常",e);
-                        Thread.sleep(200);
+                        Thread.sleep(2000);
                     }
                     if(!executorService.isShutdown()){
                         executorService.execute(this);
