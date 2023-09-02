@@ -64,6 +64,20 @@ public class LocalUploadStrategyImpl extends AbstractUploadStrategyImpl {
         return url;
     }
 
+    @Override
+    public UploadImageVO getImageInfo(String path, String fileName) {
+        UploadImageVO uploadImageVO = new UploadImageVO();
+        String url = localUrl + path + fileName;
+        uploadImageVO.setOriginUrl(url);
+        uploadImageVO.setThumbUrl(url);
+        return uploadImageVO;
+    }
+
+    @Override
+    public String getFileUrl(String path, String fileName) {
+        return localUrl + path + fileName;
+    }
+
     private void createDirectory(String dirPath) {
         File directory = new File(dirPath);
         if (!directory.exists()) {

@@ -45,9 +45,11 @@ public abstract class AbstractUploadStrategyImpl implements UploadStrategy {
             if (!exists(path + fileName)) {
                 // 不存在则继续上传
                 uploadImageVO = uploadImage(path, fileName, file);
-                uploadImageVO.setName(originalName);
-                uploadImageVO.setOriginName(originalName + extName);
+            } else {
+                uploadImageVO = getImageInfo(path, fileName);
             }
+            uploadImageVO.setName(originalName);
+            uploadImageVO.setOriginName(originalName + extName);
             // 返回文件访问路径
             return uploadImageVO;
         } catch (Exception e) {
@@ -74,6 +76,8 @@ public abstract class AbstractUploadStrategyImpl implements UploadStrategy {
             if (!exists(path + fileName)) {
                 // 不存在则继续上传
                 url = uploadFile(path, fileName, file);
+            } else {
+                url = getFileUrl(path, fileName);
             }
         } catch (Exception e) {
             log.error("上传文件异常:{}", e.getMessage());
@@ -109,4 +113,22 @@ public abstract class AbstractUploadStrategyImpl implements UploadStrategy {
      * @throws IOException io异常
      */
     public abstract String uploadFile(String path, String fileName, MultipartFile file) throws IOException;
+
+    /**
+     * 获取文件信息
+     *
+     * @param path 路径
+     * @param fileName 文件名
+     * @return 图片名称
+     */
+    public abstract UploadImageVO getImageInfo(String path, String fileName);
+
+    /**
+     * 获取文件路径
+     *
+     * @param path 路径
+     * @param fileName 文件名
+     * @return 文件路径
+     */
+    public abstract String getFileUrl(String path, String fileName);
 }

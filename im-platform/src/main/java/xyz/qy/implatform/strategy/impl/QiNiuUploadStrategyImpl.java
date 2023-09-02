@@ -58,4 +58,18 @@ public class QiNiuUploadStrategyImpl extends AbstractUploadStrategyImpl {
         log.info("putRet{}", putRet);
         return qiNiuConfigProperties.getDomain() + path + fileName;
     }
+
+    @Override
+    public UploadImageVO getImageInfo(String path, String fileName) {
+        UploadImageVO uploadImageVO = new UploadImageVO();
+        String url = qiNiuConfigProperties.getDomain() + path + fileName;
+        uploadImageVO.setOriginUrl(url);
+        uploadImageVO.setThumbUrl(url);
+        return uploadImageVO;
+    }
+
+    @Override
+    public String getFileUrl(String path, String fileName) {
+        return qiNiuConfigProperties.getDomain() + path + fileName;
+    }
 }
