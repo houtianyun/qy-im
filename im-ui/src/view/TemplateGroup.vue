@@ -62,7 +62,7 @@
         <el-form-item label="头像" prop="avatar">
           <file-upload class="avatar-uploader" :action="imageAction" :showLoading="true"
                        :maxSize="maxSize" @success="handleUploadSuccess"
-                       :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp']">
+                       :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp', 'image/gif']">
             <img v-if="curTemplateGroup.avatar" :src="curTemplateGroup.avatar" class="avatar">
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </file-upload>
@@ -97,7 +97,7 @@
                            :maxSize="maxSize"
                            @success="handleUploadNewCharacterSuccess"
                            :uploadList="uploadList"
-                           :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp']">
+                           :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp', 'image/gif']">
           <i class="el-icon-plus avatar-uploader-icon"></i>
         </batch-file-upload>
       </div>
@@ -160,7 +160,7 @@
                            :maxSize="maxSize"
                            @success="handleUploadNewAvatarSuccess"
                            :uploadList="uploadList"
-                           :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp']">
+                           :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp', 'image/gif']">
           <i class="el-icon-plus avatar-uploader-icon"></i>
         </batch-file-upload>
       </div>
