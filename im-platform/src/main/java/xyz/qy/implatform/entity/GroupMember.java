@@ -91,6 +91,11 @@ public class GroupMember extends Model<GroupMember> {
     @TableField("quit")
     private Boolean quit;
 
+    /**
+     * 是否展示昵称
+     */
+    @TableField("show_nickname")
+    private Boolean showNickName;
 
     /**
      * 创建时间

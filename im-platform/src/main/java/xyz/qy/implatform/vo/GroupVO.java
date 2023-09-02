@@ -53,4 +53,7 @@ public class GroupVO {
 
     @ApiModelProperty(value = "模板人物Id")
     private Long templateCharacterId;
+
+    @ApiModelProperty(value = "是否展示昵称")
+    private Boolean showNickName;
 }

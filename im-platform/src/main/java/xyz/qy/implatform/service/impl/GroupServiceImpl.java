@@ -129,6 +129,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         }
         member.setAliasName(StringUtils.isEmpty(vo.getAliasName())?session.getNickName():vo.getAliasName());
         member.setRemark(StringUtils.isEmpty(vo.getRemark())? Objects.requireNonNull(group).getName():vo.getRemark());
+        member.setShowNickName(vo.getShowNickName());
         groupMemberService.updateById(member);
         assert group != null;
         log.info("修改群聊，群聊id:{},群聊名称:{}",group.getId(),group.getName());

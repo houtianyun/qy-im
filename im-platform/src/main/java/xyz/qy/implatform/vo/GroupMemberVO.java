@@ -48,4 +48,7 @@ public class GroupMemberVO {
 
     @ApiModelProperty("用户头像")
     private String userAvatar;
+
+    @ApiModelProperty("是否展示群成员昵称")
+    private Boolean showNickName = false;
 }
