@@ -53,6 +53,11 @@ public class TemplateGroupVO {
     private Date updateTime;
 
     /**
+     * 是否模板群聊创建人
+     */
+    private Boolean isOwner = false;
+
+    /**
      * 模板人物
      */
     private List<TemplateCharacterVO> templateCharacterVOList;

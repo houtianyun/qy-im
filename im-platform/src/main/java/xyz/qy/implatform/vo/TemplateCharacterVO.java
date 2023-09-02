@@ -61,6 +61,11 @@ public class TemplateCharacterVO {
     private Boolean choosed = Boolean.FALSE;
 
     /**
+     * 是否创建人
+     */
+    private Boolean isOwner = false;
+
+    /**
      * 模板人物头像
      */
     private List<CharacterAvatarVO> characterAvatarVOList;

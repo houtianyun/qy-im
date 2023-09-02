@@ -57,6 +57,12 @@ public class TemplateGroupController {
         return ResultUtils.success(templateGroupService.findMyTemplateGroups());
     }
 
+    @ApiOperation(value = "分页查询所有模板群聊",notes="分页查询所有模板群聊")
+    @GetMapping("/findAllTemplateGroups")
+    public Result<List<TemplateGroupVO>> findAllTemplateGroups() {
+        return ResultUtils.success(templateGroupService.pageAllTemplateGroups());
+    }
+
     @ApiOperation(value = "模板群聊提交审批",notes="模板群聊提交审批")
     @PostMapping("/submitForApproval")
     public Result submitForApproval(@NotNull(message = "模板群聊id不能为空") @RequestBody Long id) {

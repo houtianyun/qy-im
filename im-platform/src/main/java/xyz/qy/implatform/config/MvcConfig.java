@@ -1,5 +1,7 @@
 package xyz.qy.implatform.config;
 
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import xyz.qy.implatform.config.intercept.PageableInterceptor;
 import xyz.qy.implatform.interceptor.AuthInterceptor;
 import xyz.qy.implatform.interceptor.XssInterceptor;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +12,7 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
+@EnableWebMvc
 public class MvcConfig implements WebMvcConfigurer {
 
     @Override
@@ -21,6 +24,8 @@ public class MvcConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/website/**", "/captchaImage", "/social/login/*" ,
                         "/login","/logout","/register","/refreshToken",
                         "/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
+        //分页拦截器
+        registry.addInterceptor(new PageableInterceptor());
     }
 
 

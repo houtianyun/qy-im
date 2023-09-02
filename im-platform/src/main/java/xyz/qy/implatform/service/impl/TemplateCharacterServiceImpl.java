@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -49,6 +50,8 @@ public class TemplateCharacterServiceImpl extends ServiceImpl<TemplateCharacterM
 
     @Override
     public List<TemplateCharacterVO> findTemplateCharactersByGroupId(Long templateGroupId) {
+        UserSession session = SessionContext.getSession();
+        Long userId = session.getId();
         LambdaQueryWrapper<TemplateCharacter> queryWrapper = new LambdaQueryWrapper<>();
         if (ObjectUtil.isNull(templateGroupId)) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "模板群聊id为空");
@@ -58,7 +61,17 @@ public class TemplateCharacterServiceImpl extends ServiceImpl<TemplateCharacterM
         queryWrapper.eq(TemplateCharacter::getDeleted, Constant.NO);
 
         List<TemplateCharacter> templateCharacterList = this.list(queryWrapper);
-        return BeanUtils.copyProperties(templateCharacterList, TemplateCharacterVO.class);
+        if (CollectionUtils.isEmpty(templateCharacterList)) {
+            return Collections.emptyList();
+        }
+
+        List<TemplateCharacterVO> templateCharacterVOS = BeanUtils.copyProperties(templateCharacterList, TemplateCharacterVO.class);
+        for (TemplateCharacterVO templateCharacterVO : templateCharacterVOS) {
+            if (String.valueOf(userId).equals(templateCharacterVO.getCreateBy())) {
+                templateCharacterVO.setIsOwner(true);
+            }
+        }
+        return templateCharacterVOS;
     }
 
     @Override

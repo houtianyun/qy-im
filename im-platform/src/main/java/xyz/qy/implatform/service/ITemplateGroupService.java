@@ -1,5 +1,6 @@
 package xyz.qy.implatform.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import xyz.qy.implatform.entity.TemplateGroup;
 import xyz.qy.implatform.vo.ReviewVO;
@@ -20,6 +21,8 @@ public interface ITemplateGroupService extends IService<TemplateGroup> {
     List<TemplateGroupVO> findTemplateGroups(TemplateGroupVO templateGroupVO);
 
     List<TemplateGroupVO> findMyTemplateGroups();
+
+    List<TemplateGroupVO> pageAllTemplateGroups();
 
     int countUserTemplateGroup();
 

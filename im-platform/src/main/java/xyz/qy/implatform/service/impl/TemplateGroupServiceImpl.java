@@ -2,7 +2,14 @@ package xyz.qy.implatform.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import xyz.qy.implatform.contant.Constant;
 import xyz.qy.implatform.entity.TemplateCharacter;
 import xyz.qy.implatform.entity.TemplateGroup;
@@ -17,14 +24,9 @@ import xyz.qy.implatform.service.IUserService;
 import xyz.qy.implatform.session.SessionContext;
 import xyz.qy.implatform.session.UserSession;
 import xyz.qy.implatform.util.BeanUtils;
+import xyz.qy.implatform.util.PageUtils;
 import xyz.qy.implatform.vo.ReviewVO;
 import xyz.qy.implatform.vo.TemplateGroupVO;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -122,7 +124,38 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
         queryWrapper.eq(TemplateGroup::getDeleted, Constant.NO);
         List<TemplateGroup> templateGroupList = this.list(queryWrapper);
         List<TemplateGroupVO> templateGroupVOS = BeanUtils.copyProperties(templateGroupList, TemplateGroupVO.class);
-        templateGroupVOS.forEach(item -> item.setCreator(session.getUserName()));
+        templateGroupVOS.forEach(item -> {
+            item.setCreator(session.getUserName());
+            item.setIsOwner(true);
+        });
+        return templateGroupVOS;
+    }
+
+    @Override
+    public List<TemplateGroupVO> pageAllTemplateGroups() {
+        UserSession session = SessionContext.getSession();
+        Long userId = session.getId();
+        LambdaQueryWrapper<TemplateGroup> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(TemplateGroup::getDeleted, Constant.NO);
+        Page<TemplateGroup> pageResult = baseMapper.selectPage(new Page<>(PageUtils.getPageNo(), PageUtils.getPageSize()), queryWrapper);
+        if (CollectionUtils.isEmpty(pageResult.getRecords())) {
+            return Collections.emptyList();
+        }
+        List<TemplateGroup> templateGroupList = pageResult.getRecords();
+        List<String> userIds = templateGroupList.stream().map(TemplateGroup::getCreateBy)
+                .distinct().collect(Collectors.toList());
+        List<TemplateGroupVO> templateGroupVOS = BeanUtils.copyProperties(templateGroupList, TemplateGroupVO.class);
+        List<User> userList = userService.listByIds(userIds);
+        Map<Long, User> userMap = userList.stream().collect(Collectors.toMap(User::getId, Function.identity(), (key1, key2) -> key2));
+        for (TemplateGroupVO templateGroupVO : templateGroupVOS) {
+            if (userMap.containsKey(Long.parseLong(templateGroupVO.getCreateBy()))) {
+                templateGroupVO.setCreator(userMap.get(Long.parseLong(templateGroupVO.getCreateBy()))
+                        .getUserName());
+            }
+            if (String.valueOf(userId).equals(templateGroupVO.getCreateBy())) {
+                templateGroupVO.setIsOwner(true);
+            }
+        }
         return templateGroupVOS;
     }
 
@@ -253,7 +286,7 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
                 ? ReviewEnum.REVIEWED.getCode() : ReviewEnum.NO_PASS.getCode();
         templateGroup.setStatus(status);
         templateGroup.setUpdateBy(userid.toString());
-        templateCharacterList.forEach(item ->{
+        templateCharacterList.forEach(item -> {
             item.setStatus(status);
             item.setUpdateBy(userid.toString());
         });

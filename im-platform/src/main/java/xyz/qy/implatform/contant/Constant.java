@@ -43,4 +43,10 @@ public class Constant {
     public static final int USER_MAX_TEMPLATE_CHARACTER_NUM = 100;
     // 每位模板人物最多配置的人物头像数量
     public static final int MAX_CHARACTER_AVATAR_NUM = 20;
+    // 当前页
+    public static final String PAGE_NO = "pageNo";
+    // 分页大小
+    public static final String PAGE_SIZE = "pageSize";
+    // 默认分页大小
+    public static final String DEFAULT_SIZE = "10";
 }

@@ -272,11 +272,13 @@ public class GroupMemberServiceImpl extends ServiceImpl<GroupMemberMapper, Group
         }
 
         groupMember.setCharacterAvatarId(avatarVO.getCharacterAvatarId());
-        groupMember.setAliasName(characterAvatar.getTemplateCharacterName());
         groupMember.setHeadImage(characterAvatar.getAvatar());
-        if (characterAvatar.getLevel() == 0) {
-            groupMember.setAvatarAlias(characterAvatar.getName());
+        if (characterAvatar.getLevel() == 1) {
+            groupMember.setAliasName(characterAvatar.getName());
+        } else {
+            groupMember.setAliasName(characterAvatar.getTemplateCharacterName());
         }
+        groupMember.setAvatarAlias(characterAvatar.getName());
 
         this.saveOrUpdateBatch(group.getId(), Collections.singletonList(groupMember));
     }
