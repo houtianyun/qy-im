@@ -4,14 +4,22 @@
       <el-button @click="addTemplateGroup()" type="primary">新增<i class="el-icon-plus el-icon--right"></i></el-button>
       <el-button v-if="isAdmin" plain @click="toReviewPage">待审批</el-button>
     </div>
+    <div class="tab-box">
+      <el-tabs type="card" @tab-click="handleTabClick">
+        <el-tab-pane label="我的模板群聊" name="templateGroup">
+        </el-tab-pane>
+        <el-tab-pane label="全部模板群聊" name="allTemplateGroup">
+        </el-tab-pane>
+      </el-tabs>
+    </div>
     <div class="template-group-list">
       <el-card shadow="always" class="box-card" v-for="(templateGroup,index) in templateGroups" :key="index">
         <div slot="header" class="header">
-          <span>{{templateGroup.groupName}}</span>
-          <el-button class="operate-button"
+          <span>{{ templateGroup.groupName }}</span>
+          <el-button v-if="templateGroup.isOwner" class="operate-button"
                      type="primary" icon="el-icon-edit" circle
                      @click="editTemplateGroup(templateGroup)"></el-button>
-          <el-button class="operate-button"
+          <el-button v-if="templateGroup.isOwner" class="operate-button"
                      type="danger" icon="el-icon-delete" circle
                      @click="deleteTemplateGroup(templateGroup)"></el-button>
           <el-button class="operate-button"
@@ -22,10 +30,10 @@
           <head-image class="head-image" :url="templateGroup.avatar" :size="80"></head-image>
           <div class="info">
             <el-descriptions title="群聊信息" :column="2">
-              <el-descriptions-item label="模板人物" span="2">{{templateGroup.count}}</el-descriptions-item>
-              <el-descriptions-item label="创建人" span="2">{{templateGroup.creator}}</el-descriptions-item>
-              <el-descriptions-item label="创建时间" span="2">{{templateGroup.createTime}}</el-descriptions-item>
-              <el-descriptions-item label="更新时间" span="2">{{templateGroup.updateTime}}</el-descriptions-item>
+              <el-descriptions-item label="模板人物" span="2">{{ templateGroup.count }}</el-descriptions-item>
+              <el-descriptions-item label="创建人" span="2">{{ templateGroup.creator }}</el-descriptions-item>
+              <el-descriptions-item label="创建时间" span="2">{{ templateGroup.createTime }}</el-descriptions-item>
+              <el-descriptions-item label="更新时间" span="2">{{ templateGroup.updateTime }}</el-descriptions-item>
               <el-descriptions-item label="状态" span="2">
                 <el-tag v-if="templateGroup.status==='3'" effect="dark" size="small" type="danger">未通过</el-tag>
                 <el-tag v-if="templateGroup.status==='2'" effect="dark" size="small" type="success">已发布</el-tag>
@@ -36,15 +44,25 @@
           </div>
         </div>
       </el-card>
+      <div class="page-box" v-show="activeTab === 'allTemplateGroup'">
+        <el-button class="previous"
+                   type="success" icon="el-icon-arrow-left" circle
+                   @click="prePageTemplateGroup"></el-button>
+        <el-button class="next"
+                   type="success" icon="el-icon-arrow-right" circle
+                   @click="nextPageTemplateGroup"></el-button>
+      </div>
     </div>
     <el-dialog class="edit-template-group"
                :title="title"
                :visible.sync="showEditTemplateGroupDialog"
                width="500px" :before-close="handleClose">
-      <el-form :model="curTemplateGroup" label-width="110px" label-position="right" :rules="rules" ref="templateGroupForm">
+      <el-form :model="curTemplateGroup" label-width="110px" label-position="right" :rules="rules"
+               ref="templateGroupForm">
         <el-form-item label="头像" prop="avatar">
           <file-upload class="avatar-uploader" :action="imageAction" :showLoading="true"
-                       :maxSize="maxSize" @success="handleUploadSuccess" :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp']">
+                       :maxSize="maxSize" @success="handleUploadSuccess"
+                       :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp']">
             <img v-if="curTemplateGroup.avatar" :src="curTemplateGroup.avatar" class="avatar">
             <i v-else class="el-icon-plus avatar-uploader-icon"></i>
           </file-upload>
@@ -60,7 +78,8 @@
         <el-button @click="handleClose()">取 消</el-button>
         <el-button type="primary" @click="handleSubmit()">确 定</el-button>
         <el-button v-if="curTemplateGroup.status==='1'" type="info" @click="withdrawalOfApproval()">撤回审批</el-button>
-        <el-button v-if="curTemplateGroup.status==='0'" type="success" @click="handleSubmitForApproval()">提交审批</el-button>
+        <el-button v-if="curTemplateGroup.status==='0'" type="success"
+                   @click="handleSubmitForApproval()">提交审批</el-button>
 		  </span>
     </el-dialog>
     <el-dialog class="edit-template-character"
@@ -71,7 +90,7 @@
       <div class="template-group-avatar">
         <head-image class="head-image" :url="curTemplateGroup.avatar" :size="80"></head-image>
       </div>
-      <div class="upload-avatar">
+      <div v-if="curTemplateGroup.isOwner" class="upload-avatar">
         <batch-file-upload class="avatar-uploader"
                            :action="imageAction"
                            :showLoading="true"
@@ -84,7 +103,8 @@
       </div>
       <div class="template-character-box">
         <el-scrollbar style="height:360px;">
-          <div class="template-character-item" v-for="(templateCharacter, index) in templateCharacters" :key="templateCharacter.id">
+          <div class="template-character-item" v-for="(templateCharacter, index) in templateCharacters"
+               :key="templateCharacter.id">
             <div class="avatar-box">
               <head-image class="avatar-uploader" :size="45" :url="templateCharacter.avatar"></head-image>
             </div>
@@ -94,17 +114,22 @@
                 placeholder="请输入内容"
                 v-model="templateCharacter.name"
                 maxlength="20"
+                :disabled="!curTemplateGroup.isOwner"
                 show-word-limit
             />
             <div class="status-tag">
-              <el-tag class="tag" v-if="templateCharacter.status==='3'" effect="dark" size="small" type="danger">未通过</el-tag>
-              <el-tag class="tag" v-if="templateCharacter.status==='2'" effect="dark" size="small" type="success">已发布</el-tag>
-              <el-tag class="tag" v-if="templateCharacter.status==='1'" effect="dark" size="small" type="warning">审核中</el-tag>
-              <el-tag class="tag" v-if="templateCharacter.status==='0'" effect="dark" size="small" type="info">待审批</el-tag>
+              <el-tag class="tag" v-if="templateCharacter.status==='3'" effect="dark" size="small" type="danger">未通过
+              </el-tag>
+              <el-tag class="tag" v-if="templateCharacter.status==='2'" effect="dark" size="small" type="success">已发布
+              </el-tag>
+              <el-tag class="tag" v-if="templateCharacter.status==='1'" effect="dark" size="small" type="warning">审核中
+              </el-tag>
+              <el-tag class="tag" v-if="templateCharacter.status==='0'" effect="dark" size="small" type="info">待审批
+              </el-tag>
             </div>
             <el-button class="edit-character-avatar" type="warning" icon="el-icon-orange" circle
                        @click="openCharacterAvatarDialog(templateCharacter)"></el-button>
-            <el-button class="delete-button"
+            <el-button v-if="curTemplateGroup.isOwner" class="delete-button"
                        type="danger" icon="el-icon-delete" circle
                        @click="deleteTemplateCharacter(templateCharacter, index)"></el-button>
           </div>
@@ -112,9 +137,12 @@
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button @click="handleEditTemplateCharacterClose()">取 消</el-button>
-        <el-button type="primary" @click="handleTemplateCharacterSubmit()">确 定</el-button>
-        <el-button v-if="curTemplateGroup.status==='1'" type="info" @click="withdrawalOfApproval()">撤回审批</el-button>
-        <el-button v-if="curTemplateGroup.status==='0'" type="success" @click="handleSubmitForApproval()">提交审批</el-button>
+        <el-button v-if="curTemplateGroup.isOwner" type="primary"
+                   @click="handleTemplateCharacterSubmit()">确 定</el-button>
+        <el-button v-if="curTemplateGroup.isOwner && curTemplateGroup.status==='1'" type="info"
+                   @click="withdrawalOfApproval()">撤回审批</el-button>
+        <el-button v-if="curTemplateGroup.isOwner && curTemplateGroup.status==='0'" type="success"
+                   @click="handleSubmitForApproval()">提交审批</el-button>
 		  </span>
     </el-dialog>
     <el-dialog class="edit-character-avatar-dialog"
@@ -125,7 +153,7 @@
       <div class="template-character-avatar">
         <head-image class="head-image" :url="curTemplateCharacter.avatar" :size="80"></head-image>
       </div>
-      <div class="upload-avatar">
+      <div v-if="curTemplateCharacter.isOwner" class="upload-avatar">
         <batch-file-upload class="avatar-uploader"
                            :action="imageAction"
                            :showLoading="true"
@@ -138,7 +166,8 @@
       </div>
       <div class="character-avatar-box">
         <el-scrollbar style="height:360px;">
-          <div class="character-avatar-item" v-for="(characterAvatar, index) in characterAvatars" :key="characterAvatar.id">
+          <div class="character-avatar-item" v-for="(characterAvatar, index) in characterAvatars"
+               :key="characterAvatar.id">
             <div class="avatar-box">
               <head-image class="avatar-uploader" :size="45" :url="characterAvatar.avatar"></head-image>
             </div>
@@ -148,9 +177,11 @@
                 placeholder="请输入内容"
                 v-model="characterAvatar.name"
                 maxlength="20"
+                :disabled="!curTemplateCharacter.isOwner"
                 show-word-limit
             />
-            <el-select class="select-item" v-model="characterAvatar.level" placeholder="请选择">
+            <el-select class="select-item" v-model="characterAvatar.level" placeholder="请选择"
+                       :disabled="!curTemplateCharacter.isOwner">
               <el-option
                   v-for="item in levelOptions"
                   :key="item.value"
@@ -159,12 +190,16 @@
               </el-option>
             </el-select>
             <div class="status-tag">
-              <el-tag class="tag" v-if="characterAvatar.status==='3'" effect="dark" size="small" type="danger">未通过</el-tag>
-              <el-tag class="tag" v-if="characterAvatar.status==='2'" effect="dark" size="small" type="success">已发布</el-tag>
-              <el-tag class="tag" v-if="characterAvatar.status==='1'" effect="dark" size="small" type="warning">审核中</el-tag>
-              <el-tag class="tag" v-if="characterAvatar.status==='0'" effect="dark" size="small" type="info">待审批</el-tag>
+              <el-tag class="tag" v-if="characterAvatar.status==='3'" effect="dark" size="small" type="danger">未通过
+              </el-tag>
+              <el-tag class="tag" v-if="characterAvatar.status==='2'" effect="dark" size="small" type="success">已发布
+              </el-tag>
+              <el-tag class="tag" v-if="characterAvatar.status==='1'" effect="dark" size="small" type="warning">审核中
+              </el-tag>
+              <el-tag class="tag" v-if="characterAvatar.status==='0'" effect="dark" size="small" type="info">待审批
+              </el-tag>
             </div>
-            <el-button class="delete-button"
+            <el-button  v-if="curTemplateCharacter.isOwner" class="delete-button"
                        type="danger" icon="el-icon-delete" circle
                        @click="deleteCharacterAvatar(characterAvatar, index)"></el-button>
           </div>
@@ -172,9 +207,12 @@
       </div>
       <span slot="footer" class="dialog-footer">
         <el-button @click="handleEditCharacterAvatarClose()">取 消</el-button>
-        <el-button type="primary" @click="handleCharacterAvatarsSubmit()">确 定</el-button>
-        <el-button v-if="curTemplateCharacter.status==='2'" type="info" @click="withdrawalOfApprovalForAvatar()">撤回审批</el-button>
-        <el-button v-if="curTemplateCharacter.status==='2'" type="success" @click="handleAvatarsSubmitForApproval()">提交审批</el-button>
+        <el-button v-if="curTemplateCharacter.isOwner" type="primary"
+                   @click="handleCharacterAvatarsSubmit()">确 定</el-button>
+        <el-button v-if="curTemplateCharacter.isOwner && curTemplateCharacter.status==='2'" type="info"
+                   @click="withdrawalOfApprovalForAvatar()">撤回审批</el-button>
+        <el-button v-if="curTemplateCharacter.isOwner && curTemplateCharacter.status==='2'" type="success"
+                   @click="handleAvatarsSubmitForApproval()">提交审批</el-button>
 		  </span>
     </el-dialog>
   </div>
@@ -206,13 +244,18 @@ export default {
       curTemplateCharacter: {},
       rules: {
         groupName: [{required: true, message: '请输入模板群聊名称', trigger: 'blur'},
-          { min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur' }],
+          {min: 1, max: 20, message: '长度在 1 到 20 个字符', trigger: 'blur'}],
         avatar: [{required: true, message: '请上传群聊头像', trigger: 'blur'}]
       },
       maxSize: 5 * 1024 * 1024,
       title: "编辑模板群聊",
       uploadList: [],
       levelOptions: [{value: 0, label: '0级'}, {value: 1, label: '1级'}],
+      page: {
+        pageNo: 1,
+        pageSize: 10,
+      },
+      activeTab: 'templateGroup'
     }
   },
   created() {
@@ -225,6 +268,21 @@ export default {
         method: "get"
       }).then((data) => {
         this.templateGroups = data;
+      })
+    },
+    queryAllTemplateGroups() {
+      this.$http({
+        url: `/templateGroup/findAllTemplateGroups?pageNo=${this.page.pageNo}&pageSize=${this.page.pageSize}`,
+        method: "get"
+      }).then((data) => {
+        if (data.length !== 0) {
+          this.templateGroups = data;
+        } else {
+          this.$message.warning("已经是最后一页");
+          if (this.page.pageNo !== 1) {
+            this.page.pageNo = this.page.pageNo - 1;
+          }
+        }
       })
     },
     handleUploadSuccess(res) {
@@ -253,10 +311,10 @@ export default {
           url: "/templateGroup/addOrModify",
           method: "post",
           data: this.curTemplateGroup
-        }).then(()=>{
+        }).then(() => {
           this.$message.success("操作成功");
           this.queryMyTemplateGroups();
-        }).finally(() =>{
+        }).finally(() => {
           this.handleClose();
         })
       })
@@ -343,11 +401,13 @@ export default {
       })
     },
     handleUploadNewCharacterSuccess(res) {
-      this.templateCharacters.push({ avatar: res.data.originUrl, name: res.data.name, status: '0'});
+      this.templateCharacters.push({avatar: res.data.originUrl, name: res.data.name, status: '0'});
     },
     handleUploadNewAvatarSuccess(res) {
-      this.characterAvatars.push({ avatar: res.data.originUrl, templateCharacterName: this.curTemplateCharacter.name,
-        name: res.data.name, status: '0', level: 0});
+      this.characterAvatars.push({
+        avatar: res.data.originUrl, templateCharacterName: this.curTemplateCharacter.name,
+        name: res.data.name, status: '0', level: 0
+      });
     },
     handleSubmitForApproval() {
       if (this.curTemplateGroup.status === '1') {
@@ -391,7 +451,7 @@ export default {
     },
     queryAllCharacterAvatar(templateCharacter) {
       this.$http({
-        url: '/characterAvatar/listAll/'+templateCharacter.id,
+        url: '/characterAvatar/listAll/' + templateCharacter.id,
         method: 'get'
       }).then((data) => {
         this.characterAvatars = data;
@@ -484,10 +544,31 @@ export default {
         this.$message.success("操作成功");
         this.handleEditCharacterAvatarClose();
       })
+    },
+    handleTabClick(tab, event) {
+      if (tab.name === 'templateGroup') {
+        this.activeTab = 'templateGroup';
+        this.queryMyTemplateGroups();
+      } else if (tab.name === 'allTemplateGroup') {
+        this.activeTab = 'allTemplateGroup';
+        this.page.pageNo = 1;
+        this.queryAllTemplateGroups();
+      }
+    },
+    prePageTemplateGroup() {
+      if (this.page.pageNo === 1) {
+        return false
+      }
+      this.page.pageNo = this.page.pageNo - 1;
+      this.queryAllTemplateGroups();
+    },
+    nextPageTemplateGroup() {
+      this.page.pageNo = this.page.pageNo + 1;
+      this.queryAllTemplateGroups();
     }
   },
   computed: {
-    imageAction(){
+    imageAction() {
       return `${process.env.VUE_APP_BASE_API}/image/upload`;
     },
     isAdmin() {
@@ -501,6 +582,11 @@ export default {
 .buttons {
   margin: 0px 10px;
   text-align: left;
+}
+
+.tab-box {
+  margin-top: 10px;
+  margin-left: 10px;
 }
 
 .template-group-list {
@@ -532,6 +618,10 @@ export default {
       width: 240px;
     }
   }
+}
+
+.page-box {
+  clear: both;
 }
 
 .edit-template-group {
