@@ -134,6 +134,23 @@
                   </span>
                 </el-dialog>
               </div>
+              <div class="member-info" v-show="activeGroup.isTemplate===1">
+                <div class="view-member-info-btn" title="群聊成员信息" @click="openGroupMemberInfoDialog">
+                  <i class="el-icon-search"></i>
+                </div>
+                <div class="view-member-text">查看</div>
+                <el-dialog
+                    width="25%"
+                    title="模板群聊成员信息"
+                    :visible.sync="groupMemberVisible"
+                    :before-close="closeGroupMemberInfoDialog">
+                  <el-scrollbar style="height:400px;">
+                    <div v-for="(groupMember, index) in groupMembers" :key="index">
+                      <template-group-member class="r-group-member" :member="groupMember"></template-group-member>
+                    </div>
+                  </el-scrollbar>
+                </el-dialog>
+              </div>
 						</div>
 					</el-scrollbar>
 				</div>
@@ -191,6 +208,7 @@
   import TemplateCharacterItem from "@/components/group/TemplateCharacterItem";
   import SwitchTemplateGroup from "@/components/group/SwitchTemplateGroup";
   import CharacterAvatarItem from "@/components/group/CharacterAvatarItem";
+  import TemplateGroupMember from "@/components/group/TemplateGroupMember";
 
 	export default {
 		name: "group",
@@ -202,7 +220,8 @@
       CreateTemplateGroup,
       TemplateCharacterItem,
       SwitchTemplateGroup,
-      CharacterAvatarItem
+      CharacterAvatarItem,
+      TemplateGroupMember
 		},
 		data() {
 			return {
@@ -227,6 +246,7 @@
         isTemplateGroup: false,
         selectTemplateCharacterVisible: false,
         selectCharacterAvatarVisible: false,
+        groupMemberVisible: false,
         characterActiveIndex: -1,
         avatarActiveIndex: -1,
         newTemplateCharacter: {},
@@ -520,6 +540,12 @@
 		    console.log("doneUploadSuccess", res)
         this.commonGroup.headImage = res.data.originUrl;
         this.commonGroup.headImageThumb = res.data.thumbUrl;
+      },
+      closeGroupMemberInfoDialog() {
+		    this.groupMemberVisible = false;
+      },
+      openGroupMemberInfoDialog() {
+        this.groupMemberVisible = true;
       }
 		},
 		computed: {
@@ -758,6 +784,39 @@
               margin-right: 10px;
               height: 65px;
               line-height: 65px;
+            }
+          }
+
+          .member-info {
+            margin-left: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 60px;
+
+            .view-member-info-btn {
+              width: 100%;
+              height: 60px;
+              line-height: 60px;
+              border: #cccccc solid 1px;
+              font-size: 25px;
+              cursor: pointer;
+              box-sizing: border-box;
+
+              &:hover {
+                border: #aaaaaa solid 1px;
+              }
+            }
+
+            .view-member-text {
+              font-size: 16px;
+              text-align: center;
+              width: 100%;
+              height: 30px;
+              line-height: 30px;
+              white-space: nowrap;
+              text-overflow: ellipsis;
+              overflow: hidden
             }
           }
 				}

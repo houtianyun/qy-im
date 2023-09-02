@@ -22,6 +22,23 @@
               @reload="$emit('reload')"
               @close="showAddGroupMember=false"></add-group-member>
 				</div>
+        <div v-if="group.isTemplate === 1" class="member-info">
+          <div class="view-member-info-btn" title="群聊成员信息" @click="openGroupMemberInfoDialog">
+            <i class="el-icon-search"></i>
+          </div>
+          <div class="view-member-text">查看</div>
+          <el-dialog
+              width="25%"
+              title="模板群聊成员信息"
+              :visible.sync="groupMemberVisible"
+              :before-close="closeGroupMemberInfoDialog">
+            <el-scrollbar style="height:400px;">
+              <div v-for="(groupMember, index) in groupMembers" :key="index">
+                <template-group-member class="r-group-member" :member="groupMember"></template-group-member>
+              </div>
+            </el-scrollbar>
+          </el-dialog>
+        </div>
 				<div v-for="(member) in groupMembers" :key="member.id">
 					<group-member class="group-side-member" v-show="!member.quit && member.aliasName.startsWith(searchText)" :member="member"
 					 :showDel="false"></group-member>
@@ -59,19 +76,22 @@
 <script>
 	import AddGroupMember from '../group/AddGroupMember.vue';
 	import GroupMember from '../group/GroupMember.vue';
+	import TemplateGroupMember from "@/components/group/TemplateGroupMember";
 
 	export default {
 		name: "chatGroupSide",
 		components: {
 			AddGroupMember,
-			GroupMember
+			GroupMember,
+      TemplateGroupMember
 		},
 		data() {
 			return {
 				searchText: "",
 				editing: false,
 				showAddGroupMember: false,
-        selectableCharacters: []
+        selectableCharacters: [],
+        groupMemberVisible: false,
 			}
 		},
 		props: {
@@ -146,6 +166,12 @@
         }).finally(() =>{
 
         })
+      },
+      closeGroupMemberInfoDialog() {
+        this.groupMemberVisible = false;
+      },
+      openGroupMemberInfoDialog() {
+        this.groupMemberVisible = true;
       }
 		},
 		computed: {
@@ -210,6 +236,39 @@
 					overflow: hidden
 				}
 			}
+
+      .member-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 50px;
+        margin-left: 15px;
+
+        .view-member-info-btn {
+          width: 100%;
+          height: 50px;
+          line-height: 50px;
+          border: #cccccc solid 1px;
+          font-size: 25px;
+          cursor: pointer;
+          box-sizing: border-box;
+
+          &:hover {
+            border: #aaaaaa solid 1px;
+          }
+        }
+
+        .view-member-text {
+          font-size: 16px;
+          text-align: center;
+          width: 100%;
+          height: 30px;
+          line-height: 30px;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          overflow: hidden
+        }
+      }
 		}
 
 		.group-side-form {
