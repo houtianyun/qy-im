@@ -61,6 +61,18 @@
 				<el-form-item label="我在本群的昵称">
 					<el-input v-model="group.aliasName" :disabled="!editing || group.isTemplate === 1" placeholder="xx" maxlength="20"></el-input>
 				</el-form-item>
+        <el-form-item label="群成员名称显示" v-if="group.isTemplate === 1">
+          <el-switch
+              style="display: block"
+              v-model="myGroupMemberInfo.showNickName"
+              active-color="#13ce66"
+              inactive-color="#ff4949"
+              active-text="显示"
+              inactive-text="关闭"
+              @change="showNickNameChange"
+              :disabled="!editing">
+          </el-switch>
+        </el-form-item>
 
 				<div class="btn-group">
 					<el-button v-show="editing" type="success" @click="handleSaveGroup()">提交</el-button>
@@ -92,6 +104,7 @@
 				showAddGroupMember: false,
         selectableCharacters: [],
         groupMemberVisible: false,
+        showNickName: false,
 			}
 		},
 		props: {
@@ -100,7 +113,10 @@
 			},
 			groupMembers: {
 				type: Array
-			}
+			},
+      myGroupMemberInfo: {
+        type: Object
+      }
 		},
 		methods: {
 			handleClose() {
@@ -116,6 +132,7 @@
 			},
 			handleSaveGroup() {
 				let vo = this.group;
+				vo.showNickName = this.myGroupMemberInfo.showNickName;
 				this.editing = false;
 				this.$http({
 					url: "/group/modify",
@@ -172,6 +189,9 @@
       },
       openGroupMemberInfoDialog() {
         this.groupMemberVisible = true;
+      },
+      showNickNameChange() {
+        this.$emit("change", this.myGroupMemberInfo.showNickName);
       }
 		},
 		computed: {

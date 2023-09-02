@@ -3,7 +3,7 @@
     <el-container>
       <el-tabs v-moel="activeTab" tab-position="left" style="height: 360px;" @tab-click="handleTabClick">
         <el-tab-pane label="消息通知" name="notify">
-
+          <div>待开发</div>
         </el-tab-pane>
         <el-tab-pane label="修改密码" name="modifyPwd">
           <el-form :model="pwdForm" status-icon :rules="rules" ref="pwdForm" label-width="80px">
@@ -20,6 +20,11 @@
               <el-button type="success" @click="resetPwd('pwdForm')">确认</el-button>
             </el-form-item>
           </el-form>
+        </el-tab-pane>
+        <el-tab-pane label="项目源码" name="sourceCode">
+          <div>
+            <a href="https://gitee.com/houtianyun/qy-im" target="_blank">https://gitee.com/houtianyun/qy-im</a>
+          </div>
         </el-tab-pane>
       </el-tabs>
     </el-container>

@@ -8,6 +8,7 @@
 			<div class="chat-msg-content">
 				<div class="chat-msg-top">
 					<span>{{showName}}</span>
+					<span v-show="myGroupMemberInfo.showNickName">{{nickName}}</span>
 					<chat-time :time="msgInfo.sendTime"></chat-time>
 				</div>
 				<div class="chat-msg-bottom" @contextmenu.prevent="showRightMenu($event)">
@@ -67,10 +68,18 @@
 				type: String,
 				required: true
 			},
+      nickName: {
+        type: String,
+        required: true
+      },
 			msgInfo: {
 				type: Object,
 				required: true
 			},
+      myGroupMemberInfo: {
+        type: Object,
+        required: true
+      },
 			menu:{
 				type: Boolean,
 				default: true

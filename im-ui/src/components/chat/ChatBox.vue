@@ -11,8 +11,15 @@
 						<div class="im-chat-box">
 							<ul>
 								<li v-for="(msgInfo,idx) in chat.messages" :key="idx">
-									<chat-message-item :mine="msgInfo.sendId == mine.id" :headImage="headImage(msgInfo)" :showName="showName(msgInfo)"
-									 :msgInfo="msgInfo" @delete="deleteMessage" @recall="recallMessage">
+									<chat-message-item
+                      :mine="msgInfo.sendId == mine.id"
+                      :headImage="headImage(msgInfo)"
+                      :showName="showName(msgInfo)"
+                      :nickName="nickName(msgInfo)"
+									    :msgInfo="msgInfo"
+                      :myGroupMemberInfo="myGroupMemberInfo"
+                      @delete="deleteMessage"
+                      @recall="recallMessage">
 									</chat-message-item>
 								</li>
 							</ul>
@@ -47,7 +54,9 @@
 					</el-footer>
 				</el-container>
 				<el-aside class="chat-group-side-box" width="300px" v-show="showSide">
-					<chat-group-side :group="group" :groupMembers="groupMembers" @reload="loadGroup(group.id)">
+					<chat-group-side :group="group" :groupMembers="groupMembers" @reload="loadGroup(group.id)"
+                           :myGroupMemberInfo="myGroupMemberInfo"
+                           @change="modifyMyGroupMember">
 					</chat-group-side>
 				</el-aside>
 			</el-container>
@@ -86,6 +95,7 @@
 				friend: {},
 				group: {},
 				groupMembers: [],
+        myGroupMemberInfo: {}, // 我的群聊成员信息
 				sendText: "",
 				showVoice: false, // 是否显示语音录制弹窗
 				showSide: false, // 是否显示群聊信息栏
@@ -325,7 +335,6 @@
 						this.$store.commit("insertMessage", msgInfo);
 					})
 				});
-
 			},
 			loadGroup(groupId) {
 				this.$http({
@@ -342,6 +351,7 @@
 					url: `/group/members/${groupId}`,
 					method: 'get'
 				}).then((groupMembers) => {
+          this.myGroupMemberInfo = groupMembers.find((m) => m.userId === this.mine.id);
 					this.groupMembers = groupMembers;
 				});
 			},
@@ -364,8 +374,15 @@
 				} else {
 					return msgInfo.sendId == this.mine.id ? this.mine.nickName : this.chat.showName
 				}
-
 			},
+      nickName(msgInfo) {
+        if (this.chat.type === 'GROUP') {
+          let member = this.groupMembers.find((m) => m.userId === msgInfo.sendId);
+          return member ? member.nickName : "";
+        } else {
+          return "";
+        }
+      },
 			headImage(msgInfo) {
 				if (this.chat.type == 'GROUP') {
 					let member = this.groupMembers.find((m) => m.userId == msgInfo.sendId);
@@ -379,7 +396,10 @@
 					const div = document.getElementById("chatScrollBox");
 					div.scrollTop = div.scrollHeight;
 				});
-			}
+			},
+      modifyMyGroupMember(showNickName) {
+        this.myGroupMemberInfo.showNickName = showNickName;
+      }
 		},
 		computed: {
 			mine() {
