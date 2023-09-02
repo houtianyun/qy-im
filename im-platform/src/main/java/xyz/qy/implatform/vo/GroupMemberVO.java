@@ -45,4 +45,7 @@ public class GroupMemberVO {
 
     @ApiModelProperty("头像别名")
     private String avatarAlias;
+
+    @ApiModelProperty("用户头像")
+    private String userAvatar;
 }
