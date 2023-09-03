@@ -7,7 +7,17 @@ import cn.hutool.core.util.RandomUtil;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import xyz.qy.imcommon.contant.RedisKey;
 import xyz.qy.implatform.contant.Constant;
 import xyz.qy.implatform.dto.LoginDTO;
@@ -36,29 +46,23 @@ import xyz.qy.implatform.util.FileUtils;
 import xyz.qy.implatform.util.ImageUtil;
 import xyz.qy.implatform.util.IpUtils;
 import xyz.qy.implatform.util.JwtUtil;
+import xyz.qy.implatform.util.PageUtils;
 import xyz.qy.implatform.util.RedisCache;
 import xyz.qy.implatform.util.SysStringUtils;
 import xyz.qy.implatform.vo.GroupMessageVO;
 import xyz.qy.implatform.vo.IpGeoInfoVO;
 import xyz.qy.implatform.vo.LoginVO;
-import xyz.qy.implatform.vo.PrivateMessageVO;
+import xyz.qy.implatform.vo.PageResultVO;
 import xyz.qy.implatform.vo.PasswordVO;
+import xyz.qy.implatform.vo.PrivateMessageVO;
 import xyz.qy.implatform.vo.UploadImageVO;
 import xyz.qy.implatform.vo.UserVO;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -108,7 +112,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new GlobalException(ResultCode.PASSWOR_ERROR);
         }
         recordLoginInfo(user);
-
+        redisCache.deleteObject(RedisKey.CAPTCHA_CODE_KEY + dto.getUuid());
         return JwtUtil.createToken(user);
     }
 
@@ -194,6 +198,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             user.setCity(ipGeoInfo.getCity());
         }
         this.save(user);
+        redisCache.deleteObject(RedisKey.CAPTCHA_CODE_KEY + vo.getUuid());
         GroupMember groupMember = groupService.addToCommonGroup(user);
         if (ObjectUtil.isNotNull(groupMember)) {
             GroupMessageVO groupMessageVO = CommonUtils.buildGroupMessageVO(Constant.COMMON_GROUP_ID, CommonUtils.buildWelcomeMessage(user, groupMember), MessageType.TEXT.code());
@@ -298,18 +303,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return
      */
     @Override
-    public List<UserVO> findUserByNickName(String nickname) {
+    public PageResultVO findUserByNickName(String nickname) {
+        UserSession session = SessionContext.getSession();
+        Long userId = session.getId();
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
-                .like(User::getNickName, nickname)
-                .last("limit 20");
-        List<User> users = this.list(queryWrapper);
+                .ne(User::getId, userId)
+                .and(StringUtils.isNotBlank(nickname),
+                        qw -> qw.like(User::getNickName, nickname)
+                                .or()
+                                .like(User::getUserName, nickname))
+                .orderByDesc(User::getCreateTime);
+        Page<User> page = this.page(new Page<>(PageUtils.getPageNo(), PageUtils.getPageSize()), queryWrapper);
+        List<User> users = page.getRecords();
+        if (CollectionUtils.isEmpty(users)) {
+            return PageResultVO.builder().data(Collections.EMPTY_LIST).build();
+        }
         List<UserVO> vos = users.stream().map(u -> {
             UserVO vo = BeanUtils.copyProperties(u, UserVO.class);
             vo.setOnline(isOnline(u.getId()));
             return vo;
         }).collect(Collectors.toList());
-        return vos;
+        return PageResultVO.builder().data(vos).total(page.getTotal()).build();
     }
 
     /**

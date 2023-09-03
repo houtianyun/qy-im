@@ -5,6 +5,7 @@ import xyz.qy.implatform.dto.LoginDTO;
 import xyz.qy.implatform.dto.RegisterDTO;
 import xyz.qy.implatform.entity.User;
 import xyz.qy.implatform.vo.LoginVO;
+import xyz.qy.implatform.vo.PageResultVO;
 import xyz.qy.implatform.vo.PasswordVO;
 import xyz.qy.implatform.vo.UserVO;
 
@@ -23,7 +24,7 @@ public interface IUserService extends IService<User> {
 
     void update(UserVO vo);
 
-    List<UserVO> findUserByNickName(String nickname);
+    PageResultVO findUserByNickName(String nickname);
 
     List<Long> checkOnline(String userIds);
 

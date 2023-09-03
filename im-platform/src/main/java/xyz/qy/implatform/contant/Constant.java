@@ -49,4 +49,6 @@ public class Constant {
     public static final String PAGE_SIZE = "pageSize";
     // 默认分页大小
     public static final String DEFAULT_SIZE = "10";
+    // 默认第一页
+    public static final String DEFAULT_PAGE_NO = "1";
 }

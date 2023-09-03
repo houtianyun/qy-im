@@ -13,4 +13,6 @@ public class RedisKey {
     public final static String IM_RESULT_PRIVATE_QUEUE = "im:result:private";
     // 群聊消息发送结果队列
     public final static String IM_RESULT_GROUP_QUEUE = "im:result:group";
+    // 验证码 redis key
+    public static final String CAPTCHA_CODE_KEY = "captcha_codes:";
 }
