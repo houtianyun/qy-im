@@ -5,8 +5,14 @@
 			<el-scrollbar  class="chat-history-scrollbar" ref="scrollbar" id="historyScrollbar" >
 				<ul>
 					<li v-for="(msgInfo,idx) in messages" :key="idx">
-						<chat-message-item :mine="msgInfo.sendId == mine.id" :headImage="headImage(msgInfo)" :showName="showName(msgInfo)"
-						 :msgInfo="msgInfo" :menu="false">
+						<chat-message-item
+                :mine="msgInfo.sendId == mine.id"
+                :headImage="headImage(msgInfo)"
+                :showName="showName(msgInfo)"
+                :nickName="nickName(msgInfo)"
+						    :msgInfo="msgInfo"
+                :menu="false"
+                :myGroupMemberInfo="myGroupMemberInfo">
 						</chat-message-item>
 					</li>
 				</ul>
@@ -47,7 +53,8 @@
 				messages: [],
 				loadAll: false,
 				loading: false,
-				lastScrollTime: new Date()
+				lastScrollTime: new Date(),
+        myGroupMemberInfo: {},
 			}
 		},
 		methods: {
@@ -96,13 +103,22 @@
 				})
 			},
 			showName(msgInfo) {
-				if (this.chat.type == 'GROUP') {
-					let member = this.groupMembers.find((m) => m.userId == msgInfo.sendId);
+				if (this.chat.type === 'GROUP') {
+					let member = this.groupMembers.find((m) => m.userId === msgInfo.sendId);
+          this.myGroupMemberInfo = this.groupMembers.find((m) => m.userId === this.mine.id);
 					return member ? member.aliasName : "";
 				} else {
-					return msgInfo.sendId == this.mine.id ? this.mine.nickName : this.chat.showName
+					return msgInfo.sendId === this.mine.id ? this.mine.nickName : this.chat.showName
 				}
 			},
+      nickName(msgInfo) {
+        if (this.chat.type === 'GROUP') {
+          let member = this.groupMembers.find((m) => m.userId === msgInfo.sendId);
+          return member ? member.nickName : "";
+        } else {
+          return "";
+        }
+      },
 			headImage(msgInfo) {
 				if (this.chat.type == 'GROUP') {
 					let member = this.groupMembers.find((m) => m.userId == msgInfo.sendId);

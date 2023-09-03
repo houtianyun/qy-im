@@ -78,7 +78,10 @@
 			},
       myGroupMemberInfo: {
         type: Object,
-        required: true
+        required: true,
+        default() {
+          return {}
+        }
       },
 			menu:{
 				type: Boolean,
