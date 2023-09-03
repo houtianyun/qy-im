@@ -67,6 +67,7 @@ create table im_group_member
     avatar_alias          varchar(50)                              null comment '头像别名',
     remark                varchar(255) default ''                  null comment '备注',
     quit                  tinyint(1)   default 0                   not null comment '是否已退出',
+    show_nickname         tinyint(1)   default 0                   not null comment '是否展示群成员昵称（0：否；1：是）',
     created_time          datetime     default current_timestamp() null comment '创建时间',
     switch_time           datetime                                 null comment '模板人物切换时间',
     constraint unique_idx_1
