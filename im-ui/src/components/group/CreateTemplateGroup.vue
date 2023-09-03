@@ -6,7 +6,9 @@
           <el-button slot="append" icon="el-icon-search" ></el-button>
         </el-input>
         <el-scrollbar style="height:400px;">
-          <div v-for="(templateGroup,index) in templateGroupList" :key="templateGroup.id" class="template-group-box">
+          <div v-for="(templateGroup,index) in templateGroupList" :key="templateGroup.id"
+               v-show="templateGroup.groupName.startsWith(searchText)"
+               class="template-group-box">
             <template-group-item :templateGroup="templateGroup" class="group-item-left"></template-group-item>
             <div class="group-item-right">
               <el-button :type="groupActiveIndex === index ? 'success' : ''" icon="el-icon-check" circle
@@ -17,8 +19,12 @@
         </el-scrollbar>
       </div>
       <div class="agm-r-box">
+        <el-input width="200px" placeholder="搜索模板人物" class="input-with-select" v-model="characterSearchText" >
+          <el-button slot="append" icon="el-icon-search" ></el-button>
+        </el-input>
         <el-scrollbar style="height:400px;">
-          <div class="template-character-box" v-for="(templateCharacter,index) in templateCharacterList" :key="templateCharacter.id">
+          <div class="template-character-box" v-for="(templateCharacter,index) in templateCharacterList"
+               :key="templateCharacter.id" v-show="templateCharacter.name.startsWith(characterSearchText)">
             <template-character-item class="character-item-left" :templateCharacter = "templateCharacter"></template-character-item>
             <div class="character-item-right">
               <el-button :type="characterActiveIndex === index ? 'success' : ''" icon="el-icon-check" circle
@@ -55,6 +61,7 @@ export default {
   data() {
     return {
       searchText: "",
+      characterSearchText: "",
       activeIndex: -1,
       templateGroupList: [],
       templateCharacterList: [],

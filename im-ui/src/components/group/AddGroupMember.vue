@@ -6,7 +6,7 @@
           <el-button slot="append" icon="el-icon-search"></el-button>
         </el-input>
         <el-scrollbar style="height:400px;">
-          <div v-for="(friend,index) in friends" :key="friend.id">
+          <div v-for="(friend,index) in friends" :key="friend.id" v-show="friend.nickName.startsWith(searchText)">
             <friend-item :showDelete="false" @click.native="handleSwitchCheck(friend)"
              :friend="friend" :index="index" :active="index === activeIndex">
               <el-checkbox :disabled="friend.disabled" @click.native.stop="" class="agm-friend-checkbox" v-model="friend.isCheck"
@@ -37,8 +37,14 @@
         :visible.sync="selectTemplateCharacterVisible"
         :before-close="closeSelectCharacter"
         append-to-body>
+      <div>
+        <el-input width="200px" placeholder="搜索模板人物" class="input-with-select" v-model="characterSearchText">
+          <el-button slot="append" icon="el-icon-search"></el-button>
+        </el-input>
+      </div>
       <el-scrollbar style="height:400px;">
-        <div v-for="(templateCharacter, index) in selectableCharacters" :key="index">
+        <div v-for="(templateCharacter, index) in selectableCharacters" :key="index"
+             v-show="templateCharacter.name.startsWith(characterSearchText)">
           <template-character-item class="character-item-left" :templateCharacter="templateCharacter"></template-character-item>
           <div class="character-item-right">
             <el-button :disabled="!templateCharacter.selectable ||templateCharacter.choosed "
@@ -73,6 +79,7 @@
 		data() {
 			return {
 				searchText: "",
+        characterSearchText: "",
 				activeIndex: -1,
 				friends: [],
         selectTemplateCharacterVisible: false,

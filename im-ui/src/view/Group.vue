@@ -87,8 +87,14 @@
                     title="请选择模板人物"
                     :visible.sync="selectTemplateCharacterVisible"
                     :before-close="closeSelectCharacter">
+                  <div>
+                    <el-input width="200px" placeholder="搜索模板人物" class="input-with-select" v-model="characterSearchText">
+                      <el-button slot="append" icon="el-icon-search"></el-button>
+                    </el-input>
+                  </div>
                   <el-scrollbar style="height:400px;">
-                    <div v-for="(templateCharacter, index) in selectableCharacters" :key="index">
+                    <div v-for="(templateCharacter, index) in selectableCharacters" :key="index"
+                         v-show="templateCharacter.name.startsWith(characterSearchText)">
                       <template-character-item class="character-item-left" :templateCharacter="templateCharacter"></template-character-item>
                       <div class="character-item-right">
                         <el-button :disabled="!templateCharacter.selectable ||templateCharacter.choosed "
@@ -226,6 +232,7 @@
 		data() {
 			return {
 				searchText: "",
+        characterSearchText: "",
 				maxSize: 5 * 1024 * 1024,
 				activeGroup: {},
 				groupMembers: [],

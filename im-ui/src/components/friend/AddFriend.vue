@@ -1,5 +1,5 @@
 <template>
-	<el-dialog title="添加好友" :visible.sync="dialogVisible" width="30%" :before-close="handleClose">
+	<el-dialog title="添加好友" :visible.sync="dialogVisible" width="35%" :before-close="handleClose">
 		<el-input  placeholder="输入好友昵称或用户名,最多展示10条" class="input-with-select"
                v-model="searchText" @keyup.enter.native="searchByKeyWord()">
 			<el-button slot="append" icon="el-icon-search" @click="searchByKeyWord()"></el-button>
