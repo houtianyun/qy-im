@@ -1,7 +1,8 @@
 <template>
 	<el-dialog title="添加好友" :visible.sync="dialogVisible" width="30%" :before-close="handleClose">
-		<el-input  placeholder="输入好友昵称,最多展示10条" class="input-with-select" v-model="searchText" @keyup.enter.native="handleSearch()">
-			<el-button slot="append" icon="el-icon-search" @click="handleSearch()"></el-button>
+		<el-input  placeholder="输入好友昵称或用户名,最多展示10条" class="input-with-select"
+               v-model="searchText" @keyup.enter.native="searchByKeyWord()">
+			<el-button slot="append" icon="el-icon-search" @click="searchByKeyWord()"></el-button>
 		</el-input>
 		<el-scrollbar style="height:400px">
 			<div v-for="(user) in users" :key="user.id" v-show="user.id != $store.state.userStore.userInfo.id">
@@ -18,6 +19,17 @@
 				</div>
 			</div>
 		</el-scrollbar>
+    <div class="page-box">
+      <el-pagination
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="currentPage"
+          :page-sizes="[10, 20, 50]"
+          :page-size="10"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total">
+      </el-pagination>
+    </div>
 	</el-dialog>
 </template>
 
@@ -31,7 +43,10 @@
 		data() {
 			return {
 				users: [],
-				searchText: ""
+				searchText: "",
+        currentPage: 1,
+        pageSize: 10,
+        total: 0,
 			}
 		},
 		props: {
@@ -43,15 +58,20 @@
 			handleClose() {
 				this.$emit("close");
 			},
+      searchByKeyWord() {
+        this.currentPage = 1;
+        this.handleSearch();
+      },
 			handleSearch() {
 				this.$http({
-					url: "/user/findByNickName",
+					url: `/user/findByNickName?pageNo=${this.currentPage}&pageSize=${this.pageSize}`,
 					method: "get",
 					params: {
 						nickName: this.searchText
 					}
 				}).then((data) => {
-					this.users = data;
+          this.total= data.total;
+					this.users = data.data;
 				})
 			},
 			handleAddFriend(user){
@@ -76,7 +96,15 @@
 				let friends = this.$store.state.friendStore.friends;
 				let friend = friends.find((f)=> f.id==userId);			
 				return friend != undefined;
-			}
+			},
+      handleSizeChange(pageSize) {
+        this.pageSize = pageSize;
+			  this.handleSearch();
+      },
+      handleCurrentChange(currentPage) {
+        this.currentPage = currentPage;
+        this.handleSearch();
+      }
 		},
 	
 		mounted() {

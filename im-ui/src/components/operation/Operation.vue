@@ -21,9 +21,15 @@
             </el-form-item>
           </el-form>
         </el-tab-pane>
+        <el-tab-pane label="重置密码" name="resetPwd">
+          <div>待开发</div>
+        </el-tab-pane>
+        <el-tab-pane label="邮箱绑定" name="email">
+          <div>待开发</div>
+        </el-tab-pane>
         <el-tab-pane label="项目源码" name="sourceCode">
           <div>
-            <a href="https://gitee.com/houtianyun/qy-im" target="_blank">https://gitee.com/houtianyun/qy-im</a>
+            Gitee&nbsp;&nbsp;<a href="https://gitee.com/houtianyun/qy-im" target="_blank">https://gitee.com/houtianyun/qy-im</a>
           </div>
         </el-tab-pane>
       </el-tabs>
