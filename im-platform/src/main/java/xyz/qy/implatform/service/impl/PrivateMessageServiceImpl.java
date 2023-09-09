@@ -2,6 +2,10 @@ package xyz.qy.implatform.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
 import xyz.qy.imclient.IMClient;
 import xyz.qy.imcommon.contant.Constant;
 import xyz.qy.imcommon.contant.RedisKey;
@@ -17,10 +21,6 @@ import xyz.qy.implatform.service.IPrivateMessageService;
 import xyz.qy.implatform.session.SessionContext;
 import xyz.qy.implatform.util.BeanUtils;
 import xyz.qy.implatform.vo.PrivateMessageVO;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
@@ -59,7 +59,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         this.save(msg);
         // 推送消息
         PrivateMessageInfo msgInfo = BeanUtils.copyProperties(msg, PrivateMessageInfo.class);
-        imClient.sendPrivateMessage(vo.getRecvId(),msgInfo);
+        imClient.sendPrivateMessage(vo.getRecvId(), msgInfo);
         log.info("发送私聊消息，发送id:{},接收id:{}，内容:{}", userId, vo.getRecvId(), vo.getContent());
         return msg.getId();
     }
@@ -78,7 +78,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         this.save(msg);
         // 推送消息
         PrivateMessageInfo msgInfo = BeanUtils.copyProperties(msg, PrivateMessageInfo.class);
-        imClient.sendPrivateMessage(vo.getRecvId(),msgInfo);
+        imClient.sendPrivateMessage(vo.getRecvId(), msgInfo);
         log.info("发送私聊消息，发送id:{},接收id:{}，内容:{}", sendUserId, vo.getRecvId(), vo.getContent());
     }
 
@@ -108,7 +108,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         msgInfo.setType(MessageType.TIP.code());
         msgInfo.setSendTime(new Date());
         msgInfo.setContent("对方撤回了一条消息");
-        imClient.sendPrivateMessage(msgInfo.getRecvId(),msgInfo);
+        imClient.sendPrivateMessage(msgInfo.getRecvId(), msgInfo);
         log.info("撤回私聊消息，发送id:{},接收id:{}，内容:{}", msg.getSendId(), msg.getRecvId(), msg.getContent());
     }
 
@@ -167,22 +167,20 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         List<PrivateMessage> messages = this.list(queryWrapper);
         // 上传至redis，等待推送
         if (!messages.isEmpty()) {
-            List<PrivateMessageInfo> messageInfos = messages.stream().map(m -> {
-                PrivateMessageInfo msgInfo = BeanUtils.copyProperties(m, PrivateMessageInfo.class);
-                return msgInfo;
-            }).collect(Collectors.toList());
             // 推送消息
-            PrivateMessageInfo[] infoArr = messageInfos.toArray(new PrivateMessageInfo[messageInfos.size()]);
+            PrivateMessageInfo[] infoArr = messages.stream().map(m ->
+                    BeanUtils.copyProperties(m, PrivateMessageInfo.class))
+                    .toArray(PrivateMessageInfo[]::new);
             // 不止一条未读消息
             if (infoArr.length > 1) {
-                for (int i=0; i<infoArr.length; i++) {
+                for (int i = 0; i < infoArr.length; i++) {
                     // 最后一条消息发送完成才播放提示音
                     if (i != infoArr.length - 1) {
                         infoArr[i].setPlayAudio(false);
                     }
                 }
             }
-            imClient.sendPrivateMessage(userId,infoArr);
+            imClient.sendPrivateMessage(userId, infoArr);
             log.info("拉取未读私聊消息，用户id:{},数量:{}", userId, infoArr.length);
         }
     }

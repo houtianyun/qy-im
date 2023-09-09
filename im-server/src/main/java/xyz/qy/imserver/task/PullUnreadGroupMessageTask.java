@@ -29,10 +29,10 @@ public class PullUnreadGroupMessageTask extends  AbstractPullMessageTask {
         // 从redis拉取未读消息
         String key = RedisKey.IM_UNREAD_GROUP_QUEUE + IMServerGroup.serverId;
         List messageInfos = redisTemplate.opsForList().range(key,0,-1);
+        MessageProcessor processor = ProcessorFactory.createProcessor(IMCmdType.GROUP_MESSAGE);
         for(Object o: messageInfos){
             redisTemplate.opsForList().leftPop(key);
             IMRecvInfo<GroupMessageInfo> recvInfo = (IMRecvInfo)o;
-            MessageProcessor processor = ProcessorFactory.createProcessor(IMCmdType.GROUP_MESSAGE);
             processor.process(recvInfo);
         }
     }
