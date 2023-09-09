@@ -1,5 +1,6 @@
 package xyz.qy.imserver.netty.processor;
 
+import xyz.qy.imcommon.contant.Constant;
 import xyz.qy.imcommon.contant.RedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.enums.IMSendCode;
@@ -25,6 +26,7 @@ public class PrivateMessageProcessor extends  MessageProcessor<IMRecvInfo<Privat
         PrivateMessageInfo messageInfo = recvInfo.getData();
         Long recvId = recvInfo.getRecvIds().get(0);
         log.info("接收到消息，发送者:{},接收者:{}，内容:{}",messageInfo.getSendId(),recvId,messageInfo.getContent());
+        String key = RedisKey.IM_RESULT_PRIVATE_QUEUE;
         try{
             ChannelHandlerContext channelCtx = UserChannelCtxMap.getChannelCtx(recvId);
             if(channelCtx != null ){
@@ -34,7 +36,6 @@ public class PrivateMessageProcessor extends  MessageProcessor<IMRecvInfo<Privat
                 sendInfo.setData(messageInfo);
                 channelCtx.channel().writeAndFlush(sendInfo);
                 // 消息发送成功确认
-                String key = RedisKey.IM_RESULT_PRIVATE_QUEUE;
                 SendResult sendResult = new SendResult();
                 sendResult.setRecvId(recvId);
                 sendResult.setCode(IMSendCode.SUCCESS);
@@ -42,7 +43,6 @@ public class PrivateMessageProcessor extends  MessageProcessor<IMRecvInfo<Privat
                 redisTemplate.opsForList().rightPush(key,sendResult);
             }else{
                 // 消息推送失败确认
-                String key = RedisKey.IM_RESULT_PRIVATE_QUEUE;
                 SendResult sendResult = new SendResult();
                 sendResult.setRecvId(recvId);
                 sendResult.setCode(IMSendCode.NOT_FIND_CHANNEL);
@@ -52,13 +52,14 @@ public class PrivateMessageProcessor extends  MessageProcessor<IMRecvInfo<Privat
             }
         } catch (Exception e) {
             // 消息推送失败确认
-            String key = RedisKey.IM_RESULT_PRIVATE_QUEUE;
             SendResult sendResult = new SendResult();
             sendResult.setRecvId(recvId);
             sendResult.setCode(IMSendCode.UNKONW_ERROR);
             sendResult.setMessageInfo(messageInfo);
             redisTemplate.opsForList().rightPush(key,sendResult);
             log.error("发送异常，发送者:{},接收者:{}，内容:{}",messageInfo.getSendId(),recvId,messageInfo.getContent(),e);
+        } finally {
+            redisTemplate.convertAndSend(Constant.PRIVATE_MSG_SEND_RESULT_TOPIC, key);
         }
     }
 }

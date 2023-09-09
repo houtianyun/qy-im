@@ -9,8 +9,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import xyz.qy.imclient.listener.GroupMsgSendResultChannelListener;
+import xyz.qy.imclient.listener.PrivateMsgSendResultChannelListener;
+import xyz.qy.imcommon.contant.Constant;
 
 import javax.annotation.Resource;
 
@@ -34,7 +40,7 @@ public class RedisConfig {
     }
 
     @Bean
-    public Jackson2JsonRedisSerializer jackson2JsonRedisSerializer(){
+    public Jackson2JsonRedisSerializer jackson2JsonRedisSerializer() {
         Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
         ObjectMapper om = new ObjectMapper();
         om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
@@ -43,5 +49,53 @@ public class RedisConfig {
         om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
         jackson2JsonRedisSerializer.setObjectMapper(om);
         return jackson2JsonRedisSerializer;
+    }
+
+    /**
+     * 监听器配置
+     */
+    @Bean
+    public RedisMessageListenerContainer redisMessageListenerContainer() {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(factory);
+        container.addMessageListener(privateMsgSendResultListenerAdapter(), privateMsgSendResultChannelTopic());
+        container.addMessageListener(groupMsgSendResultListenerAdapter(), groupMsgSendResultChannelTopic());
+        return container;
+    }
+
+    @Bean
+    public MessageListenerAdapter privateMsgSendResultListenerAdapter() {
+        return new MessageListenerAdapter(privateMsgSendResultChannelListener());
+    }
+
+    @Bean
+    public MessageListenerAdapter groupMsgSendResultListenerAdapter() {
+        return new MessageListenerAdapter(groupMsgSendResultChannelListener());
+    }
+
+    @Bean
+    public PrivateMsgSendResultChannelListener privateMsgSendResultChannelListener() {
+        return new PrivateMsgSendResultChannelListener();
+    }
+
+    @Bean
+    public GroupMsgSendResultChannelListener groupMsgSendResultChannelListener() {
+        return new GroupMsgSendResultChannelListener();
+    }
+
+    /**
+     * 私聊消息发送结果redis主题
+     */
+    @Bean
+    ChannelTopic privateMsgSendResultChannelTopic() {
+        return new ChannelTopic(Constant.PRIVATE_MSG_SEND_RESULT_TOPIC);
+    }
+
+    /**
+     * 群聊消息发送结果redis主题
+     */
+    @Bean
+    ChannelTopic groupMsgSendResultChannelTopic() {
+        return new ChannelTopic(Constant.GROUP_MSG_SEND_RESULT_TOPIC);
     }
 }

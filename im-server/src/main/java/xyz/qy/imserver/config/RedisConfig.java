@@ -10,8 +10,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import xyz.qy.imcommon.contant.Constant;
+import xyz.qy.imserver.listener.GroupMessageChannelListener;
+import xyz.qy.imserver.listener.PrivateMessageChannelListener;
 
 import javax.annotation.Resource;
 
@@ -45,5 +51,53 @@ public class RedisConfig {
         om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL, JsonTypeInfo.As.PROPERTY);
         jackson2JsonRedisSerializer.setObjectMapper(om);
         return jackson2JsonRedisSerializer;
+    }
+
+    /**
+     * 监听器配置
+     */
+    @Bean
+    public RedisMessageListenerContainer redisMessageListenerContainer() {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(factory);
+        container.addMessageListener(privateMessageListenerAdapter(), privateMessageChannelTopic());
+        container.addMessageListener(groupMessageListenerAdapter(), groupMessageChannelTopic());
+        return container;
+    }
+
+    @Bean
+    public MessageListenerAdapter privateMessageListenerAdapter() {
+        return new MessageListenerAdapter(privateMessageChannelListener());
+    }
+
+    @Bean
+    public MessageListenerAdapter groupMessageListenerAdapter() {
+        return new MessageListenerAdapter(groupMessageChannelListener());
+    }
+
+    @Bean
+    public PrivateMessageChannelListener privateMessageChannelListener() {
+        return new PrivateMessageChannelListener();
+    }
+
+    @Bean
+    public GroupMessageChannelListener groupMessageChannelListener() {
+        return new GroupMessageChannelListener();
+    }
+
+    /**
+     * 私聊消息redis主题
+     */
+    @Bean
+    ChannelTopic privateMessageChannelTopic() {
+        return new ChannelTopic(Constant.PRIVATE_MSG_TOPIC);
+    }
+
+    /**
+     * 群聊消息redis主题
+     */
+    @Bean
+    ChannelTopic groupMessageChannelTopic() {
+        return new ChannelTopic(Constant.GROUP_MSG_TOPIC);
     }
 }
