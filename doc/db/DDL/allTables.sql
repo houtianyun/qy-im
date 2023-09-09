@@ -272,3 +272,16 @@ create table im_music
         unique (origin_id)
 )
     comment '音乐表';
+
+
+create table im_group_msg_read_position
+(
+    group_id     bigint                               not null comment '群聊id',
+    user_id      bigint                               not null comment '用户id',
+    group_msg_id bigint                               not null comment '群聊消息id',
+    create_time  datetime default current_timestamp() null comment '创建时间',
+    update_time  datetime default current_timestamp() null on update current_timestamp() comment '更新时间',
+    constraint idx1
+        unique (group_id, user_id)
+)
+    comment '记录用户群聊消息的已读位置表';

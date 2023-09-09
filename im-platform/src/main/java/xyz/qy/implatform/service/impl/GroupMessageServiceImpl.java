@@ -1,5 +1,7 @@
 package xyz.qy.implatform.service.impl;
 
+import cn.hutool.core.util.ObjectUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -14,11 +16,13 @@ import xyz.qy.implatform.contant.RedisKey;
 import xyz.qy.implatform.entity.Group;
 import xyz.qy.implatform.entity.GroupMember;
 import xyz.qy.implatform.entity.GroupMessage;
+import xyz.qy.implatform.entity.GroupMsgReadPosition;
 import xyz.qy.implatform.enums.MessageStatus;
 import xyz.qy.implatform.enums.MessageType;
 import xyz.qy.implatform.enums.ResultCode;
 import xyz.qy.implatform.exception.GlobalException;
 import xyz.qy.implatform.mapper.GroupMessageMapper;
+import xyz.qy.implatform.mapper.GroupMsgReadPositionMapper;
 import xyz.qy.implatform.service.IGroupMemberService;
 import xyz.qy.implatform.service.IGroupMessageService;
 import xyz.qy.implatform.service.IGroupService;
@@ -26,6 +30,7 @@ import xyz.qy.implatform.session.SessionContext;
 import xyz.qy.implatform.util.BeanUtils;
 import xyz.qy.implatform.vo.GroupMessageVO;
 
+import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -46,6 +51,9 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
 
     @Autowired
     private IMClient imClient;
+
+    @Resource
+    private GroupMsgReadPositionMapper groupMsgReadPositionMapper;
 
     /**
      * 发送群聊消息(与mysql所有交换都要进行缓存)
@@ -162,8 +170,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         List<GroupMessageInfo> allGroupMessageInfo = new LinkedList<>();
         for (GroupMember member : members) {
             // 获取群聊已读的最大消息id，只推送未读消息
-            String key = RedisKey.IM_GROUP_READED_POSITION + member.getGroupId() + ":" + userId;
-            Integer maxReadedId = (Integer) redisTemplate.opsForValue().get(key);
+            Integer maxReadedId = getGroupMsgReadId(member.getGroupId(), userId);
             QueryWrapper<GroupMessage> wrapper = new QueryWrapper();
             wrapper.lambda().eq(GroupMessage::getGroupId, member.getGroupId())
                     .ge(GroupMessage::getSendTime, member.getCreatedTime())
@@ -198,7 +205,20 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
             }
         }
         imClient.sendGroupMessage(Collections.singletonList(userId), infoArr);
+    }
 
+    private Integer getGroupMsgReadId(Long groupId, Long userId) {
+        String key = RedisKey.IM_GROUP_READED_POSITION + groupId + ":" + userId;
+        Integer maxReadedId = (Integer) redisTemplate.opsForValue().get(key);
+        if (ObjectUtil.isNull(maxReadedId)) {
+            GroupMsgReadPosition groupMsgReadPosition = groupMsgReadPositionMapper.selectOne(new LambdaQueryWrapper<GroupMsgReadPosition>()
+                    .eq(GroupMsgReadPosition::getGroupId, groupId)
+                    .eq(GroupMsgReadPosition::getUserId, userId));
+            if (ObjectUtil.isNotNull(groupMsgReadPosition)) {
+                maxReadedId = groupMsgReadPosition.getGroupMsgId().intValue();
+            }
+        }
+        return maxReadedId;
     }
 
     /**
