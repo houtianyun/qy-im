@@ -45,6 +45,7 @@ public class IMSender {
                 recvIds.add(recvId);
                 recvInfo.setRecvIds(recvIds);
                 recvInfo.setData(messageInfos[i]);
+                recvInfo.setPlayAudio(messageInfos[i].getPlayAudio());
                 recvInfos[i] = recvInfo;
             }
             redisTemplate.opsForList().rightPushAll(sendKey, recvInfos);
@@ -91,6 +92,7 @@ public class IMSender {
                 recvInfo.setCmd(IMCmdType.GROUP_MESSAGE.code());
                 recvInfo.setRecvIds(new LinkedList<>(entry.getValue()));
                 recvInfo.setData(messageInfos[i]);
+                recvInfo.setPlayAudio(messageInfos[i].getPlayAudio());
                 recvInfos[i] = recvInfo;
             }
             String key = RedisKey.IM_UNREAD_GROUP_QUEUE + entry.getKey();

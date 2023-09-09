@@ -34,6 +34,11 @@ public class GroupMessageInfo {
     private Integer type;
 
     /**
+     * 是否播放消息提示音
+     */
+    private Boolean playAudio = true;
+
+    /**
      * 发送时间
      */
     @JsonSerialize(using = DateToLongSerializer.class)

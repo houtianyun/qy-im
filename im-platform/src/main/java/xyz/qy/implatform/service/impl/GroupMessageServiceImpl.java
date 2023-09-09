@@ -182,6 +182,15 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
             }).collect(Collectors.toList());
             // 发送消息
             GroupMessageInfo[] infoArr =  messageInfos.toArray(new GroupMessageInfo[messageInfos.size()]);
+            // 不止一条未读群聊消息
+            if (infoArr.length > 1) {
+                for (int i=0; i<infoArr.length; i++) {
+                    // 最后一条消息发送完才播放提示音
+                    if (i != infoArr.length - 1) {
+                        infoArr[i].setPlayAudio(false);
+                    }
+                }
+            }
             imClient.sendGroupMessage(Collections.singletonList(userId), infoArr);
             log.info("拉取未读群聊消息，用户id:{},群聊id:{},数量:{}",userId,member.getGroupId(),messageInfos.size());
         }

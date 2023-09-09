@@ -20,6 +20,11 @@ public class IMRecvInfo<T> {
      * 推送消息体
      */
     private T data;
+
+    /**
+     * 是否播放消息提示音
+     */
+    private Boolean playAudio = true;
 }
 
 

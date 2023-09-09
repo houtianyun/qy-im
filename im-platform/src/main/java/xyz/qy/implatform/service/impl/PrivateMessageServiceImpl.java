@@ -173,6 +173,15 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
             }).collect(Collectors.toList());
             // 推送消息
             PrivateMessageInfo[] infoArr = messageInfos.toArray(new PrivateMessageInfo[messageInfos.size()]);
+            // 不止一条未读消息
+            if (infoArr.length > 1) {
+                for (int i=0; i<infoArr.length; i++) {
+                    // 最后一条消息发送完成才播放提示音
+                    if (i != infoArr.length - 1) {
+                        infoArr[i].setPlayAudio(false);
+                    }
+                }
+            }
             imClient.sendPrivateMessage(userId,infoArr);
             log.info("拉取未读私聊消息，用户id:{},数量:{}", userId, infoArr.length);
         }
