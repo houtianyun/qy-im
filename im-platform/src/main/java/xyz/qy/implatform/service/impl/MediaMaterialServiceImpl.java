@@ -181,6 +181,7 @@ public class MediaMaterialServiceImpl extends ServiceImpl<MediaMaterialMapper, M
     @Override
     public void generateRandomSort() {
         LambdaQueryWrapper<MediaMaterial> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(MediaMaterial::getId, MediaMaterial::getSort);
         wrapper.eq(MediaMaterial::getStatus, Constant.YES);
         List<MediaMaterial> materialList = baseMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(materialList)) {
