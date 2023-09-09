@@ -166,8 +166,10 @@
 				this.$store.commit("openChat", chatInfo);
 				// 插入消息
 				this.$store.commit("insertMessage", msg);
-				// 播放提示音
-				this.playAudioTip();
+        if (msg.playAudio) {
+          // 播放提示音
+          this.playAudioTip();
+        }
 			},
 			handleGroupMessage(msg) {
 				// 群聊缓存存在，直接插入群聊消息
@@ -196,8 +198,10 @@
 				this.$store.commit("openChat", chatInfo);
 				// 插入消息
 				this.$store.commit("insertMessage", msg);
-				// 播放提示音
-				this.playAudioTip();
+        if (msg.playAudio) {
+          // 播放提示音
+          this.playAudioTip();
+        }
 			},
 			handleExit() {
         this.$wsApi.closeWebSocket();
