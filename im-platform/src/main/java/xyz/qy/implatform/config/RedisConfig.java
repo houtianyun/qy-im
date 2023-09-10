@@ -50,7 +50,7 @@ public class RedisConfig extends CachingConfigurerSupport {
         return redisTemplate;
     }
 
-    @Bean
+    @Bean("myJackson2JsonRedisSerializer")
     public Jackson2JsonRedisSerializer jackson2JsonRedisSerializer(){
         Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
         ObjectMapper om = new ObjectMapper();

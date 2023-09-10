@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.redisson.Redisson;
+import org.redisson.api.RedissonClient;
+import org.redisson.config.Config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -19,6 +22,7 @@ import xyz.qy.imclient.listener.PrivateMsgSendResultChannelListener;
 import xyz.qy.imcommon.contant.Constant;
 
 import javax.annotation.Resource;
+import java.io.IOException;
 
 @Configuration("IMRedisConfig")
 public class RedisConfig {
@@ -97,5 +101,12 @@ public class RedisConfig {
     @Bean
     ChannelTopic groupMsgSendResultChannelTopic() {
         return new ChannelTopic(Constant.GROUP_MSG_SEND_RESULT_TOPIC);
+    }
+
+    @Bean
+    public RedissonClient redissonClient() throws IOException {
+        Config config = Config.fromYAML(RedisConfig.class.getClassLoader()
+                .getResource("redission-config.yml"));
+        return Redisson.create(config);
     }
 }

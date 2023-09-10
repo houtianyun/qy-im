@@ -24,11 +24,13 @@
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
+            <version>5.8.21</version>
         </dependency>
         <!--FastJson-->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
+            <version>1.2.83</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -38,6 +40,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-beans</artifactId>
+            <version>5.3.20</version>
         </dependency>
         <dependency>
             <groupId>org.apache.velocity</groupId>
@@ -52,6 +55,7 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
+            <version>5.3.19</version>
         </dependency>
         <dependency>
             <groupId>eu.bitwalker</groupId>
@@ -61,7 +65,7 @@
         <dependency>
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
-            <version>1.4</version>
+            <version>1.5</version>
         </dependency>
     </dependencies>
 </project>

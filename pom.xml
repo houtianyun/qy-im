@@ -27,9 +27,9 @@
         <fastjson.version>1.2.40</fastjson.version>
         <velocity.version>1.7</velocity.version>
         <ehcache.version>3.3.1</ehcache.version>
-        <swagger.version>2.7.0</swagger.version>
+        <swagger.version>2.10.0</swagger.version>
         <hutool.version>5.3.9</hutool.version>
-        <druid.version>1.1.22</druid.version>
+        <druid.version>1.2.4</druid.version>
         <alipay.version>3.7.110.ALL</alipay.version>
         <zxing.version>3.3.3</zxing.version>
         <commons-lang3.version>3.8.1</commons-lang3.version>
@@ -43,7 +43,7 @@
                 <!-- Import dependency management from Spring Boot -->
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
-                <version>2.0.3.RELEASE</version>
+                <version>2.2.11.RELEASE</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

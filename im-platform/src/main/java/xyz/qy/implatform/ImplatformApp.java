@@ -12,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableAspectJAutoProxy(exposeProxy = true)
 @MapperScan(basePackages = {"xyz.qy.implatform.mapper"})
-@SpringBootApplication(exclude= {SecurityAutoConfiguration.class })// 禁用secrity
+@SpringBootApplication
 public class ImplatformApp {
     public static void main(String[] args) {
         SpringApplication.run(ImplatformApp.class,args);
