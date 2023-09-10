@@ -31,6 +31,9 @@
           <div>
             Gitee&nbsp;&nbsp;<a href="https://gitee.com/houtianyun/qy-im" target="_blank">https://gitee.com/houtianyun/qy-im</a>
           </div>
+          <div>
+            GitHub&nbsp;&nbsp;<a href="https://github.com/houtianyun/qy-im" target="_blank">https://github.com/houtianyun/qy-im</a>
+          </div>
         </el-tab-pane>
       </el-tabs>
     </el-container>
