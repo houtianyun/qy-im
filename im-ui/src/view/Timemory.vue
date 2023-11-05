@@ -28,7 +28,11 @@ export default {
     };
   },
   mounted() {
-    setInterval(this.updateTime, 1);
+    const timer = setInterval(this.updateTime, 1);
+    this.$once('hook:beforeDestroy', () => {
+      console.log('clearInterval done')
+      clearInterval(timer);
+    })
   },
   created() {
     this.getGuShi();
@@ -64,6 +68,9 @@ export default {
       };
       xhr.send();
     },
+    goLogin() {
+      this.$router.push("/login");
+    }
   },
   watch: {}
 }
