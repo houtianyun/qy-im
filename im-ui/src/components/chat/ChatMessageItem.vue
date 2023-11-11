@@ -199,6 +199,13 @@
 				display: flex;
 				flex-direction: column;
 
+        .send-fail {
+          color: #e60c0c;
+          font-size: 30px;
+          cursor: pointer;
+          margin: 0 20px;
+        }
+
 				.chat-msg-top {
 					display: flex;
 					flex-wrap: nowrap;

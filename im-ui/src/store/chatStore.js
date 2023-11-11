@@ -7,7 +7,14 @@ export default {
 
 	mutations: {
 		initChatStore(state) {
-			//state.activeIndex = -1;
+			// 防止图片一直处在加载中状态
+			state.chats.forEach((chat)=>{
+				chat.messages.forEach((msg)=>{
+					if(msg.loadStatus === "loading"){
+						msg.loadStatus = "fail"
+					}
+				})
+			})
 		},
 		openChat(state, chatInfo) {
 			let chat = null;

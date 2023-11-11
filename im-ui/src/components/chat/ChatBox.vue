@@ -47,10 +47,22 @@
 							</div>
 							<div title="聊天记录" class="el-icon-chat-dot-round" @click="showHistoryBox()"></div>
 						</div>
-						<textarea v-model="sendText" ref="sendBox" class="send-text-area" :disabled="lockMessage" @keydown.enter="sendTextMessage()"></textarea>
-						<div class="im-chat-send">
-							<el-button type="primary" @click="sendTextMessage()">发送</el-button>
-						</div>
+            <div class="send-content-area">
+              <textarea v-show="!sendImageUrl" v-model="sendText" ref="sendBox" class="send-text-area" :disabled="lockMessage"
+                        @keydown.enter="sendTextMessage()"
+                        @paste="handlePaste"
+                        placeholder="温馨提示:可以粘贴截图到这里了哦~"></textarea>
+              <div v-show="sendImageUrl" class="send-image-area">
+                <div class="send-image-box">
+                  <img class="send-image" :src="sendImageUrl" />
+                  <span class="send-image-close el-icon-close" title="删除"
+                        @click="removeSendImage()"></span>
+                </div>
+              </div>
+              <div class="send-btn-area">
+                <el-button type="primary" @click="handleSendMessage()">发送</el-button>
+              </div>
+            </div>
 					</el-footer>
 				</el-container>
 				<el-aside class="chat-group-side-box" width="300px" v-show="showSide">
@@ -97,6 +109,8 @@
 				groupMembers: [],
         myGroupMemberInfo: {}, // 我的群聊成员信息
 				sendText: "",
+        sendImageUrl: "",
+        sendImageFile: "",
 				showVoice: false, // 是否显示语音录制弹窗
 				showSide: false, // 是否显示群聊信息栏
 				showEmotion: false, // 是否显示emoji表情
@@ -109,6 +123,26 @@
 			}
 		},
 		methods: {
+      handlePaste(e) {
+        let txt = event.clipboardData.getData('Text')
+        if (typeof(txt) == 'string') {
+          this.sendText += txt
+        }
+        const items = (event.clipboardData || window.clipboardData).items
+        if (items.length) {
+          for (let i = 0; i < items.length; i++) {
+            if (items[i].type.indexOf('image') !== -1) {
+              let file = items[i].getAsFile();
+              this.sendImageFile = file;
+              this.sendImageUrl = URL.createObjectURL(file);
+            }
+          }
+        }
+      },
+      removeSendImage() {
+        this.sendImageUrl = "";
+        this.sendImageFile = null;
+      },
 			handleImageSuccess(res, file) {
 				let msgInfo = JSON.parse(JSON.stringify(file.raw.msgInfo));
 				msgInfo.content = JSON.stringify(res.data);
@@ -308,6 +342,46 @@
 					return false;
 				}
 			},
+      handleSendMessage() {
+        if (this.sendImageFile) {
+          this.sendImageMessage();
+        } else {
+          this.sendTextMessage();
+        }
+      },
+      sendImageMessage() {
+        let file = this.sendImageFile;
+        this.handleImageBefore(this.sendImageFile);
+        let formData = new FormData()
+        formData.append('file', file)
+        this.$http.post("/image/upload", formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }).then((data) => {
+          this.doSendImageMsg(data, file);
+        }).catch((res) => {
+          this.doSendImageMsg(res, file);
+        }).finally(() =>{
+          this.sendImageFile = null;
+          this.sendImageUrl = "";
+          this.$nextTick(() => this.$refs.sendBox.focus());
+          this.scrollToBottom();
+        })
+      },
+      doSendImageMsg(data) {
+        let msgInfo = JSON.parse(JSON.stringify(this.sendImageFile.msgInfo));
+        msgInfo.content = JSON.stringify(data);
+        this.$http({
+          url: this.messageAction,
+          method: 'post',
+          data: msgInfo
+        }).then((id) => {
+          msgInfo.loadStatus = 'ok';
+          msgInfo.id = id;
+          this.$store.commit("insertMessage", msgInfo);
+        })
+      },
 			deleteMessage(msgInfo) {
 				this.$confirm('确认删除消息?', '删除消息', {
 					confirmButtonText: '确定',
@@ -516,20 +590,64 @@
 				}
 			}
 
-			.send-text-area {
-				box-sizing: border-box;
-				padding: 5px;
-				width: 100%;
-				flex: 1;
-				resize: none;
-				background-color: #f8f8f8 !important;
-				outline-color: rgba(83, 160, 231, 0.61);
-			}
+      .send-content-area {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background-color: #f8f8f8 !important;
+        outline-color: rgba(83, 160, 231, 0.61);
 
-			.im-chat-send {
-				text-align: right;
-				padding: 7px;
-			}
+        .send-text-area {
+          box-sizing: border-box;
+          padding: 5px;
+          width: 100%;
+          flex: 1;
+          resize: none;
+          font-size: 16px;
+          color: black;
+          background-color: #f8f8f8 !important;
+          outline-color: rgba(83, 160, 231, 0.61);
+
+        }
+
+        .send-image-area {
+          text-align: left;
+
+          .send-image-box {
+            position: relative;
+            display: inline-block;
+
+            .send-image {
+              max-height: 190px;
+              border: 1px solid #ccc;
+              border-radius: 2%;
+              margin: 2px;
+            }
+
+            .send-image-close {
+              position: absolute;
+              padding: 3px;
+              right: 7px;
+              top: 7px;
+              color: white;
+              cursor: pointer;
+              font-size: 15px;
+              font-weight: 600;
+              background-color: #aaa;
+              border-radius: 50%;
+              border: 1px solid #ccc;
+            }
+          }
+
+        }
+
+        .send-btn-area {
+          padding: 10px;
+          position: absolute;
+          bottom: 0;
+          right: 0;
+        }
+      }
 		}
 
 		.chat-group-side-box {
