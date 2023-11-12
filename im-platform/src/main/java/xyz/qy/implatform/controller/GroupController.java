@@ -122,8 +122,7 @@ public class GroupController {
     @ApiOperation(value = "申请加入群聊", notes = "申请加入群聊")
     @PostMapping("/joinGroup")
     public Result joinGroup(@Valid @RequestBody GroupJoinVO vo) {
-        groupService.joinGroup(vo);
-        return ResultUtils.success();
+        return ResultUtils.success(groupService.joinGroup(vo));
     }
 }
 

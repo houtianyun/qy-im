@@ -641,7 +641,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
 
     @Lock(prefix = "im:group:member:modify", key = "#vo.getGroupId()")
     @Override
-    public void joinGroup(GroupJoinVO vo) {
+    public GroupVO joinGroup(GroupJoinVO vo) {
         UserSession session = SessionContext.getSession();
         Long userId = session.getId();
 
@@ -717,5 +717,9 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "参数异常");
         }
         log.info("用户{}进入群聊，群聊id:{},群聊名称:{},用户id:{}", user.getUserName(), group.getId(), group.getName(), userId);
+        GroupVO groupVO = BeanUtils.copyProperties(group, GroupVO.class);
+        groupVO.setAliasName(user.getNickName());
+        groupVO.setRemark(groupVO.getName());
+        return groupVO;
     }
 }

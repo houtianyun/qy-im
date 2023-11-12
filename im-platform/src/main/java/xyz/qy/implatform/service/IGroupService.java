@@ -65,5 +65,5 @@ public interface IGroupService extends IService<Group> {
      *
      * @param vo 群聊信息vo
      */
-    void joinGroup(GroupJoinVO vo);
+    GroupVO joinGroup(GroupJoinVO vo);
 }
