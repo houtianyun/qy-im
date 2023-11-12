@@ -389,13 +389,18 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
      **/
     @Override
     public List<GroupMemberVO> findGroupMembers(Long groupId) {
+        Group group = this.GetById(groupId);
         List<GroupMember> members = groupMemberService.findNoQuitGroupMembers(groupId);
         List<Long> userIds = members.stream().map(GroupMember::getUserId).collect(Collectors.toList());
         List<User> userList = userService.listByIds(userIds);
         Map<Long, User> userMap = userList.stream().collect(Collectors.toMap(User::getId, Function.identity()));
         List<GroupMemberVO> vos = members.stream().map(m->{
-            GroupMemberVO vo = BeanUtils.copyProperties(m,GroupMemberVO.class);
+            GroupMemberVO vo = BeanUtils.copyProperties(m, GroupMemberVO.class);
             User user = userMap.get(vo.getUserId());
+            if (user.getId().equals(group.getOwnerId())) {
+                vo.setIsAdmin(true);
+            }
+            vo.setGroupId(String.valueOf(group.getId()));
             vo.setNickName(user.getNickName());
             vo.setUserAvatar(user.getHeadImage());
             return  vo;

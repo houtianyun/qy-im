@@ -28,6 +28,9 @@ public class GroupMemberVO {
     @ApiModelProperty("模板群聊id")
     private Long templateGroupId;
 
+    @ApiModelProperty("是否模板人物")
+    private Integer isTemplate;
+
     @ApiModelProperty("模板人物id")
     private Long templateCharacterId;
 
@@ -51,4 +54,7 @@ public class GroupMemberVO {
 
     @ApiModelProperty("是否展示群成员昵称")
     private Boolean showNickName = false;
+
+    @ApiModelProperty("是否群管理员")
+    private Boolean isAdmin = false;
 }

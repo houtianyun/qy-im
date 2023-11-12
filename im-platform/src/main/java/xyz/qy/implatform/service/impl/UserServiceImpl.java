@@ -124,7 +124,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setLoginType(LoginTypeEnum.USERNAME.getType());
         IpGeoInfoVO ipGeoInfo = IpUtils.getIpGeoInfo(ipAddress);
         if (ObjectUtil.isNotNull(ipGeoInfo)) {
-            user.setProvince(ipGeoInfo.getPro());
+            user.setProvince(StringUtils.isBlank(ipGeoInfo.getPro()) ? ipSource : ipGeoInfo.getPro());
             user.setCity(ipGeoInfo.getCity());
         }
         user.setLastLoginTime(LocalDateTime.now());
@@ -194,20 +194,24 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setIpSource(ipSource);
         IpGeoInfoVO ipGeoInfo = IpUtils.getIpGeoInfo(ipAddress);
         if (ObjectUtil.isNotNull(ipGeoInfo)) {
-            user.setProvince(StringUtils.isBlank(ipGeoInfo.getPro()) ? ipAddress : ipGeoInfo.getPro());
+            user.setProvince(StringUtils.isBlank(ipGeoInfo.getPro()) ? ipSource : ipGeoInfo.getPro());
             user.setCity(ipGeoInfo.getCity());
         }
         this.save(user);
         redisCache.deleteObject(RedisKey.CAPTCHA_CODE_KEY + vo.getUuid());
-        GroupMember groupMember = groupService.addToCommonGroup(user);
-        if (ObjectUtil.isNotNull(groupMember)) {
-            GroupMessageVO groupMessageVO = CommonUtils.buildGroupMessageVO(Constant.COMMON_GROUP_ID, CommonUtils.buildWelcomeMessage(user, groupMember), MessageType.TEXT.code());
-            groupMessageService.sendGroupMessage(groupMessageVO, Constant.ADMIN_USER_ID);
-        }
-        if (!user.getId().equals(Constant.ADMIN_USER_ID)) {
-            friendService.addFriend(user.getId(), Constant.ADMIN_USER_ID);
-            PrivateMessageVO privateMessageVO = CommonUtils.buildPrivateMessageVO(user.getId(), Constant.ADMIN_WELCOME_MSG, MessageType.TEXT.code());
-            privateMessageService.sendPrivateMessage(privateMessageVO, Constant.ADMIN_USER_ID);
+        try {
+            GroupMember groupMember = groupService.addToCommonGroup(user);
+            if (ObjectUtil.isNotNull(groupMember)) {
+                GroupMessageVO groupMessageVO = CommonUtils.buildGroupMessageVO(Constant.COMMON_GROUP_ID, CommonUtils.buildWelcomeMessage(user, groupMember), MessageType.TEXT.code());
+                groupMessageService.sendGroupMessage(groupMessageVO, Constant.ADMIN_USER_ID);
+            }
+            if (!user.getId().equals(Constant.ADMIN_USER_ID)) {
+                friendService.addFriend(user.getId(), Constant.ADMIN_USER_ID);
+                PrivateMessageVO privateMessageVO = CommonUtils.buildPrivateMessageVO(user.getId(), Constant.ADMIN_WELCOME_MSG, MessageType.TEXT.code());
+                privateMessageService.sendPrivateMessage(privateMessageVO, Constant.ADMIN_USER_ID);
+            }
+        } catch (Exception e) {
+            log.error("error:{}", e.getMessage());
         }
         log.info("注册用户，用户id:{},用户名:{},昵称:{}", user.getId(), vo.getUserName(), vo.getNickName());
     }
