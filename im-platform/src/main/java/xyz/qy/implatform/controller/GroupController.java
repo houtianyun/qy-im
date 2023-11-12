@@ -17,6 +17,7 @@ import xyz.qy.implatform.result.ResultUtils;
 import xyz.qy.implatform.service.IGroupService;
 import xyz.qy.implatform.vo.CommonGroupVO;
 import xyz.qy.implatform.vo.GroupInviteVO;
+import xyz.qy.implatform.vo.GroupJoinVO;
 import xyz.qy.implatform.vo.GroupMemberVO;
 import xyz.qy.implatform.vo.GroupVO;
 import xyz.qy.implatform.vo.SwitchTemplateGroupVO;
@@ -110,6 +111,19 @@ public class GroupController {
     @PostMapping("/switchCommonGroup")
     public Result switchCommonGroup(@Valid @RequestBody CommonGroupVO vo) {
         return ResultUtils.success(groupService.switchCommonGroup(vo));
+    }
+
+    @ApiOperation(value = "查询用户未加入的群聊", notes = "查询用户未加入的群聊")
+    @GetMapping("/queryNotJoinGroups")
+    public Result queryNotJoinGroups(String keyWord) {
+        return ResultUtils.success(groupService.queryNotJoinGroups(keyWord));
+    }
+
+    @ApiOperation(value = "申请加入群聊", notes = "申请加入群聊")
+    @PostMapping("/joinGroup")
+    public Result joinGroup(@Valid @RequestBody GroupJoinVO vo) {
+        groupService.joinGroup(vo);
+        return ResultUtils.success();
     }
 }
 

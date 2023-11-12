@@ -3,6 +3,7 @@ package xyz.qy.implatform.service.impl;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import xyz.qy.imclient.annotation.Lock;
 import xyz.qy.implatform.contant.Constant;
@@ -25,10 +26,13 @@ import xyz.qy.implatform.service.IUserService;
 import xyz.qy.implatform.session.SessionContext;
 import xyz.qy.implatform.session.UserSession;
 import xyz.qy.implatform.util.BeanUtils;
+import xyz.qy.implatform.util.PageUtils;
 import xyz.qy.implatform.vo.CommonGroupVO;
 import xyz.qy.implatform.vo.GroupInviteVO;
+import xyz.qy.implatform.vo.GroupJoinVO;
 import xyz.qy.implatform.vo.GroupMemberVO;
 import xyz.qy.implatform.vo.GroupVO;
+import xyz.qy.implatform.vo.PageResultVO;
 import xyz.qy.implatform.vo.SwitchTemplateGroupVO;
 import xyz.qy.implatform.vo.TemplateCharacterInviteVO;
 import xyz.qy.implatform.vo.TemplateGroupCreateVO;
@@ -606,5 +610,112 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         }
         groupMemberService.saveOrUpdateBatch(group.getId(), Collections.singletonList(groupMember));
         return groupMember;
+    }
+
+    @Override
+    public PageResultVO queryNotJoinGroups(String keyWord) {
+        UserSession session = SessionContext.getSession();
+        Long userId = session.getId();
+
+        // 查询用户未加入的群聊
+        // 先查询当前用户的群id列表
+        List<GroupMember> groupMembers = groupMemberService.findByUserId(userId);
+        // 已经加入的群id
+        List<Long> hasJoinGroupIds = groupMembers.stream().map((GroupMember::getGroupId)).collect(Collectors.toList());
+
+        // 查询未加入的群聊
+        LambdaQueryWrapper<Group> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Group::getDeleted, false);
+        if (CollectionUtils.isNotEmpty(hasJoinGroupIds)) {
+            queryWrapper.notIn(Group::getId, hasJoinGroupIds);
+        }
+        queryWrapper.like(StringUtils.isNotBlank(keyWord), Group::getName, keyWord);
+        queryWrapper.orderByAsc(Group::getCreatedTime);
+        Page<Group> page = this.page(new Page<>(PageUtils.getPageNo(), PageUtils.getPageSize()), queryWrapper);
+        if (CollectionUtils.isEmpty(page.getRecords())) {
+            return PageResultVO.builder().data(Collections.emptyList()).build();
+        }
+        List<GroupVO> groupVOList = BeanUtils.copyPropertiesList(page.getRecords(), GroupVO.class);
+        return PageResultVO.builder().data(groupVOList).total(page.getTotal()).build();
+    }
+
+    @Lock(prefix = "im:group:member:modify", key = "#vo.getGroupId()")
+    @Override
+    public void joinGroup(GroupJoinVO vo) {
+        UserSession session = SessionContext.getSession();
+        Long userId = session.getId();
+
+        User user = userService.getById(userId);
+        // 判断群聊是否存在
+        Group group = this.getById(vo.getGroupId());
+        if(group == null || group.getDeleted()){
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "群聊不存在");
+        }
+        if (!group.getIsTemplate().equals(vo.getIsTemplate())) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "群聊参数有误");
+        }
+        // 群聊人数校验
+        List<GroupMember> members = groupMemberService.findByGroupId(vo.getGroupId());
+        long size = members.stream().filter(m->!m.getQuit()).count();
+        if(size >= Constant.MAX_GROUP_MEMBER){
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "当前群聊人数已达上限");
+        }
+        Optional<GroupMember> optional =  members.stream().filter(m-> m.getUserId().equals(userId)).findFirst();
+        if (optional.isPresent() && !optional.get().getQuit()) {
+            throw new GlobalException("您已加入当前群聊");
+        }
+        // 不是模板群聊
+        if (vo.getIsTemplate().equals(Constant.NO)) {
+            GroupMember groupMember = optional.orElseGet(GroupMember::new);
+            groupMember.setGroupId(vo.getGroupId());
+            groupMember.setUserId(userId);
+            groupMember.setAliasName(user.getNickName());
+            groupMember.setRemark(group.getName());
+            groupMember.setHeadImage(user.getHeadImage());
+            groupMember.setIsTemplate(Constant.NO);
+            groupMember.setCreatedTime(new Date());
+            groupMember.setQuit(false);
+            groupMember.setCharacterAvatarId(null);
+            groupMember.setAvatarAlias(null);
+            groupMemberService.saveOrUpdateBatch(group.getId(), Collections.singletonList(groupMember));
+        } else if (vo.getIsTemplate().equals(Constant.YES)) {
+            if (ObjectUtil.isNull(vo.getTemplateGroupId()) || ObjectUtil.isNull(vo.getTemplateCharacterId())) {
+                throw new GlobalException("参数异常");
+            }
+            Long templateGroupId = vo.getTemplateGroupId();
+            if (!group.getTemplateGroupId().equals(templateGroupId)) {
+                throw new GlobalException("群聊类型已改变，请重新操作");
+            }
+            Long templateCharacterId = vo.getTemplateCharacterId();
+            // 判断用户选择的模板人物是否已存在
+            GroupMember groupMember = members.stream().filter(m -> Objects.equals(m.getTemplateCharacterId(), templateCharacterId) && !m.getQuit()).findFirst().orElse(null);
+            if (ObjectUtil.isNotNull(groupMember)) {
+                throw new GlobalException("当前模板人物已有用户选择，请重新选择");
+            }
+            // 判断当前模板人物是否存在模板群聊中
+            List<TemplateCharacter> characterList = templateCharacterService.lambdaQuery()
+                    .eq(TemplateCharacter::getTemplateGroupId, group.getTemplateGroupId())
+                    .list();
+            TemplateCharacter templateCharacter = characterList.stream().filter(c -> c.getId().equals(templateCharacterId)).findFirst().orElse(null);
+            if (ObjectUtil.isNull(templateCharacter)) {
+                throw new GlobalException("所选模板人物不存在于当前模板群聊");
+            }
+            GroupMember member = optional.orElseGet(GroupMember::new);
+            member.setGroupId(vo.getGroupId());
+            member.setUserId(userId);
+            member.setAliasName(templateCharacter.getName());
+            member.setRemark(group.getName());
+            member.setHeadImage(templateCharacter.getAvatar());
+            member.setIsTemplate(Constant.YES);
+            member.setCreatedTime(new Date());
+            member.setQuit(false);
+            member.setTemplateCharacterId(templateCharacterId);
+            member.setCharacterAvatarId(null);
+            member.setAvatarAlias(null);
+            groupMemberService.saveOrUpdateBatch(group.getId(), Collections.singletonList(member));
+        } else {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "参数异常");
+        }
+        log.info("用户{}进入群聊，群聊id:{},群聊名称:{},用户id:{}", user.getUserName(), group.getId(), group.getName(), userId);
     }
 }

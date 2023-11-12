@@ -6,8 +6,10 @@ import xyz.qy.implatform.entity.GroupMember;
 import xyz.qy.implatform.entity.User;
 import xyz.qy.implatform.vo.CommonGroupVO;
 import xyz.qy.implatform.vo.GroupInviteVO;
+import xyz.qy.implatform.vo.GroupJoinVO;
 import xyz.qy.implatform.vo.GroupMemberVO;
 import xyz.qy.implatform.vo.GroupVO;
+import xyz.qy.implatform.vo.PageResultVO;
 import xyz.qy.implatform.vo.SwitchTemplateGroupVO;
 import xyz.qy.implatform.vo.TemplateGroupCreateVO;
 
@@ -49,4 +51,19 @@ public interface IGroupService extends IService<Group> {
      * @param user 用户
      */
     GroupMember addToCommonGroup(User user);
+
+    /**
+     * 查询当前用户未加入的群聊
+     *
+     * @param keyWord 搜索关键词
+     * @return 群聊
+     */
+    PageResultVO queryNotJoinGroups(String keyWord);
+
+    /**
+     * 请求加入群聊
+     *
+     * @param vo 群聊信息vo
+     */
+    void joinGroup(GroupJoinVO vo);
 }
