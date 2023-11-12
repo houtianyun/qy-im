@@ -135,6 +135,7 @@ export default {
         }
         this.doJoinGroup(groupJoinVo);
       } else {
+        this.selectableCharacters = [];
         this.curChooseGroup = group;
         this.querySelectableTemplateCharacter();
         this.selectTemplateCharacterVisible = true;

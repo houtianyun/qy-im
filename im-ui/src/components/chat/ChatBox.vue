@@ -25,7 +25,7 @@
 							</ul>
 						</div>
 					</el-main>
-					<el-footer height="200px" class="im-chat-footer">
+					<el-footer height="240px" class="im-chat-footer">
 						<div class="chat-tool-bar">
 							<div title="表情" class="icon iconfont icon-biaoqing" ref="emotion" @click="switchEmotionBox()">
 							</div>
@@ -60,7 +60,7 @@
                 </div>
               </div>
               <div class="send-btn-area">
-                <el-button type="primary" @click="handleSendMessage()">发送</el-button>
+                <el-button type="primary" size="small" @click="handleSendMessage()">发送</el-button>
               </div>
             </div>
 					</el-footer>
@@ -591,6 +591,7 @@
 			}
 
       .send-content-area {
+        position: relative;
         display: flex;
         flex-direction: column;
         height: 100%;
