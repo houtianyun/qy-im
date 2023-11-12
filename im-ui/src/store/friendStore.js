@@ -45,7 +45,7 @@ export default {
 		},
 		refreshOnlineStatus(state){
 			let userIds = [];
-			console.log("refreshOnlineStatus")
+			//console.log("refreshOnlineStatus")
 			if(state.friends.length ==0){
 				return; 
 			}
@@ -65,7 +65,7 @@ export default {
 			},30000)
 		},
 		setOnlineStatus(state,onlineIds){
-			console.log("setOnlineStatus")
+			//console.log("setOnlineStatus")
 			state.friends.forEach((f)=>{
 				let onlineFriend = onlineIds.find((id)=> f.id==id);
 				f.online = onlineFriend != undefined;

@@ -6,10 +6,13 @@
     <div class="text">
       <div>{{member.nickName}}</div>
     </div>
-    <div class="template-character-name">
+    <div v-if="member.isAdmin" class="is-admin">
+      <el-tag type="danger" size="small" effect="dark">管理员</el-tag>
+    </div>
+    <div v-if="member.isTemplate === 1" class="template-character-name">
       <div>{{member.aliasName}}</div>
     </div>
-    <div class="avatar">
+    <div v-if="member.isTemplate === 1" class="avatar">
       <head-image :url="member.headImage"></head-image>
     </div>
 	</div>
@@ -65,6 +68,10 @@
     flex-shrink: 0;
     overflow: hidden;
     text-align: left;
+  }
+
+  .is-admin {
+    text-align: center;
   }
 
   .template-character-name {

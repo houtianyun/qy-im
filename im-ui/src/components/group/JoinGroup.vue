@@ -19,6 +19,7 @@
             </el-tag>
           </div>
           <div class="btn">
+            <el-button icon="el-icon-search" circle @click="viewGroup(group)" title="查看"></el-button>
             <el-button type="primary" size="medium" @click="joinGroup(group)">加入</el-button>
           </div>
         </div>
@@ -65,18 +66,32 @@
                     <el-button type="primary" @click="chooseTemplateCharacterOk">确 定</el-button>
                   </span>
     </el-dialog>
+    <el-dialog
+        width="25%"
+        title="群聊成员信息"
+        :visible.sync="groupMemberVisible"
+        :before-close="closeGroupMemberInfoDialog"
+        append-to-body>
+      <el-scrollbar style="height:400px;">
+        <div v-for="(groupMember, index) in groupMembers" :key="index">
+          <template-group-member class="r-group-member" :member="groupMember"></template-group-member>
+        </div>
+      </el-scrollbar>
+    </el-dialog>
   </el-dialog>
 </template>
 
 <script>
 import HeadImage from '../common/HeadImage.vue'
 import TemplateCharacterItem from "@/components/group/TemplateCharacterItem";
+import TemplateGroupMember from "@/components/group/TemplateGroupMember";
 
 export default {
   name: "JoinGroup",
   components:{
     HeadImage,
-    TemplateCharacterItem
+    TemplateCharacterItem,
+    TemplateGroupMember
   },
   data() {
     return {
@@ -91,6 +106,8 @@ export default {
       characterActiveIndex: -1,
       curChooseCharacter: null, // 当前选择的模板人物
       curChooseGroup: null, // 当前选择的群聊
+      groupMemberVisible: false,
+      groupMembers: []
     }
   },
   props: {
@@ -188,6 +205,22 @@ export default {
         this.selectableCharacters = result;
       }).finally(() =>{
 
+      })
+    },
+    viewGroup(group) {
+      this.groupMembers = [];
+      this.loadGroupMembers(group);
+      this.groupMemberVisible = true;
+    },
+    closeGroupMemberInfoDialog() {
+      this.groupMemberVisible = false;
+    },
+    loadGroupMembers(group) {
+      this.$http({
+        url: `/group/members/${group.id}`,
+        method: "get"
+      }).then((members) => {
+        this.groupMembers = members;
       })
     },
   },
