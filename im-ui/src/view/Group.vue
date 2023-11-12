@@ -168,6 +168,7 @@
         width="30%">
       <el-radio v-model="radio" label="1">普通群聊</el-radio>
       <el-radio v-model="radio" label="2">模板群聊</el-radio>
+      <el-radio v-model="radio" label="3">搜索群聊</el-radio>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取 消</el-button>
         <el-button type="primary" @click="openCreateGroupDialog()">确 定</el-button>
@@ -201,6 +202,7 @@
           <el-button type="primary" @click="switchCommonGroup()">确 定</el-button>
         </span>
     </el-dialog>
+    <join-group :dialogVisible="showJoinGroup" @close="closeJoinGroup"></join-group>
 	</el-container>
 </template>
 
@@ -215,6 +217,7 @@
   import SwitchTemplateGroup from "@/components/group/SwitchTemplateGroup";
   import CharacterAvatarItem from "@/components/group/CharacterAvatarItem";
   import TemplateGroupMember from "@/components/group/TemplateGroupMember";
+  import JoinGroup from "@/components/group/JoinGroup";
 
 	export default {
 		name: "group",
@@ -227,7 +230,8 @@
       TemplateCharacterItem,
       SwitchTemplateGroup,
       CharacterAvatarItem,
-      TemplateGroupMember
+      TemplateGroupMember,
+      JoinGroup
 		},
 		data() {
 			return {
@@ -264,16 +268,18 @@
           headImage: null,
           headImageThumb: null
         },
+        showJoinGroup: false
 			};
 		},
 		methods: {
 		  openCreateGroupDialog() {
 		    this.dialogVisible = false;
-        console.log("radio", this.radio);
 		    if (this.radio === '1') {
           this.handleCreateGroup();
-        } else {
+        } else if (this.radio === '2') {
           this.showCreateTemplateGroup = true;
+        } else {
+          this.showJoinGroup = true;
         }
       },
       handleCloseTemplateGroup() {
@@ -553,6 +559,9 @@
       },
       openGroupMemberInfoDialog() {
         this.groupMemberVisible = true;
+      },
+      closeJoinGroup() {
+		    this.showJoinGroup = false;
       }
 		},
 		computed: {
