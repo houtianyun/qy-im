@@ -49,5 +49,9 @@ export default {
     border: #dddddd solid 1px;
     background: white;
   }
+
+  .community-box {
+    margin-top: -10px;
+  }
 }
 </style>
