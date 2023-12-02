@@ -51,4 +51,6 @@ public class Constant {
     public static final String DEFAULT_SIZE = "10";
     // 默认第一页
     public static final String DEFAULT_PAGE_NO = "1";
+    // 英文逗号（,）
+    public static final String COMMA = ",";
 }

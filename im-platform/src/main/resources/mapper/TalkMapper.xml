@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="xyz.qy.implatform.mapper.TalkMapper">
+
+    <sql id="taskQueryBase">
+        select id,user_id,content,img_url,video_url,`scope`,address,
+        create_time,create_by,update_time,update_by,deleted from im_talk
+    </sql>
+
+    <select id="pageQueryTalkList">
+        <include refid="taskQueryBase"/> my
+        <where>
+            <if test="queryDTO.ownerId != null">
+                my.user_id = #{queryDTO.ownerId}
+            </if>
+            <if test="true">
+                and my.deleted = 0
+            </if>
+        </where>
+        union
+        <include refid="taskQueryBase"/> f
+        <where>
+            <if test="queryDTO.friendIds != null and queryDTO.friendIds.size() > 0">
+                and f.user_id in
+                <foreach collection="queryDTO.groupMemberIds" item="userId" index="index" separator="," open="(" close=")">
+                    #{userId}
+                </foreach>
+            </if>
+            <if test="true">
+                and f.deleted = 0
+            </if>
+            <if test="true">
+                and f.scope = 2
+            </if>
+        </where>
+        union
+
+
+
+    </select>
+
+</mapper> 

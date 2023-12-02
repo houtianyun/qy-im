@@ -155,14 +155,14 @@ public class FileUtils {
             }
             inputStream.close();
         } catch (IOException e) {
-            log.error("Stream copy exception", e);
+            log.error("Stream copy exception:{}", e.getMessage());
             throw new IllegalArgumentException("文件上传失败");
         } finally {
             if (os != null) {
                 try {
                     os.close();
                 } catch (IOException e) {
-                    log.error("Stream close exception", e);
+                    log.error("Stream close exception:{}", e.getMessage());
 
                 }
             }
@@ -170,7 +170,7 @@ public class FileUtils {
                 try {
                     inputStream.close();
                 } catch (IOException e) {
-                    log.error("Stream close exception", e);
+                    log.error("Stream close exception:{}", e.getMessage());
                 }
             }
         }

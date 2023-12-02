@@ -118,7 +118,7 @@ public class IpUtils {
                 ipGeoInfoVO = JSONObject.parseObject(result, IpGeoInfoVO.class);
             }
         } catch (Exception e) {
-            log.error("getIpGeoInfo error", e);
+            log.error("getIpGeoInfo error:{}", e.getMessage());
         } finally {
             return ipGeoInfoVO;
         }

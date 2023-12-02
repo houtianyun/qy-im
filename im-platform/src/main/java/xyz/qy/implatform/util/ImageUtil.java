@@ -6,8 +6,8 @@ import net.coobird.thumbnailator.Thumbnails;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 
 @Slf4j
 public class ImageUtil {
@@ -22,7 +22,7 @@ public class ImageUtil {
     private static final Double ZERO_FOUR_FOUR = 0.44;
     private static final Double ZERO_FOUR = 0.4;
 
-    private static final String RANDOM_IMAGE_URL = "https://api.yimian.xyz/img?type=head";
+    private static final String RANDOM_IMAGE_URL = "https://api.t1qq.com/api/tool/sjtx?key=fWd2Vi3klujKDRb133p6LHavHC";
 
     /**
      * 根据指定大小压缩图片
@@ -82,16 +82,26 @@ public class ImageUtil {
      */
     public static InputStream getRandomAvatar() {
         try {
-            URLConnection con = new URL(RANDOM_IMAGE_URL).openConnection();
-            con.setConnectTimeout(5000);
-            con.setReadTimeout(5000);
-            return con.getInputStream();
+            URL url = new URL(RANDOM_IMAGE_URL);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+            // 设置请求方式
+            connection.setRequestMethod("GET");
+            connection.connect();
+
+            // 获取响应码
+            int responseCode = connection.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                return connection.getInputStream();
+            }
         } catch (Exception e) {
-            log.error("getRandomAvatar", e);
+            log.error("get random avatar error:{}", e.getMessage());
         }
         return null;
     }
 }
+
+
 
 
 

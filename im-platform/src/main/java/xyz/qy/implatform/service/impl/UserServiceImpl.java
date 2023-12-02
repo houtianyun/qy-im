@@ -185,7 +185,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 user.setHeadImage(uploadImageVO.getOriginUrl());
             }
         } catch (Exception e) {
-            log.error("get avatar error", e);
+            log.error("get avatar error:{}", e.getMessage());
         }
 
         String ipAddress = IpUtils.getIpAddress(request);

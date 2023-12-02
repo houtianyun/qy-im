@@ -77,7 +77,7 @@ public class LockAspect {
             log.error("分布式锁,请求超时:{}", e.getMessage());
             throw e;
         } catch (Exception e) {
-            log.error("分布式锁,创建失败", e);
+            log.error("分布式锁,创建失败:{}", e.getMessage());
             //redisson核心步骤4 unlock 最后记得释放锁
             //lock.unlock();
         } finally {
