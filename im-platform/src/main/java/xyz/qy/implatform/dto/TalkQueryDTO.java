@@ -1,5 +1,6 @@
 package xyz.qy.implatform.dto;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -11,21 +12,15 @@ import java.util.List;
  **/
 @Data
 public class TalkQueryDTO {
-
+    @ApiModelProperty(value = "可见范围")
     private Integer scope;
 
-    /**
-     * 当前用户id
-     */
+    @ApiModelProperty(value = "当前用户id")
     private Long ownerId;
 
-    /**
-     * 好友id
-     */
+    @ApiModelProperty(value = "好友id")
     private List<Long> friendIds;
 
-    /**
-     * 群友id
-     */
+    @ApiModelProperty(value = "群友id")
     private List<Long> groupMemberIds;
 }

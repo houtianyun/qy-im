@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @CacheConfig(cacheNames= RedisKey.IM_CACHE_FRIEND)
@@ -42,6 +43,17 @@ public class FriendServiceImpl extends ServiceImpl<FriendMapper, Friend> impleme
         QueryWrapper<Friend> queryWrapper = new QueryWrapper();
         queryWrapper.lambda().eq(Friend::getUserId,UserId);
         return this.list(queryWrapper);
+    }
+
+    /**
+     * 获取用户的所有好友id
+     *
+     * @param userId 用户id
+     * @return 好友id
+     */
+    @Override
+    public List<Long> getFriendIdsByUserId(Long userId) {
+        return this.findFriendByUserId(userId).stream().map(Friend::getFriendId).collect(Collectors.toList());
     }
 
     /**

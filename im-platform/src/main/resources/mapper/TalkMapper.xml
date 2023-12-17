@@ -5,11 +5,11 @@
 <mapper namespace="xyz.qy.implatform.mapper.TalkMapper">
 
     <sql id="taskQueryBase">
-        select id,user_id,content,img_url,video_url,`scope`,address,
+        select id,user_id,nick_name,avatar,content,img_url,video_url,`scope`,address,anonymous,
         create_time,create_by,update_time,update_by,deleted from im_talk
     </sql>
 
-    <select id="pageQueryTalkList">
+    <select id="pageQueryAllTalkList" resultType="xyz.qy.implatform.entity.Talk">
         <include refid="taskQueryBase"/> my
         <where>
             <if test="queryDTO.ownerId != null">
@@ -24,7 +24,7 @@
         <where>
             <if test="queryDTO.friendIds != null and queryDTO.friendIds.size() > 0">
                 and f.user_id in
-                <foreach collection="queryDTO.groupMemberIds" item="userId" index="index" separator="," open="(" close=")">
+                <foreach collection="queryDTO.friendIds" item="userId" index="index" separator="," open="(" close=")">
                     #{userId}
                 </foreach>
             </if>
@@ -36,9 +36,32 @@
             </if>
         </where>
         union
-
-
-
+        <include refid="taskQueryBase"/> gf
+        <where>
+            <if test="queryDTO.groupMemberIds != null and queryDTO.groupMemberIds.size() > 0">
+                and gf.user_id in
+                <foreach collection="queryDTO.groupMemberIds" item="userId" index="index" separator="," open="(" close=")">
+                    #{userId}
+                </foreach>
+            </if>
+            <if test="true">
+                and gf.deleted = 0
+            </if>
+            <if test="true">
+                and gf.scope = 3
+            </if>
+        </where>
+        union
+        <include refid="taskQueryBase"/> pub
+        <where>
+            <if test="true">
+                and pub.deleted = 0
+            </if>
+            <if test="true">
+                and pub.scope = 4
+            </if>
+        </where>
+        order by create_time desc
     </select>
 
 </mapper> 

@@ -1,6 +1,5 @@
 package xyz.qy.implatform.vo;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,7 +21,16 @@ public class TalkVO {
     private Long id;
 
     @ApiModelProperty(value = "用户id")
-    private String userId;
+    private Long userId;
+
+    @ApiModelProperty(value = "用户昵称")
+    private String nickName;
+
+    @ApiModelProperty(value = "头像")
+    private String avatar;
+
+    @ApiModelProperty(value = "是否匿名")
+    private Boolean anonymous;
 
     @NotBlank(message = "说说内容为空")
     @ApiModelProperty(value = "内容")
@@ -43,7 +51,7 @@ public class TalkVO {
     private String address;
 
     @ApiModelProperty(value = "是否删除")
-    private String deleted;
+    private Boolean deleted;
 
     @ApiModelProperty(value = "创建者")
     private Long createBy;
@@ -52,7 +60,6 @@ public class TalkVO {
     @ApiModelProperty(value = "创建时间")
     private Date createTime;
 
-    @TableField("update_by")
     @ApiModelProperty(value = "更新者")
     private Long updateBy;
 

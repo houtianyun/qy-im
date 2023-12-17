@@ -18,6 +18,12 @@ public class TalkAddDTO {
     @ApiModelProperty(value = "用户id")
     private String userId;
 
+    @ApiModelProperty(value = "用户昵称")
+    private String nickName;
+
+    @ApiModelProperty(value = "头像")
+    private String avatar;
+
     @NotBlank(message = "说说内容为空")
     @ApiModelProperty(value = "内容")
     private String content;
@@ -35,4 +41,7 @@ public class TalkAddDTO {
 
     @ApiModelProperty(value = "发布地址")
     private String address;
+
+    @ApiModelProperty(value = "是否匿名")
+    private Boolean anonymous = false;
 }

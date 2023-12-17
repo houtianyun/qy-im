@@ -13,6 +13,8 @@ public interface IFriendService extends IService<Friend> {
 
     List<Friend> findFriendByUserId(Long UserId);
 
+    List<Long> getFriendIdsByUserId(Long userId);
+
     void addFriend(Long friendId);
 
     void addFriend(Long userId, Long friendId);

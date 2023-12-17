@@ -29,6 +29,18 @@ public class Talk extends BaseEntity{
     private Long userId;
 
     /**
+     * 用户昵称
+     */
+    @TableField("nick_name")
+    private String nickName;
+
+    /**
+     * 头像
+     */
+    @TableField("avatar")
+    private String avatar;
+
+    /**
      * 内容
      */
     @TableField("content")
@@ -57,4 +69,10 @@ public class Talk extends BaseEntity{
      */
     @TableField("address")
     private String address;
+
+    /**
+     * 是否匿名
+     */
+    @TableField("anonymous")
+    private Boolean anonymous;
 }

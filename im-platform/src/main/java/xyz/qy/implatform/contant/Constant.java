@@ -53,4 +53,8 @@ public class Constant {
     public static final String DEFAULT_PAGE_NO = "1";
     // 英文逗号（,）
     public static final String COMMA = ",";
+    // 匿名用户id
+    public static final Long ANONYMOUS_USER_ID = -1l;
+    // 匿名用户名称
+    public static final String ANONYMOUS_NICK_NAME = "匿名用户";
 }

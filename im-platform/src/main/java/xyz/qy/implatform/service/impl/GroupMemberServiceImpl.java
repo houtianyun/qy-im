@@ -88,7 +88,7 @@ public class GroupMemberServiceImpl extends ServiceImpl<GroupMemberMapper, Group
     }
 
     /**
-     * 根据用户id查询群聊成员
+     * 根据用户id查询所有未退出群聊
      *
      * @param userId 用户id
      * @return
@@ -140,6 +140,46 @@ public class GroupMemberServiceImpl extends ServiceImpl<GroupMemberMapper, Group
                 .eq(GroupMember::getQuit,false);
         List<GroupMember> members = this.list(memberWrapper);
         return members.stream().map(GroupMember::getUserId).collect(Collectors.toList());
+    }
+
+    /**
+     * 根据用户id获取用户所在所有群id
+     *
+     * @param userId 用户id
+     * @return 用户id
+     */
+    @Override
+    public List<Long> getAllGroupIdsByUserId(Long userId) {
+        // 查询用户所有群聊
+        List<GroupMember> groupMembers = findByUserId(userId);
+
+        if (CollectionUtils.isEmpty(groupMembers)) {
+            return Collections.emptyList();
+        }
+        // 群聊id
+        return groupMembers.stream().map(GroupMember::getGroupId).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取用户所有群用户id
+     *
+     * @param userId 用户id
+     * @return 用户id
+     */
+    @Override
+    public List<Long> getAllGroupMemberIdsByUserId(Long userId) {
+        List<Long> groupIds = this.getAllGroupIdsByUserId(userId);
+
+        if (CollectionUtils.isEmpty(groupIds)) {
+            return Collections.emptyList();
+        }
+
+        // 获取群聊所有用户id
+        LambdaQueryWrapper<GroupMember> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(GroupMember::getGroupId, groupIds);
+        wrapper.ne(GroupMember::getUserId, userId);
+        wrapper.eq(GroupMember::getQuit, false);
+        return this.list(wrapper).stream().map(GroupMember::getUserId).distinct().collect(Collectors.toList());
     }
 
     /**
