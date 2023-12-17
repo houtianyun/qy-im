@@ -7,8 +7,8 @@
                   v-model="form.content">
         </el-input>
       </el-form-item>
-      <el-form-item label="公开范围：" prop="publishLevel" label-width="120px" class="form-item">
-        <el-select v-model="form.publishLevel" placeholder="请选择">
+      <el-form-item label="公开范围：" prop="scope" label-width="120px" class="form-item">
+        <el-select v-model="form.scope" placeholder="请选择">
           <el-option
               v-for="item in options"
               :key="item.value"
@@ -17,6 +17,10 @@
           </el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="是否匿名：" prop="anonymous" label-width="120px" class="form-item">
+        <el-radio v-model="form.anonymous" :label="true">是</el-radio>
+        <el-radio v-model="form.anonymous" :label="false">否</el-radio>
+      </el-form-item>
       <el-form-item label="关联图片：" prop="imgUrl" label-width="120px" class="form-item">
         <batch-image-upload class="form-content"
                             :action="imageAction"
@@ -24,7 +28,8 @@
                             :maxSize="maxSize"
                             :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp', 'image/gif']"
                             @success="handleUploadImageSuccess"
-                            @remove="handleRemove">
+                            @remove="handleRemove"
+                            ref="imageUploader">
         </batch-image-upload>
       </el-form-item>
       <el-form-item>
@@ -57,20 +62,21 @@ export default {
   data() {
     return {
       maxSize: 5 * 1024 * 1024,
-      fileList: [],
+      imageList: [],
       uploadHeaders: {"accessToken":sessionStorage.getItem('accessToken')},
       fileTypes: ['image/jpeg', 'image/png', 'image/jpg','image/webp', 'image/gif'],
       rules: {
         content: [
           { required: true, message: '请输入内容', trigger: 'blue' }
         ],
-        publishLevel: [
+        scope: [
           { required: true, message: '请选择公开范围', trigger: 'blue' }
         ],
       },
       form: {
         content: '',
-        publishLevel: 2,
+        scope: 2,
+        anonymous: false,
       },
       options: [
         {value: 1, label: "私密"},
@@ -84,25 +90,38 @@ export default {
     handleClose() {
       this.$emit("close");
     },
+    clearImages () {
+      //this.$refs.imageUploader.clearImages();
+      this.$refs.imageUploader.$emit("removeImages")
+    },
     handleUploadImageSuccess(res) {
-      this.fileList.push({ url: res.data.originUrl});
+      this.imageList.push({ url: res.data.originUrl});
     },
     handleRemove(file) {
-      this.fileList.forEach((item, index) => {
+      this.imageList.forEach((item, index) => {
         if (item.url === file.response.data.originUrl) {
-          this.fileList.splice(index, 1);
+          this.imageList.splice(index, 1);
         }
       });
     },
     submitForm(formName) {
+      let talkParam = this.form;
+      talkParam.imgUrls = this.imageList.map(obj => {return obj.url});
+      console.log("talkParam", talkParam);
       this.$refs[formName].validate((valid) => {
         if (valid) {
           this.$http({
-            url: "/login",
+            url: "/talk/add",
             method: 'post',
-            data: this.form
+            data: talkParam
           }).then((data) => {
-
+            this.$message.success("发布成功");
+            this.resetForm('ruleForm');
+            this.imageList = [];
+            this.clearImages();
+            this.$emit("refresh");
+          }).finally(() => {
+            this.$emit("close");
           })
         }
       });
@@ -115,7 +134,7 @@ export default {
     imageAction() {
       return `${process.env.VUE_APP_BASE_API}/image/upload`;
     },
-  }
+  },
 }
 </script>
 

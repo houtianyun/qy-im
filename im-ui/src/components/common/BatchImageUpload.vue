@@ -1,5 +1,5 @@
 <template>
-  <el-upload class="uploader"
+  <el-upload ref="uploader" class="uploader"
       :action=action
       :headers="uploadHeaders"
       :before-upload="beforeUpload"
@@ -75,7 +75,10 @@ export default {
       }
       this.$emit("before", file);
       return true;
-    }
+    },
+    clearImages () {
+      this.$refs['uploader'].clearFiles();
+    },
   },
   computed: {
     fileSizeStr() {
@@ -87,6 +90,13 @@ export default {
       }
       return this.maxSize + "B";
     }
+  },
+  mounted() {
+    this.$nextTick(function() {
+      this.$on('removeImages', function() {
+        this.$refs['uploader'].clearFiles();
+      });
+    });
   }
 }
 </script>
