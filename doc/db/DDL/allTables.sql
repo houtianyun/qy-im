@@ -285,3 +285,25 @@ create table im_group_msg_read_position
         unique (group_id, user_id)
 )
     comment '记录用户群聊消息的已读位置表';
+
+
+create table im_talk
+(
+    id          int auto_increment comment '主键'
+        primary key,
+    user_id     bigint               not null comment '用户id',
+    nick_name   varchar(50)          null comment '用户昵称',
+    avatar      varchar(1000)        null comment '用户头像',
+    content     varchar(500)         not null comment '内容',
+    img_url     varchar(2000)        null comment '图片（多个使用,隔开）',
+    video_url   varchar(500)         null comment '视频连接',
+    scope       tinyint(1)           not null comment '公布范围（1：私密；2：好友可见；3：群友可见；4：公开）',
+    address     varchar(200)         null comment '发布地址',
+    anonymous   tinyint(1) default 0 not null comment '是否匿名：0-否；1-是',
+    create_time datetime             not null comment '创建时间',
+    create_by   bigint               not null comment '创建人',
+    update_time datetime             null comment '更新时间',
+    update_by   bigint               null comment '更新人',
+    deleted     tinyint(1) default 0 not null comment '是否删除（1：是；0：否）'
+)
+    comment '说说表';
