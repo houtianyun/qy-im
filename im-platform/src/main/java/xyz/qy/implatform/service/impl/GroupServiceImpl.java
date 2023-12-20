@@ -390,7 +390,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     @Override
     public List<GroupMemberVO> findGroupMembers(Long groupId) {
         Group group = this.GetById(groupId);
-        List<GroupMember> members = groupMemberService.findNoQuitGroupMembers(groupId);
+        List<GroupMember> members = groupMemberService.findByGroupId(groupId);
         List<Long> userIds = members.stream().map(GroupMember::getUserId).collect(Collectors.toList());
         List<User> userList = userService.listByIds(userIds);
         Map<Long, User> userMap = userList.stream().collect(Collectors.toMap(User::getId, Function.identity()));
