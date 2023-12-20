@@ -151,7 +151,7 @@
                     :visible.sync="groupMemberVisible"
                     :before-close="closeGroupMemberInfoDialog">
                   <el-scrollbar style="height:400px;">
-                    <div v-for="(groupMember, index) in groupMembers" :key="index">
+                    <div v-for="(groupMember, index) in groupMembers" :key="index" v-show="!groupMember.quit">
                       <template-group-member class="r-group-member" :member="groupMember"></template-group-member>
                     </div>
                   </el-scrollbar>
