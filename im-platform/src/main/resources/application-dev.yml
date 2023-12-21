@@ -1,5 +1,11 @@
 #配置项目的数据源
 spring:
+  servlet:
+    multipart:
+      enabled: true
+      maxFileSize: 50MB
+      maxRequestSize: 50MB
+
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://localhost:3306/qy-im?useSSL=false&useUnicode=true&characterEncoding=utf-8&allowPublicKeyRetrieval=true
@@ -17,12 +23,6 @@ management:
   health:
     redis:
       enabled: false
-
-
-  servlet:
-    multipart:
-      max-file-size: 50MB
-      max-request-size: 50MB
 
 mybatis-plus:
   configuration:
