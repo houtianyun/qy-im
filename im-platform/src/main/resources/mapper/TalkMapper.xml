@@ -5,7 +5,7 @@
 <mapper namespace="xyz.qy.implatform.mapper.TalkMapper">
 
     <sql id="taskQueryBase">
-        select id,user_id,nick_name,avatar,content,img_url,video_url,`scope`,address,anonymous,
+        select id,user_id,character_id,nick_name,avatar,content,img_url,video_url,`scope`,address,anonymous,
         create_time,create_by,update_time,update_by,deleted from im_talk
     </sql>
 

@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * @description: 说说
+ * @description: 动态
  * @author: HouTianYun
  * @create: 2023-11-19 21:29
  **/
@@ -27,6 +27,12 @@ public class Talk extends BaseEntity{
      */
     @TableField("user_id")
     private Long userId;
+
+    /**
+     * 角色人物id
+     */
+    @TableField("character_id")
+    private Long characterId;
 
     /**
      * 用户昵称

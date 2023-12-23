@@ -13,11 +13,11 @@ import xyz.qy.implatform.entity.Talk;
  **/
 public interface TalkMapper extends BaseMapper<Talk> {
     /**
-     * 分页查询所有说说
+     * 分页查询所有动态
      *
      * @param page     分页对象
      * @param queryDTO 查询DTO
-     * @return 说说列表
+     * @return 动态列表
      */
     Page<Talk> pageQueryAllTalkList(@Param("page") Page<Object> page, @Param("queryDTO") TalkQueryDTO queryDTO);
 }

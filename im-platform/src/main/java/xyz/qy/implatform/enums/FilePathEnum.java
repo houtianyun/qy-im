@@ -28,7 +28,7 @@ public enum FilePathEnum {
     CONFIG("config/","配置图片路径"),
 
     /**
-     * 说说图片路径
+     * 动态图片路径
      */
     TALK("talks/","配置图片路径"),
 

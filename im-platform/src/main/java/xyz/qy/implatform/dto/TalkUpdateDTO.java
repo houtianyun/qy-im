@@ -9,12 +9,16 @@ import javax.validation.constraints.Size;
 import java.util.List;
 
 /**
- * @description: 动态新增DTO
+ * @description:
  * @author: HouTianYun
- * @create: 2023-11-19 21:45
+ * @create: 2023-12-23 16:02
  **/
 @Data
-public class TalkAddDTO {
+public class TalkUpdateDTO {
+    @ApiModelProperty("主键")
+    @NotNull(message = "参数异常")
+    private Long id;
+
     @ApiModelProperty(value = "用户id")
     private String userId;
 

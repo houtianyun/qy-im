@@ -11,7 +11,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * @description: 说说
+ * @description: 动态
  * @author: HouTianYun
  * @create: 2023-11-20 20:49
  **/
@@ -23,6 +23,9 @@ public class TalkVO {
     @ApiModelProperty(value = "用户id")
     private Long userId;
 
+    @ApiModelProperty(value = "角色id")
+    private Long characterId;
+
     @ApiModelProperty(value = "用户昵称")
     private String nickName;
 
@@ -32,7 +35,7 @@ public class TalkVO {
     @ApiModelProperty(value = "是否匿名")
     private Boolean anonymous;
 
-    @NotBlank(message = "说说内容为空")
+    @NotBlank(message = "动态内容为空")
     @ApiModelProperty(value = "内容")
     private String content;
 
@@ -52,6 +55,15 @@ public class TalkVO {
 
     @ApiModelProperty(value = "是否删除")
     private Boolean deleted;
+
+    @ApiModelProperty(value = "是否点赞")
+    private Boolean isLike = Boolean.FALSE;
+
+    @ApiModelProperty(value = "是否自己的")
+    private Boolean isOwner = Boolean.FALSE;
+
+    @ApiModelProperty(value = "能否选择角色")
+    private Boolean enableCharacterChoose = Boolean.FALSE;
 
     @ApiModelProperty(value = "创建者")
     private Long createBy;

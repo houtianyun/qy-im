@@ -6,7 +6,7 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * @description: 说说查询 DTO
+ * @description: 动态查询 DTO
  * @author: HouTianYun
  * @create: 2023-11-20 20:09
  **/
