@@ -22,7 +22,7 @@
           <el-avatar :fit="fit" size="medium" icon="el-icon-user-solid" :src="form.avatar">
           </el-avatar>
         </span>
-        <span class="nick-name">{{form.nickName}} <el-button @click="removeCharacter" class="del-btn" v-if="form.nickName" type="danger" icon="el-icon-delete" size="mini" circle></el-button></span>
+        <span class="nick-name">{{form.nickName}} <el-button @click="removeCharacter" class="del-btn" v-if="form.enableCharacterChoose" type="danger" icon="el-icon-delete" size="mini" circle></el-button></span>
       </el-form-item>
       <el-form-item label="是否匿名：" prop="anonymous" label-width="120px" class="form-item">
         <el-radio v-model="form.anonymous" :label="true">是</el-radio>
@@ -34,8 +34,10 @@
                             :showLoading="true"
                             :maxSize="maxSize"
                             :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp', 'image/gif']"
+                            :imageList="imageList"
                             @success="handleUploadImageSuccess"
                             @remove="handleRemove"
+                            @change="handleChange"
                             ref="imageUploader">
         </batch-image-upload>
       </el-form-item>
@@ -113,6 +115,10 @@ export default {
     visible: {
       type: Boolean
     },
+    talkId: {
+      type: Number,
+      default: null
+    }
   },
   data() {
     return {
@@ -130,11 +136,14 @@ export default {
         ],
       },
       form: {
+        id: null,
         content: '',
         scope: 2,
         anonymous: false,
         nickName: '',
-        avatar: ''
+        avatar: '',
+        characterId: null,
+        enableCharacterChoose: true,
       },
       options: [
         {value: 1, label: "私密"},
@@ -152,6 +161,11 @@ export default {
       templateCharacter: {},
     }
   },
+  created() {
+    if (this.talkId !== null) {
+      this.getTalkDetail(this.talkId);
+    }
+  },
   methods: {
     handleClose() {
       this.$emit("close");
@@ -160,12 +174,15 @@ export default {
       //this.$refs.imageUploader.clearImages();
       this.$refs.imageUploader.$emit("removeImages")
     },
+    handleChange(info, fileList) {
+      this.imageList = fileList;
+    },
     handleUploadImageSuccess(res) {
       this.imageList.push({ url: res.data.originUrl});
     },
     handleRemove(file) {
       this.imageList.forEach((item, index) => {
-        if (item.url === file.response.data.originUrl) {
+        if (item.url === file.url) {
           this.imageList.splice(index, 1);
         }
       });
@@ -176,8 +193,14 @@ export default {
       console.log("talkParam", talkParam);
       this.$refs[formName].validate((valid) => {
         if (valid) {
+          let url = "/talk"
+          if (talkParam.id != null) {
+            url += "/update"
+          } else {
+            url += "/add"
+          }
           this.$http({
-            url: "/talk/add",
+            url: url,
             method: 'post',
             data: talkParam
           }).then((data) => {
@@ -198,8 +221,12 @@ export default {
       this.form.nickName = '';
     },
     openCharacterChooseDialog() {
-      this.chooseCharacterDialogVisible = true;
-      this.queryTemplateGroup();
+      if (this.form.enableCharacterChoose) {
+        this.chooseCharacterDialogVisible = true;
+        this.queryTemplateGroup();
+      } else {
+        this.$message.warning("已存在角色");
+      }
     },
     closeChooseCharacterDialog() {
       this.chooseCharacterDialogVisible = false;
@@ -235,11 +262,25 @@ export default {
     handleOk() {
       this.form.nickName = this.templateCharacter.name;
       this.form.avatar = this.templateCharacter.avatar;
+      this.form.characterId = this.templateCharacter.id;
       this.closeChooseCharacterDialog();
     },
     removeCharacter() {
       this.form.avatar = '';
       this.form.nickName = '';
+      this.form.characterId = null;
+    },
+    getTalkDetail(talkId) {
+      let _this = this
+      this.$http({
+        url: `/talk/getTalkDetail/${talkId}`,
+        method: 'get'
+      }).then((data) => {
+        _this.form = data;
+        if (data.imgUrls && data.imgUrls.length > 0) {
+          _this.imageList = data.imgUrls.map(item => {return {url: item}});
+        }
+      });
     }
   },
   computed: {

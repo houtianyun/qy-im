@@ -42,13 +42,53 @@
                   <i class="el-icon-time"></i> {{ item.createTime }}
                 </a>
               </span>
+              <div class="operate" ref="operate">
+                <span class="like" v-if="!item.isLike" @click="sayLike(item)">
+                  <i class="el-icon-star-on"></i> 赞
+                </span>
+                <span class="like" v-else @click="cancelLike(item)">
+                  <i class="el-icon-star-on" style="color: yellow"></i> 取消
+                </span>
+                <span class="fgx"></span>
+                <span class="commentBtn" @click="handleShowCommentBox(null, item.id, index)">
+                  <i class="el-icon-chat-dot-square"></i> 评论
+                </span>
+                <span class="delBtn" v-if="item.isOwner">
+                  <el-popconfirm
+                      confirm-button-text='确认'
+                      cancel-button-text='取消'
+                      icon="el-icon-info"
+                      icon-color="red"
+                      title="确认删除当前动态吗？"
+                      @confirm="delTalk(item, index)"
+                  >
+                    <el-button slot="reference" icon="el-icon-delete-solid" size="mini" circle @click.stop></el-button>
+                  </el-popconfirm>
+
+                </span>
+                <span class="editBtn" v-if="item.isOwner" @click="editTalk(item)">
+                  <i class="el-icon-edit"></i>
+                </span>
+                <span class="fgx"></span>
+                <span class="setBtn">
+                  <i class="el-icon-setting"></i>
+                </span>
+              </div>
+              <a class="operateBtn" @click="handleShowOperate(index)">
+                <i class="el-icon-more"></i>
+              </a>
             </div>
           </div>
         </div>
         <pagination :totalPage="page.totalPage" :pageNo="page.pageNo" @changePage="handlePage"></pagination>
       </div>
     </div>
-    <add-talk :visible="addTalkVisible" @close="addTalkVisible = false" @refresh="refreshTalkList"></add-talk>
+    <add-talk :visible.sync="addTalkVisible"
+              v-if="addTalkVisible"
+              @close="closeAddTalkDialog"
+              @refresh="refreshTalkList"
+              :talkId="curTalk.id">
+    </add-talk>
 <!--    <image-preview :img="images"></image-preview>-->
   </div>
 </template>
@@ -81,6 +121,8 @@ export default {
       },
       talkList: [],
       images: {},
+      lastIndex: null,
+      curTalk: {}
     }
   },
   created() {
@@ -120,6 +162,55 @@ export default {
     handlePage(pageNo) {
       this.page.pageNo = pageNo;
       this.pageQueryTalkList();
+    },
+    handleShowOperate(index) {
+      if (this.lastIndex != null && this.lastIndex != index) {
+        this.$refs.operate[this.lastIndex].style.display = "none"
+      }
+      if (this.lastIndex == index) {
+        if (this.$refs.operate[index].style.display == "block") {
+          this.$refs.operate[index].style.display = "none"
+        } else {
+          this.$refs.operate[index].style.display = "block"
+        }
+      } else {
+        this.$refs.operate[index].style.display = "block"
+      }
+      this.lastIndex = index
+    },
+    sayLike(talk) {
+      talk.isLike = true
+    },
+    cancelLike(talk) {
+      talk.isLike = false
+    },
+    handleShowCommentBox(comment, sayId, index) {
+
+    },
+    delTalk(talk, index) {
+      this.$http({
+        url: "/talk/delete",
+        method: 'delete',
+        data: {id: talk.id}
+      }).then((data) => {
+        this.$message.success("删除成功");
+        //this.talkList.splice(index, 1);
+        this.refreshTalkList();
+        this.lastIndex = null;
+      }).finally(() => {
+
+      })
+    },
+    editTalk(talk) {
+      this.curTalk = talk;
+      this.addTalkVisible = true;
+    },
+    closeAddTalkDialog() {
+      this.addTalkVisible = false;
+      this.curTalk = {};
+    },
+    delBtn(e){
+      e.stopPropagation();
     },
   }
 }
@@ -303,6 +394,58 @@ export default {
               display: flex;
               margin-right: auto;
               font-size: 14px;
+            }
+
+            .operateBtn {
+              position: absolute;
+              right: 20px;
+              bottom: 0px;
+              display: inline-block;
+              background-color: #6CC6CB;
+              padding: 0 5px;
+              cursor: pointer;
+            }
+
+            .operate {
+              position: absolute;
+              right: 55px;
+              bottom: -8px;
+              background-color: #4b5153;
+              padding: 8px;
+              border-radius: 5px;
+              display: none;
+
+              &::after {
+                content: '';
+                position: absolute;
+                right: -15px;
+                bottom: 10px;
+                width: 0;
+                height: 0;
+                border-width: 8px;
+                border-style: solid;
+                border-color: transparent transparent transparent #4b5153;
+              }
+
+              span {
+                padding: 0 10px;
+                color: #fff;
+                position: relative;
+                cursor: pointer;
+
+                &:hover {
+                  color: #f56c6c;
+                }
+              }
+
+              .like::after {
+                content: "";
+                width: 2px;
+                height: 100%;
+                background-color: #373d40;
+                position: absolute;
+                right: 0;
+              }
             }
           }
         }

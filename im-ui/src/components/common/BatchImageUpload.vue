@@ -6,8 +6,10 @@
       :on-success="handleSuccess"
       :on-remove="handleRemove"
       :on-error="handleError"
+      :on-change="handleChange"
+      :file-list="imageList"
       list-type="picture-card"
-      multiple
+      :multiple="false"
   >
     <i class="el-icon-plus" />
   </el-upload>
@@ -20,6 +22,10 @@ export default {
     action: {
       type: String,
       required: true
+    },
+    imageList: {
+      type: Array,
+      default: null
     },
     fileTypes: {
       type: Array,
@@ -75,6 +81,9 @@ export default {
       }
       this.$emit("before", file);
       return true;
+    },
+    handleChange(info, fileList) {
+
     },
     clearImages () {
       this.$refs['uploader'].clearFiles();
