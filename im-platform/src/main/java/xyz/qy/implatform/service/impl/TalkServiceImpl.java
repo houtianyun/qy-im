@@ -13,13 +13,17 @@ import xyz.qy.implatform.dto.TalkDelDTO;
 import xyz.qy.implatform.dto.TalkQueryDTO;
 import xyz.qy.implatform.dto.TalkUpdateDTO;
 import xyz.qy.implatform.entity.Talk;
+import xyz.qy.implatform.entity.TalkComment;
+import xyz.qy.implatform.entity.TalkStar;
 import xyz.qy.implatform.entity.TemplateCharacter;
 import xyz.qy.implatform.entity.User;
 import xyz.qy.implatform.exception.GlobalException;
 import xyz.qy.implatform.mapper.TalkMapper;
 import xyz.qy.implatform.service.IFriendService;
 import xyz.qy.implatform.service.IGroupMemberService;
+import xyz.qy.implatform.service.ITalkCommentService;
 import xyz.qy.implatform.service.ITalkService;
+import xyz.qy.implatform.service.ITalkStarService;
 import xyz.qy.implatform.service.ITemplateCharacterService;
 import xyz.qy.implatform.service.IUserService;
 import xyz.qy.implatform.session.SessionContext;
@@ -27,12 +31,18 @@ import xyz.qy.implatform.session.UserSession;
 import xyz.qy.implatform.util.BeanUtils;
 import xyz.qy.implatform.util.PageUtils;
 import xyz.qy.implatform.vo.PageResultVO;
+import xyz.qy.implatform.vo.TalkCommentVO;
+import xyz.qy.implatform.vo.TalkStarVO;
 import xyz.qy.implatform.vo.TalkVO;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -54,6 +64,12 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
 
     @Autowired
     private ITemplateCharacterService characterService;
+
+    @Autowired
+    private ITalkStarService talkStarService;
+
+    @Autowired
+    private ITalkCommentService talkCommentService;
 
     @Override
     public void addTalk(TalkAddDTO talkAddDTO) {
@@ -143,6 +159,27 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
         if (CollectionUtils.isEmpty(records)) {
             return PageResultVO.builder().data(Collections.emptyList()).build();
         }
+
+        // 动态id
+        List<Long> talkIds = records.stream().map(Talk::getId).collect(Collectors.toList());
+
+        // 动态赞星数据
+        List<TalkStar> talkStarList = talkStarService.lambdaQuery().in(TalkStar::getTalkId, talkIds)
+                .orderByAsc(TalkStar::getCreateTime)
+                .list();
+
+        // 动态评论数据
+        List<TalkComment> talkCommentList = talkCommentService.lambdaQuery().in(TalkComment::getTalkId, talkIds)
+                .eq(TalkComment::getDeleted, false)
+                .orderByAsc(TalkComment::getCreateTime).list();
+
+        List<TalkStarVO> talkStarVOS = BeanUtils.copyProperties(talkStarList, TalkStarVO.class);
+
+        List<TalkCommentVO> talkCommentVOS = BeanUtils.copyProperties(talkCommentList, TalkCommentVO.class);
+
+        Map<Long, List<TalkStarVO>> talkStarMap = talkStarVOS.stream().collect(Collectors.groupingBy(TalkStarVO::getTalkId));
+        Map<Long, List<TalkCommentVO>> talkCommentMap = talkCommentVOS.stream().collect(Collectors.groupingBy(TalkCommentVO::getTalkId));
+
         List<TalkVO> talkVOS = records.stream().map(obj -> {
             TalkVO talkVO = BeanUtils.copyProperties(obj, TalkVO.class);
             assert talkVO != null;
@@ -152,6 +189,31 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
             if (myUserId.equals(talkVO.getUserId())) {
                 talkVO.setIsOwner(Boolean.TRUE);
             }
+
+            Set<Long> characterIds = new HashSet<>();
+            if (!Objects.isNull(talkVO.getCharacterId())) {
+                characterIds.add(talkVO.getCharacterId());
+                if (obj.getUserId().equals(myUserId)) {
+                    talkVO.setUserCommentCharacterId(talkVO.getCharacterId());
+                }
+            }
+            if (talkStarMap.containsKey(talkVO.getId())) {
+                talkVO.setTalkStarVOS(talkStarMap.get(talkVO.getId()));
+                // 找到当前用户点赞，并且角色id不为空的数据
+                Optional<TalkStarVO> talkStarVOOptional = talkVO.getTalkStarVOS().stream().filter(item -> item.getUserId().equals(myUserId)
+                        && !Objects.isNull(item.getCharacterId())).findFirst();
+                talkStarVOOptional.ifPresent(talkStarVO -> talkVO.setUserCommentCharacterId(talkStarVO.getCharacterId()));
+                characterIds.addAll(talkVO.getTalkStarVOS().stream().map(TalkStarVO::getCharacterId).collect(Collectors.toSet()));
+            }
+            if (talkCommentMap.containsKey(talkVO.getId())) {
+                talkVO.setTalkCommentVOS(talkCommentMap.get(talkVO.getId()));
+                // 找到当前用户评论，并且角色id不为空的数据
+                Optional<TalkCommentVO> talkCommentVOOptional = talkVO.getTalkCommentVOS().stream().filter(item -> item.getUserId().equals(myUserId)
+                        && !Objects.isNull(item.getCharacterId())).findFirst();
+                talkCommentVOOptional.ifPresent(talkCommentVO -> talkVO.setUserCommentCharacterId(talkCommentVO.getCharacterId()));
+                characterIds.addAll(talkVO.getTalkCommentVOS().stream().map(TalkCommentVO::getCharacterId).collect(Collectors.toSet()));
+            }
+            talkVO.setSelectedCharacterIds(characterIds);
             if (talkVO.getAnonymous()) {
                 talkVO.setUserId(Constant.ANONYMOUS_USER_ID);
                 talkVO.setCreateBy(Constant.ANONYMOUS_USER_ID);
@@ -198,5 +260,46 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
         }
 
         return talkVO;
+    }
+
+    @Override
+    public boolean verifyTalkCommentCharacter(Long talkId, Long characterId) {
+        if (Objects.isNull(talkId) || Objects.isNull(characterId)) {
+            throw new GlobalException("参数异常");
+        }
+        UserSession session = SessionContext.getSession();
+        Long userId = session.getId();
+        Talk talk = baseMapper.selectById(talkId);
+        if (Objects.isNull(talk) || talk.getDeleted()) {
+            throw new GlobalException("当前动态已被删除");
+        }
+        if (userId.equals(talk.getUserId())
+                && !Objects.isNull(talk.getCharacterId())) {
+            if (!talk.getCharacterId().equals(characterId)) {
+                return true;
+            }
+        }
+        List<TalkStar> talkStarList = talkStarService.lambdaQuery()
+                .eq(TalkStar::getTalkId, talkId)
+                .eq(TalkStar::getDeleted, false).list();
+        if (CollectionUtils.isNotEmpty(talkStarList)) {
+            Optional<TalkStar> optional = talkStarList.stream().filter(item -> characterId.equals(item.getCharacterId())
+                    && !item.getUserId().equals(userId)).findFirst();
+            if (optional.isPresent()) {
+                return true;
+            }
+        }
+
+        List<TalkComment> talkCommentList = talkCommentService.lambdaQuery()
+                .eq(TalkComment::getTalkId, talkId)
+                .eq(TalkComment::getDeleted, false).list();
+        if (CollectionUtils.isNotEmpty(talkCommentList)) {
+            Optional<TalkComment> optional = talkCommentList.stream().filter(item -> characterId.equals(item.getCharacterId())
+                    && !item.getUserId().equals(userId)).findFirst();
+            if (optional.isPresent()) {
+                return true;
+            }
+        }
+        return false;
     }
 }

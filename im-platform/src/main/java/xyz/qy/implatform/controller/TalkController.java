@@ -13,10 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import xyz.qy.implatform.dto.TalkAddDTO;
 import xyz.qy.implatform.dto.TalkDelDTO;
+import xyz.qy.implatform.dto.TalkStarDTO;
 import xyz.qy.implatform.dto.TalkUpdateDTO;
 import xyz.qy.implatform.result.Result;
 import xyz.qy.implatform.result.ResultUtils;
 import xyz.qy.implatform.service.ITalkService;
+import xyz.qy.implatform.service.ITalkStarService;
 import xyz.qy.implatform.vo.TalkVO;
 
 import javax.validation.Valid;
@@ -33,6 +35,9 @@ import javax.validation.constraints.NotNull;
 public class TalkController {
     @Autowired
     private ITalkService talkService;
+
+    @Autowired
+    private ITalkStarService talkStarService;
 
     @ApiOperation(value = "新增动态", notes = "新增动态")
     @PostMapping("/add")
@@ -65,5 +70,19 @@ public class TalkController {
     @GetMapping("/getTalkDetail/{talkId}")
     public Result<TalkVO> getTalkDetail(@NotNull(message = "参数异常") @PathVariable Long talkId) {
         return ResultUtils.success(talkService.getTalkDetail(talkId));
+    }
+
+    @ApiModelProperty(value = "动态点赞", notes = "动态点赞")
+    @PostMapping("/like")
+    public Result like(@Valid @RequestBody TalkStarDTO talkStarDTO) {
+        talkStarService.like(talkStarDTO);
+        return ResultUtils.success();
+    }
+
+    @ApiModelProperty(value = "取消点赞", notes = "取消点赞")
+    @PostMapping("/cancelLike")
+    public Result cancelLike(@Valid @RequestBody TalkStarDTO talkStarDTO) {
+        talkStarService.cancelLike(talkStarDTO);
+        return ResultUtils.success();
     }
 }

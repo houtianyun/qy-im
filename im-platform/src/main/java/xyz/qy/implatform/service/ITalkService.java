@@ -24,4 +24,13 @@ public interface ITalkService extends IService<Talk> {
     void delTalk(TalkDelDTO talkDelDTO);
 
     TalkVO getTalkDetail(Long talkId);
+
+    /**
+     * 验证用户评论角色是否异常
+     *
+     * @param talkId
+     * @param characterId
+     * @return
+     */
+    boolean verifyTalkCommentCharacter(Long talkId, Long characterId);
 }

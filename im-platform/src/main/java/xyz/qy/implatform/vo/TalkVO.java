@@ -9,6 +9,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @description: 动态
@@ -25,6 +26,12 @@ public class TalkVO {
 
     @ApiModelProperty(value = "角色id")
     private Long characterId;
+
+    @ApiModelProperty(value = "已被选择的角色id")
+    private Set<Long> selectedCharacterIds;
+
+    @ApiModelProperty(value = "用户评论角色id")
+    private Long userCommentCharacterId;
 
     @ApiModelProperty(value = "用户昵称")
     private String nickName;
@@ -64,6 +71,12 @@ public class TalkVO {
 
     @ApiModelProperty(value = "能否选择角色")
     private Boolean enableCharacterChoose = Boolean.FALSE;
+
+    @ApiModelProperty(value = "动态赞星")
+    private List<TalkStarVO> talkStarVOS;
+
+    @ApiModelProperty(value = "动态评论")
+    private List<TalkCommentVO> talkCommentVOS;
 
     @ApiModelProperty(value = "创建者")
     private Long createBy;
