@@ -88,9 +88,9 @@
         </div>
       </div>
       <span slot="footer" class="dialog-footer">
-			<el-button @click="closeChooseCharacterDialog()">取 消</el-button>
-			<el-button type="primary" @click="handleOk()">确 定</el-button>
-		</span>
+			  <el-button @click="closeChooseCharacterDialog()">取 消</el-button>
+			  <el-button type="primary" @click="handleOk()">确 定</el-button>
+		  </span>
     </el-dialog>
   </el-dialog>
 </template>

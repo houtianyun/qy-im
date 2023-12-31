@@ -70,7 +70,7 @@
                   <i class="el-icon-edit"></i>
                 </span>
                 <span class="fgx"></span>
-                <span class="setBtn">
+                <span class="setBtn" @click="commentSetDialogOpen(item, index)">
                   <i class="el-icon-setting"></i>
                 </span>
               </div>
@@ -90,6 +90,35 @@
               :talkId="curTalk.id">
     </add-talk>
 <!--    <image-preview :img="images"></image-preview>-->
+    <el-dialog title="评论设置"
+               :visible.sync="commentSetVisible"
+               :before-close="commentSetDialogClose"
+               width="25%">
+      <el-form ref="commentSetForm"  label-width="auto"
+               :model="commentSetForm" class="form-box">
+        <el-form-item label="角色选择：" prop="character" label-width="120px" class="form-item">
+        <span class="character-item" v-on:click="openCharacterChooseDialog">
+          <el-avatar fit="fit" size="medium" icon="el-icon-user-solid" :src="commentSetForm.avatar">
+          </el-avatar>
+        </span>
+          <span class="nick-name">{{commentSetForm.nickName}} <el-button @click="removeCharacter" class="del-btn" v-if="commentSetForm.commentCharacterId" type="danger" icon="el-icon-delete" size="mini" circle></el-button></span>
+        </el-form-item>
+        <el-form-item label="是否匿名：" prop="anonymous" label-width="120px" class="form-item">
+          <el-radio v-model="commentSetForm.anonymous" :label="true">是</el-radio>
+          <el-radio v-model="commentSetForm.anonymous" :label="false">否</el-radio>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="confirmCharacter()">确认</el-button>
+          <el-button @click="cancelCharacter()">取消</el-button>
+        </el-form-item>
+      </el-form>
+      <template-character-choose
+          :visible.sync="chooseCharacterDialogVisible"
+          :appendToBody="true"
+          @close="closeChooseCharacterDialog"
+          @confirm="confirmChooseCharacter">
+      </template-character-choose>
+    </el-dialog>
   </div>
 </template>
 
@@ -99,6 +128,7 @@ import HeadImage from "@/components/common/HeadImage";
 import BatchFileUpload from "@/components/common/BatchFileUpload";
 import Avatar from "@/components/common/Avatar";
 import Pagination from "@/components/pagination/Pagination";
+import TemplateCharacterChoose from "@/components/template/TemplateCharacterChoose";
 /*import ImagePreview from "@/components/imagePreview/ImagePreview";*/
 
 export default {
@@ -109,6 +139,7 @@ export default {
     AddTalk,
     Avatar,
     Pagination,
+    TemplateCharacterChoose,
     /*ImagePreview*/
   },
   data() {
@@ -122,7 +153,16 @@ export default {
       talkList: [],
       images: {},
       lastIndex: null,
-      curTalk: {}
+      curTalk: {},
+      curTalkIndex: -1,
+      commentSetVisible: false,
+      commentSetForm: {
+        commentCharacterId: null,
+        nickName: '',
+        avatar: '',
+        anonymous: false
+      },
+      chooseCharacterDialogVisible: false,
     }
   },
   created() {
@@ -179,10 +219,37 @@ export default {
       this.lastIndex = index
     },
     sayLike(talk) {
-      talk.isLike = true
+      let params = {
+        talkId: talk.id,
+        nickname: talk.commentCharacterNickName,
+        characterId: talk.commentCharacterId,
+        anonymous: talk.commentAnonymous ? talk.commentAnonymous : false
+      }
+      this.$http({
+        url: "/talk/like",
+        method: 'post',
+        data: params
+      }).then((data) => {
+        talk.isLike = true
+        this.$message.success("点赞成功");
+      }).finally(() => {
+
+      })
     },
     cancelLike(talk) {
-      talk.isLike = false
+      let params = {
+        talkId: talk.id
+      }
+      this.$http({
+        url: "/talk/cancelLike",
+        method: 'post',
+        data: params
+      }).then((data) => {
+        talk.isLike = false
+        this.$message.success("取消成功");
+      }).finally(() => {
+
+      })
     },
     handleShowCommentBox(comment, sayId, index) {
 
@@ -212,6 +279,74 @@ export default {
     delBtn(e){
       e.stopPropagation();
     },
+    commentSetDialogOpen(talk, index) {
+      this.commentSetForm.nickName = talk.commentCharacterNickName ? talk.commentCharacterNickName : talk.nickName;
+      this.commentSetForm.avatar = talk.commentCharacterAvatar ? talk.commentCharacterAvatar : talk.avatar;
+      this.commentSetForm.commentCharacterId = talk.commentCharacterId ? talk.commentCharacterId : talk.userCommentCharacterId;
+      this.commentSetForm.anonymous = talk.commentAnonymous ? talk.commentAnonymous : talk.anonymous;
+      this.curTalk = talk;
+      console.log("this.curTalk", this.curTalk);
+      this.curTalkIndex = index;
+      this.commentSetVisible = true;
+    },
+    commentSetDialogClose() {
+      this.commentSetVisible = false;
+      this.commentSetForm.nickName = '';
+      this.commentSetForm.avatar = '';
+      this.commentSetForm.commentCharacterId = null;
+      this.commentSetForm.anonymous = false;
+      this.curTalk = {};
+      this.curTalkIndex = -1;
+    },
+    openCharacterChooseDialog() {
+      this.chooseCharacterDialogVisible = true;
+    },
+    removeCharacter() {
+      this.commentSetForm.commentCharacterId = null;
+      this.commentSetForm.nickName = '';
+      this.commentSetForm.avatar = '';
+    },
+    resetCommentCharacter() {
+      this.commentSetForm.commentCharacterId = null;
+      this.commentSetForm.nickName = '';
+      this.commentSetForm.avatar = '';
+      this.commentSetForm.anonymous = false;
+    },
+    closeChooseCharacterDialog() {
+      this.chooseCharacterDialogVisible = false;
+    },
+    confirmChooseCharacter(resultData) {
+      console.log("resultData", resultData);
+      this.commentSetForm.nickName = resultData.templateCharacter.name;
+      this.commentSetForm.avatar = resultData.templateCharacter.avatar;
+      this.commentSetForm.commentCharacterId = resultData.templateCharacter.id;
+      this.chooseCharacterDialogVisible = false;
+    },
+    confirmCharacter() {
+      if (this.curTalk.userCommentCharacterId && this.commentSetForm.commentCharacterId) {
+        console.log("this.curTalk.commentCharacterId", this.curTalk.commentCharacterId)
+        console.log("this.commentSetForm.commentCharacterId", this.commentSetForm.commentCharacterId)
+        if (this.curTalk.userCommentCharacterId !== this.commentSetForm.commentCharacterId) {
+          this.$message.warning("不能更改评论角色");
+          return false;
+        }
+      }
+      this.talkList[this.curTalkIndex].commentCharacterId = this.commentSetForm.commentCharacterId;
+      this.talkList[this.curTalkIndex].commentCharacterAvatar = this.commentSetForm.avatar;
+      this.talkList[this.curTalkIndex].commentCharacterNickName = this.commentSetForm.nickName;
+      this.talkList[this.curTalkIndex].commentAnonymous = this.commentSetForm.anonymous;
+      console.log("this.talkList[this.curTalkIndex]", this.talkList[this.curTalkIndex])
+      this.resetCommentCharacter();
+      this.curTalk = {};
+      this.curTalkIndex = -1;
+      this.commentSetVisible = false;
+    },
+    cancelCharacter() {
+      this.resetCommentCharacter();
+      this.curTalk = {};
+      this.curTalkIndex = -1;
+      this.commentSetVisible = false;
+    }
   }
 }
 </script>
