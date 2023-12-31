@@ -75,8 +75,7 @@ public class TalkController {
     @ApiModelProperty(value = "动态点赞", notes = "动态点赞")
     @PostMapping("/like")
     public Result like(@Valid @RequestBody TalkStarDTO talkStarDTO) {
-        talkStarService.like(talkStarDTO);
-        return ResultUtils.success();
+        return ResultUtils.success(talkStarService.like(talkStarDTO));
     }
 
     @ApiModelProperty(value = "取消点赞", notes = "取消点赞")

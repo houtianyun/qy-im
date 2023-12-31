@@ -19,6 +19,8 @@ import xyz.qy.implatform.service.ITemplateCharacterService;
 import xyz.qy.implatform.service.IUserService;
 import xyz.qy.implatform.session.SessionContext;
 import xyz.qy.implatform.session.UserSession;
+import xyz.qy.implatform.util.BeanUtils;
+import xyz.qy.implatform.vo.TalkStarVO;
 
 import java.util.Objects;
 
@@ -40,7 +42,7 @@ public class TalkStarServiceImpl extends ServiceImpl<TalkStarMapper, TalkStar> i
 
     @Lock(prefix = "im:talk:comment", key = "#talkStarDTO.getTalkId()")
     @Override
-    public void like(TalkStarDTO talkStarDTO) {
+    public TalkStarVO like(TalkStarDTO talkStarDTO) {
         UserSession session = SessionContext.getSession();
         Long myUserId = session.getId();
 
@@ -76,6 +78,7 @@ public class TalkStarServiceImpl extends ServiceImpl<TalkStarMapper, TalkStar> i
         }
 
         this.save(talkStar);
+        return BeanUtils.copyProperties(talkStar, TalkStarVO.class);
     }
 
     @Lock(prefix = "im:talk:comment", key = "#talkStarDTO.getTalkId()")

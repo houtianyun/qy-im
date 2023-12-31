@@ -3,6 +3,7 @@ package xyz.qy.implatform.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import xyz.qy.implatform.dto.TalkStarDTO;
 import xyz.qy.implatform.entity.TalkStar;
+import xyz.qy.implatform.vo.TalkStarVO;
 
 /**
  * @description: 动态赞星
@@ -15,7 +16,7 @@ public interface ITalkStarService extends IService<TalkStar> {
      *
      * @param talkStarDTO 参数
      */
-    void like(TalkStarDTO talkStarDTO);
+    TalkStarVO like(TalkStarDTO talkStarDTO);
 
     /**
      * 取消点赞

@@ -204,6 +204,12 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
                         && !Objects.isNull(item.getCharacterId())).findFirst();
                 talkStarVOOptional.ifPresent(talkStarVO -> talkVO.setUserCommentCharacterId(talkStarVO.getCharacterId()));
                 characterIds.addAll(talkVO.getTalkStarVOS().stream().map(TalkStarVO::getCharacterId).collect(Collectors.toSet()));
+
+                // 判断当前用户是否点赞此条动态
+                talkVO.setIsLike(talkVO.getTalkStarVOS().stream()
+                        .anyMatch(item -> item.getUserId().equals(myUserId)));
+            } else {
+                talkVO.setTalkStarVOS(Collections.emptyList());
             }
             if (talkCommentMap.containsKey(talkVO.getId())) {
                 talkVO.setTalkCommentVOS(talkCommentMap.get(talkVO.getId()));
@@ -212,6 +218,8 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
                         && !Objects.isNull(item.getCharacterId())).findFirst();
                 talkCommentVOOptional.ifPresent(talkCommentVO -> talkVO.setUserCommentCharacterId(talkCommentVO.getCharacterId()));
                 characterIds.addAll(talkVO.getTalkCommentVOS().stream().map(TalkCommentVO::getCharacterId).collect(Collectors.toSet()));
+            } else {
+                talkVO.setTalkCommentVOS(Collections.emptyList());
             }
             talkVO.setSelectedCharacterIds(characterIds);
             if (talkVO.getAnonymous()) {
