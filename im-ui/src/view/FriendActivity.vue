@@ -78,6 +78,15 @@
                 <i class="el-icon-more"></i>
               </a>
             </div>
+            <div class="interaction">
+              <div v-if="item.talkStarVOS"
+                   :class="item.talkStarVOS && item.talkCommentVOS ? 'like-container is_border' : 'like-container'">
+                <span v-for="(user, user_index) in item.talkStarVOS" :key="user_index">
+                  <i class="el-icon-star-on" style="color: yellow"></i> {{ user.nickname }}
+                  <span v-if="user_index < item.talkStarVOS.length - 1">，</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
         <pagination :totalPage="page.totalPage" :pageNo="page.pageNo" @changePage="handlePage"></pagination>
@@ -168,6 +177,9 @@ export default {
   created() {
     this.pageQueryTalkList()
   },
+  computed: {
+
+  },
   methods: {
     handleShowAddTalk() {
       this.addTalkVisible = true;
@@ -231,6 +243,7 @@ export default {
         data: params
       }).then((data) => {
         talk.isLike = true
+        talk.talkStarVOS.push(data);
         this.$message.success("点赞成功");
       }).finally(() => {
 
@@ -240,12 +253,16 @@ export default {
       let params = {
         talkId: talk.id
       }
+      let userId = this.$store.state.userStore.userInfo.id;
       this.$http({
         url: "/talk/cancelLike",
         method: 'post',
         data: params
       }).then((data) => {
         talk.isLike = false
+        talk.talkStarVOS = talk.talkStarVOS.filter(function (item) {
+          return item.userId !== userId;
+        });
         this.$message.success("取消成功");
       }).finally(() => {
 
@@ -581,6 +598,26 @@ export default {
                 position: absolute;
                 right: 0;
               }
+            }
+          }
+
+          .interaction {
+            background-color: #6CC6CB;
+            margin-top: 15px;
+            border-radius: 5px;
+
+            .like-container {
+              text-align: left;
+              padding-left: 10px;
+
+              span {
+                font-size: 14px;
+                color: #576b95;
+              }
+            }
+
+            .is_border {
+              border-bottom: 1px dashed rgb(126, 120, 120);
             }
           }
         }
