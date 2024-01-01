@@ -81,7 +81,7 @@
             <div class="interaction">
               <div v-if="item.talkStarVOS"
                    :class="item.talkStarVOS && item.talkCommentVOS ? 'like-container is_border' : 'like-container'">
-                <span v-for="(user, user_index) in item.talkStarVOS" :key="user_index">
+                <span class="star-user" v-for="(user, user_index) in item.talkStarVOS" :key="user_index" @click="showUserInfo($event, user)">
                   <i class="el-icon-star-on" style="color: yellow"></i> {{ user.nickname }}
                   <span v-if="user_index < item.talkStarVOS.length - 1">，</span>
                 </span>
@@ -181,6 +181,17 @@ export default {
 
   },
   methods: {
+    showUserInfo(e, talkStar){
+      if(talkStar.userId && talkStar.userId>0){
+        this.$http({
+          url: `/user/find/${talkStar.userId}`,
+          method: 'get'
+        }).then((user) => {
+          this.$store.commit("setUserInfoBoxPos",e);
+          this.$store.commit("showUserInfoBox",user);
+        })
+      }
+    },
     handleShowAddTalk() {
       this.addTalkVisible = true;
     },
@@ -233,8 +244,9 @@ export default {
     sayLike(talk) {
       let params = {
         talkId: talk.id,
-        nickname: talk.commentCharacterNickName,
+        nickname: talk.commentCharacterName,
         characterId: talk.commentCharacterId,
+        avatar: talk.commentCharacterAvatar,
         anonymous: talk.commentAnonymous ? talk.commentAnonymous : false
       }
       this.$http({
@@ -243,6 +255,12 @@ export default {
         data: params
       }).then((data) => {
         talk.isLike = true
+        if (data.characterId) {
+          talk.commentCharacterId = data.characterId;
+          talk.commentCharacterName = data.nickname;
+          talk.commentCharacterAvatar = data.avatar;
+        }
+        talk.commentAnonymous = data.anonymous;
         talk.talkStarVOS.push(data);
         this.$message.success("点赞成功");
       }).finally(() => {
@@ -259,7 +277,10 @@ export default {
         method: 'post',
         data: params
       }).then((data) => {
-        talk.isLike = false
+        talk.isLike = false;
+        talk.commentCharacterId = null;
+        talk.commentCharacterName = null;
+        talk.commentCharacterAvatar = null;
         talk.talkStarVOS = talk.talkStarVOS.filter(function (item) {
           return item.userId !== userId;
         });
@@ -297,10 +318,10 @@ export default {
       e.stopPropagation();
     },
     commentSetDialogOpen(talk, index) {
-      this.commentSetForm.nickName = talk.commentCharacterNickName ? talk.commentCharacterNickName : talk.nickName;
-      this.commentSetForm.avatar = talk.commentCharacterAvatar ? talk.commentCharacterAvatar : talk.avatar;
-      this.commentSetForm.commentCharacterId = talk.commentCharacterId ? talk.commentCharacterId : talk.userCommentCharacterId;
-      this.commentSetForm.anonymous = talk.commentAnonymous ? talk.commentAnonymous : talk.anonymous;
+      this.commentSetForm.nickName = talk.commentCharacterName ? talk.commentCharacterName : talk.commentUserNickname;
+      this.commentSetForm.avatar = talk.commentCharacterAvatar ? talk.commentCharacterAvatar : talk.commentUserAvatar;
+      this.commentSetForm.commentCharacterId = talk.commentCharacterId;
+      this.commentSetForm.anonymous = talk.commentAnonymous;
       this.curTalk = talk;
       console.log("this.curTalk", this.curTalk);
       this.curTalkIndex = index;
@@ -340,17 +361,17 @@ export default {
       this.chooseCharacterDialogVisible = false;
     },
     confirmCharacter() {
-      if (this.curTalk.userCommentCharacterId && this.commentSetForm.commentCharacterId) {
+      if (this.curTalk.commentCharacterId && this.commentSetForm.commentCharacterId) {
         console.log("this.curTalk.commentCharacterId", this.curTalk.commentCharacterId)
         console.log("this.commentSetForm.commentCharacterId", this.commentSetForm.commentCharacterId)
-        if (this.curTalk.userCommentCharacterId !== this.commentSetForm.commentCharacterId) {
+        if (this.curTalk.commentCharacterId !== this.commentSetForm.commentCharacterId) {
           this.$message.warning("不能更改评论角色");
           return false;
         }
       }
       this.talkList[this.curTalkIndex].commentCharacterId = this.commentSetForm.commentCharacterId;
       this.talkList[this.curTalkIndex].commentCharacterAvatar = this.commentSetForm.avatar;
-      this.talkList[this.curTalkIndex].commentCharacterNickName = this.commentSetForm.nickName;
+      this.talkList[this.curTalkIndex].commentCharacterName = this.commentSetForm.nickName;
       this.talkList[this.curTalkIndex].commentAnonymous = this.commentSetForm.anonymous;
       console.log("this.talkList[this.curTalkIndex]", this.talkList[this.curTalkIndex])
       this.resetCommentCharacter();
@@ -609,6 +630,10 @@ export default {
             .like-container {
               text-align: left;
               padding-left: 10px;
+
+              .star-user {
+                cursor: pointer;
+              }
 
               span {
                 font-size: 14px;
