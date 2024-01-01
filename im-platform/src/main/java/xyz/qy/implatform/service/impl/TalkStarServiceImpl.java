@@ -70,6 +70,9 @@ public class TalkStarServiceImpl extends ServiceImpl<TalkStarMapper, TalkStar> i
             }
             talkStar.setCharacterId(templateCharacter.getId());
             talkStar.setNickname(talkStarDTO.getNickname());
+            talkStar.setAvatar(talkStarDTO.getAvatar());
+        } else {
+            talkStar.setAvatar(user.getHeadImage());
         }
         if (talkStarDTO.getAnonymous() && Objects.isNull(talkStarDTO.getCharacterId())) {
             talkStar.setNickname(Constant.ANONYMOUS_NICK_NAME);

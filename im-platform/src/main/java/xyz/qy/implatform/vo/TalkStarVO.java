@@ -22,6 +22,9 @@ public class TalkStarVO {
     @ApiModelProperty(value = "用户昵称")
     private String nickname;
 
+    @ApiModelProperty(value = "用户头像")
+    private String avatar;
+
     @ApiModelProperty(value = "角色id")
     private Long characterId;
 

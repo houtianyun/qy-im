@@ -159,12 +159,15 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
         if (CollectionUtils.isEmpty(records)) {
             return PageResultVO.builder().data(Collections.emptyList()).build();
         }
+        // 查询当前用户数据
+        User user = userService.getById(myUserId);
 
         // 动态id
         List<Long> talkIds = records.stream().map(Talk::getId).collect(Collectors.toList());
 
         // 动态赞星数据
         List<TalkStar> talkStarList = talkStarService.lambdaQuery().in(TalkStar::getTalkId, talkIds)
+                .eq(TalkStar::getDeleted, false)
                 .orderByAsc(TalkStar::getCreateTime)
                 .list();
 
@@ -180,21 +183,26 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
         Map<Long, List<TalkStarVO>> talkStarMap = talkStarVOS.stream().collect(Collectors.groupingBy(TalkStarVO::getTalkId));
         Map<Long, List<TalkCommentVO>> talkCommentMap = talkCommentVOS.stream().collect(Collectors.groupingBy(TalkCommentVO::getTalkId));
 
-        List<TalkVO> talkVOS = records.stream().map(obj -> {
+        List<TalkVO> talkVOS = records.parallelStream().map(obj -> {
             TalkVO talkVO = BeanUtils.copyProperties(obj, TalkVO.class);
             assert talkVO != null;
             if (StringUtils.isNotBlank(obj.getImgUrl())) {
                 talkVO.setImgUrls(Arrays.asList(obj.getImgUrl().split(Constant.COMMA)));
             }
+            // 当前用户是否发布作者
             if (myUserId.equals(talkVO.getUserId())) {
                 talkVO.setIsOwner(Boolean.TRUE);
+                talkVO.setCommentAnonymous(talkVO.getAnonymous());
             }
-
+            talkVO.setCommentUserAvatar(user.getHeadImage());
+            talkVO.setCommentUserNickname(user.getNickName());
             Set<Long> characterIds = new HashSet<>();
             if (!Objects.isNull(talkVO.getCharacterId())) {
                 characterIds.add(talkVO.getCharacterId());
                 if (obj.getUserId().equals(myUserId)) {
-                    talkVO.setUserCommentCharacterId(talkVO.getCharacterId());
+                    talkVO.setCommentCharacterId(talkVO.getCharacterId());
+                    talkVO.setCommentCharacterName(talkVO.getNickName());
+                    talkVO.setCommentCharacterAvatar(talkVO.getAvatar());
                 }
             }
             if (talkStarMap.containsKey(talkVO.getId())) {
@@ -202,12 +210,23 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
                 // 找到当前用户点赞，并且角色id不为空的数据
                 Optional<TalkStarVO> talkStarVOOptional = talkVO.getTalkStarVOS().stream().filter(item -> item.getUserId().equals(myUserId)
                         && !Objects.isNull(item.getCharacterId())).findFirst();
-                talkStarVOOptional.ifPresent(talkStarVO -> talkVO.setUserCommentCharacterId(talkStarVO.getCharacterId()));
+                talkStarVOOptional.ifPresent(talkStarVO -> {
+                    talkVO.setCommentCharacterId(talkStarVO.getCharacterId());
+                    talkVO.setCommentCharacterName(talkStarVO.getNickname());
+                    talkVO.setCommentCharacterAvatar(talkStarVO.getAvatar());
+                    talkVO.setCommentAnonymous(talkStarVO.getAnonymous());
+                });
                 characterIds.addAll(talkVO.getTalkStarVOS().stream().map(TalkStarVO::getCharacterId).collect(Collectors.toSet()));
 
                 // 判断当前用户是否点赞此条动态
                 talkVO.setIsLike(talkVO.getTalkStarVOS().stream()
                         .anyMatch(item -> item.getUserId().equals(myUserId)));
+
+                talkVO.getTalkStarVOS().forEach(item -> {
+                    if (item.getAnonymous()) {
+                        item.setUserId(Constant.ANONYMOUS_USER_ID);
+                    }
+                });
             } else {
                 talkVO.setTalkStarVOS(Collections.emptyList());
             }
@@ -216,7 +235,18 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
                 // 找到当前用户评论，并且角色id不为空的数据
                 Optional<TalkCommentVO> talkCommentVOOptional = talkVO.getTalkCommentVOS().stream().filter(item -> item.getUserId().equals(myUserId)
                         && !Objects.isNull(item.getCharacterId())).findFirst();
-                talkCommentVOOptional.ifPresent(talkCommentVO -> talkVO.setUserCommentCharacterId(talkCommentVO.getCharacterId()));
+                talkCommentVOOptional.ifPresent(talkCommentVO -> {
+                    talkVO.setCommentCharacterId(talkCommentVO.getCharacterId());
+                    talkVO.setCommentCharacterName(talkCommentVO.getUserNickname());
+                    talkVO.setCommentCharacterAvatar(talkCommentVO.getUserAvatar());
+                    talkVO.setCommentAnonymous(talkCommentVO.getAnonymous());
+                });
+                talkVO.getTalkCommentVOS().forEach(item -> {
+                    if (item.getAnonymous()) {
+                        item.setUserId(Constant.ANONYMOUS_USER_ID);
+                    }
+                    item.setReplyUserId(Constant.ANONYMOUS_USER_ID);
+                });
                 characterIds.addAll(talkVO.getTalkCommentVOS().stream().map(TalkCommentVO::getCharacterId).collect(Collectors.toSet()));
             } else {
                 talkVO.setTalkCommentVOS(Collections.emptyList());
@@ -232,7 +262,6 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
 
         return PageResultVO.builder().data(talkVOS).total(talkPage.getTotal()).build();
     }
-
 
     @Override
     public void delTalk(TalkDelDTO talkDelDTO) {

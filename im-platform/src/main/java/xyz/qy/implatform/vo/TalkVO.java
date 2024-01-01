@@ -30,8 +30,23 @@ public class TalkVO {
     @ApiModelProperty(value = "已被选择的角色id")
     private Set<Long> selectedCharacterIds;
 
+    @ApiModelProperty(value = "评论用户头像")
+    private String commentUserAvatar;
+
+    @ApiModelProperty(value = "评论用户昵称")
+    private String commentUserNickname;
+
+    @ApiModelProperty(value = "用户评论角色头像")
+    private String commentCharacterAvatar;
+
+    @ApiModelProperty(value = "用户评论角色昵称")
+    private String commentCharacterName;
+
     @ApiModelProperty(value = "用户评论角色id")
-    private Long userCommentCharacterId;
+    private Long commentCharacterId;
+
+    @ApiModelProperty(value = "用户评论是否匿名")
+    private Boolean commentAnonymous = false;
 
     @ApiModelProperty(value = "用户昵称")
     private String nickName;

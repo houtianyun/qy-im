@@ -307,3 +307,50 @@ create table im_talk
     deleted     tinyint(1) default 0 not null comment '是否删除（1：是；0：否）'
 )
     comment '说说表';
+
+
+create table im_talk_star
+(
+    id           bigint               not null comment '主键'
+        primary key,
+    talk_id      bigint               not null comment '动态id',
+    user_id      bigint               not null comment '用户id',
+    nickname     varchar(50)          null comment '用户昵称',
+    avatar       varchar(1000)        null comment '用户头像',
+    character_id bigint               null comment '角色id',
+    anonymous    tinyint(1) default 0 not null comment '是否匿名：0-否；1-是',
+    create_time  datetime             not null comment '创建时间',
+    create_by    bigint               not null comment '创建人',
+    update_time  datetime             null comment '更新时间',
+    update_by    bigint               null comment '更新人',
+    deleted      tinyint(1) default 0 not null comment '是否删除（0：否；1：是）',
+    constraint idx1
+        unique (talk_id, user_id)
+)
+    comment '动态赞星表';
+
+
+create table im_talk_comment
+(
+    id                  bigint               not null comment '主键'
+        primary key,
+    talk_id             bigint               not null comment '动态id',
+    user_id             bigint               not null comment '用户id',
+    user_nickname       varchar(50)          not null comment '用户昵称',
+    user_avatar         varchar(1000)        null comment '用户头像',
+    content             varchar(50)          not null comment '评论内容',
+    character_id        bigint               null comment '角色id',
+    reply_comment_id    bigint               null comment '回复的评论id',
+    reply_user_id       bigint               null comment '回复用户id',
+    reply_user_avatar   varchar(1000)        null comment '回复用户头像',
+    reply_user_nickname varchar(50)          null comment '回复用户昵称',
+    anonymous           tinyint(1) default 0 not null comment '是否匿名：0-否；1-是',
+    ip                  varchar(200)         null comment 'IP地址',
+    ip_address          varchar(200)         null comment 'IP来源',
+    deleted             tinyint(1) default 0 not null comment '是否删除（0：否；1：是）',
+    create_time         datetime             not null comment '创建时间',
+    create_by           bigint               not null comment '创建人',
+    update_time         datetime             null comment '更新时间',
+    update_by           bigint               null comment '更新人'
+)
+    comment '动态评论表';

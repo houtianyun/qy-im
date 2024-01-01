@@ -25,6 +25,9 @@ management:
       enabled: false
 
 mybatis-plus:
+  global-config:
+    db-config:
+      id-type: assign_id
   configuration:
     # 是否开启自动驼峰命名规则（camel case）映射，即从经典数据库列名 A_COLUMN（下划线命名） 到经典 Java 属性名 aColumn（驼峰命名） 的类似映射
     map-underscore-to-camel-case: true
