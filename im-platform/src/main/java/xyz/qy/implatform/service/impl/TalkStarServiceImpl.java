@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import xyz.qy.imclient.annotation.Lock;
 import xyz.qy.implatform.contant.Constant;
 import xyz.qy.implatform.dto.TalkStarDTO;
@@ -40,6 +41,7 @@ public class TalkStarServiceImpl extends ServiceImpl<TalkStarMapper, TalkStar> i
     @Autowired
     private ITemplateCharacterService templateCharacterService;
 
+    @Transactional
     @Lock(prefix = "im:talk:comment", key = "#talkStarDTO.getTalkId()")
     @Override
     public TalkStarVO like(TalkStarDTO talkStarDTO) {

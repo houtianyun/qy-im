@@ -1,6 +1,8 @@
 package xyz.qy.implatform.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import xyz.qy.implatform.entity.Visitor;
 import xyz.qy.implatform.mapper.VisitorMapper;
 import xyz.qy.implatform.service.IVisitorService;
@@ -18,6 +20,8 @@ import org.springframework.util.DigestUtils;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
+import java.time.LocalDateTime;
+
 import static xyz.qy.implatform.contant.RedisKey.UNIQUE_VISITOR;
 
 /**
@@ -25,6 +29,7 @@ import static xyz.qy.implatform.contant.RedisKey.UNIQUE_VISITOR;
  * @author: Polaris
  * @create: 2023-04-29 09:40
  **/
+@Slf4j
 @Service
 public class VisitorServiceImpl extends ServiceImpl<VisitorMapper, Visitor> implements IVisitorService {
     @Resource
@@ -37,6 +42,10 @@ public class VisitorServiceImpl extends ServiceImpl<VisitorMapper, Visitor> impl
     public void report() {
         // 获取ip
         String ipAddress = IpUtils.getIpAddress(request);
+        if (StringUtils.isBlank(ipAddress)) {
+            log.info("获取到空IP {}", LocalDateTime.now());
+            return;
+        }
         // 获取访问设备
         UserAgent userAgent = IpUtils.getUserAgent(request);
         Browser browser = userAgent.getBrowser();
@@ -52,6 +61,7 @@ public class VisitorServiceImpl extends ServiceImpl<VisitorMapper, Visitor> impl
             if (ipGeoInfoVO != null) {
                 BeanUtils.copyProperties(ipGeoInfoVO, visitor);
             }
+            visitor.setIp(ipAddress);
             visitor.setBrowser(browser.getName());
             visitor.setOperatingSystem(operatingSystem.getName());
             baseMapper.insert(visitor);

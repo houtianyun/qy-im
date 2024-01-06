@@ -12,11 +12,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import xyz.qy.implatform.dto.TalkAddDTO;
+import xyz.qy.implatform.dto.TalkCommentDTO;
 import xyz.qy.implatform.dto.TalkDelDTO;
 import xyz.qy.implatform.dto.TalkStarDTO;
 import xyz.qy.implatform.dto.TalkUpdateDTO;
 import xyz.qy.implatform.result.Result;
 import xyz.qy.implatform.result.ResultUtils;
+import xyz.qy.implatform.service.ITalkCommentService;
 import xyz.qy.implatform.service.ITalkService;
 import xyz.qy.implatform.service.ITalkStarService;
 import xyz.qy.implatform.vo.TalkVO;
@@ -38,6 +40,9 @@ public class TalkController {
 
     @Autowired
     private ITalkStarService talkStarService;
+
+    @Autowired
+    private ITalkCommentService talkCommentService;
 
     @ApiOperation(value = "新增动态", notes = "新增动态")
     @PostMapping("/add")
@@ -83,5 +88,11 @@ public class TalkController {
     public Result cancelLike(@Valid @RequestBody TalkStarDTO talkStarDTO) {
         talkStarService.cancelLike(talkStarDTO);
         return ResultUtils.success();
+    }
+
+    @ApiModelProperty(value = "新增动态评论", notes = "新增动态评论")
+    @PostMapping("/addTalkComment")
+    public Result addTalkComment(@Valid @RequestBody TalkCommentDTO talkCommentDTO) {
+        return ResultUtils.success(talkCommentService.addTalkComment(talkCommentDTO));
     }
 }

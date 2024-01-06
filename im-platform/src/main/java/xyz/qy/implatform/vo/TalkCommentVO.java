@@ -1,5 +1,7 @@
 package xyz.qy.implatform.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -11,6 +13,7 @@ import lombok.Data;
 @Data
 public class TalkCommentVO {
     @ApiModelProperty(value = "主键")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     @ApiModelProperty(value = "动态id")
@@ -32,6 +35,7 @@ public class TalkCommentVO {
     private Long characterId;
 
     @ApiModelProperty(value = "回复的评论id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long replyCommentId;
 
     @ApiModelProperty(value = "回复用户id")
