@@ -7,7 +7,7 @@
 						<el-button slot="append" icon="el-icon-search"></el-button>
 					</el-input>
 				</div>
-				<el-button plain icon="el-icon-plus" style="border: none; padding:12px; font-size: 20px;color: black;" title="添加好友"
+				<el-button plain icon="el-icon-plus" style="border: none; padding:12px; font-size: 20px;color: #00FF7F;" title="添加好友"
 				 @click="handleShowAddFriend()"></el-button>
 				<add-friend :dialogVisible="showAddFriend" @close="handleCloseAddFriend">
 				</add-friend>

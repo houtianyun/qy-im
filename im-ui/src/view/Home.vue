@@ -9,35 +9,35 @@
 			<el-menu class="menu-bar" text-color="#ddd" style="margin-top: 30px;">
 				<el-menu-item title="聊天">
 					<router-link v-bind:to="'/home/chat'">
-						<span class="el-icon-chat-dot-round"></span>
+						<span style="color: #FFFF00" class="el-icon-chat-dot-round"></span>
 						<div v-show="unreadCount>0" class="unread-text">{{unreadCount}}</div>
 					</router-link>
 				</el-menu-item>
 				<el-menu-item title="好友">
 					<router-link v-bind:to="'/home/friend'">
-						<span class="el-icon-user"></span>
+						<span style="color: #0000EE" class="el-icon-user-solid"></span>
 					</router-link>
 				</el-menu-item>
 				<el-menu-item title="群聊">
 					<router-link v-bind:to="'/home/group'">
-						<span class="icon iconfont icon-group_fill"></span>
+						<span style="color: #32CD32" class="icon iconfont icon-group_fill"></span>
 					</router-link>
 				</el-menu-item>
         <el-menu-item title="广场">
           <router-link v-bind:to="'/home/square'">
-            <span class="el-icon-magic-stick"></span>
+            <span style="color: #FA8072" class="el-icon-magic-stick"></span>
           </router-link>
         </el-menu-item>
 
 				<el-menu-item title="设置" @click="showSetting()">
-					<span class="el-icon-setting"></span>
+					<span style="color: #00FFFF" class="el-icon-setting"></span>
 				</el-menu-item>
         <el-menu-item title="操作" @click="showOperation()">
-          <span class="el-icon-s-operation"></span>
+          <span style="color: #FF00FF" class="el-icon-s-operation"></span>
         </el-menu-item>
 			</el-menu>
 			<div class="exit-box" @click="handleExit()" title="退出">
-				<span class="el-icon-circle-close"></span>
+				<span style="color: #EE7942" class="el-icon-circle-close"></span>
 			</div>
 		</el-aside>
 		<el-main class="content-box">

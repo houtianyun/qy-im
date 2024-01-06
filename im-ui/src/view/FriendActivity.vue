@@ -86,6 +86,39 @@
                   <span v-if="user_index < item.talkStarVOS.length - 1">，</span>
                 </span>
               </div>
+              <div class="commentBox">
+                <div class="commentItem" v-for="(comment, comment_index) in item.talkCommentVOS"
+                     :key="comment_index">
+                  <div class="comment-content">
+                    <avatar :url="comment.userAvatar" :userId="comment.userId" :size="'small'" class="comment-avatar"></avatar>
+                    <span class="username" v-if="!comment.replyCommentId">
+                        {{ comment.userNickname }}：
+                    </span>
+
+                    <span v-else>
+                      <span class="username">{{ comment.userNickname }}</span>
+                        回复
+                      <avatar :url="comment.replyUserAvatar" :userId="comment.replyUserId" :size="'small'" class="comment-avatar"></avatar>
+                      <span class="username">{{ comment.replyUserNickname }}：</span>
+                    </span>
+                    <span class="content point" v-html="comment.content"
+                          @click="handleShowCommentBox(comment, item.id, index)">
+                    </span>
+                  </div>
+                </div>
+
+                <div class="contentInputBox" ref="contentInputBox">
+                  <div class="">
+                    <div ref="textareaRef" contenteditable="true" @input="onInput"
+                         @paste="optimizePasteEvent" :data-placeholder="placeholder"
+                         class="comment-textarea"></div>
+                    <span class="point" @click="showEmoji = !showEmoji">
+                        <i class="icon iconfont icon-biaoqing"></i>
+                    </span>
+                    <a class="sendBtn point" @click="sayComment(item)">发送</a>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -172,6 +205,18 @@ export default {
         anonymous: false
       },
       chooseCharacterDialogVisible: false,
+      commentLastIndex: null,
+      placeholder: "请输入内容",
+      comment: {
+        replyUserId: null,
+        replyUserNickname: null,
+        replyCommentId: null,
+        talkId: null,
+        content: ""
+      },
+      showCommentBox: false,
+      lastEditRange: null,
+      showEmoji: false,
     }
   },
   created() {
@@ -181,6 +226,64 @@ export default {
 
   },
   methods: {
+    onInput(e) {
+      let selection = window.getSelection()
+      this.lastEditRange = selection.getRangeAt(0);
+    },
+    optimizePasteEvent(e) {
+      // 监听粘贴内容到输入框事件，对内容进行处理 处理掉复制的样式标签，只拿取文本部分
+      e.stopPropagation()
+      e.preventDefault()
+      let text = '', event = (e.originalEvent || e)
+      if (event.clipboardData && event.clipboardData.getData) {
+        text = event.clipboardData.getData('text/plain')
+      } else if (window.clipboardData && window.clipboardData.getData) {
+        text = window.clipboardData.getData('text')
+      }
+      if (document.queryCommandSupported('insertText')) {
+        document.execCommand('insertText', false, text)
+      } else {
+        document.execCommand('paste', false, text)
+      }
+    },
+    sayComment(talk) {
+      let el = this.$refs.textareaRef[this.commentLastIndex];
+      //let el = document.getElementById("textarea")
+      if (!el.innerHTML) {
+        this.$message.warning("请输入评论内容");
+        return
+      }
+      this.comment.content = el.innerHTML
+      let params = {
+        talkId: talk.id,
+        content: this.comment.content,
+        userNickname: talk.commentCharacterName,
+        characterId: talk.commentCharacterId,
+        userAvatar: talk.commentCharacterAvatar,
+        anonymous: talk.commentAnonymous ? talk.commentAnonymous : false,
+        replyCommentId: this.comment.replyCommentId
+      }
+      this.$http({
+        url: "/talk/addTalkComment",
+        method: 'post',
+        data: params
+      }).then((data) => {
+        if (data.characterId) {
+          talk.commentCharacterId = data.characterId;
+          talk.commentCharacterName = data.userNickname;
+          talk.commentCharacterAvatar = data.userAvatar;
+        }
+        talk.commentAnonymous = data.anonymous;
+        talk.talkCommentVOS.push(data);
+        this.$message.success("评论成功");
+        this.comment = {}
+        this.$refs.contentInputBox[this.commentLastIndex].style.display = "none"
+        this.showCommentBox = false
+        el.innerHTML = '';
+      }).finally(() => {
+        this.placeholder = '请输入内容';
+      })
+    },
     showUserInfo(e, talkStar){
       if(talkStar.userId && talkStar.userId>0){
         this.$http({
@@ -289,9 +392,6 @@ export default {
 
       })
     },
-    handleShowCommentBox(comment, sayId, index) {
-
-    },
     delTalk(talk, index) {
       this.$http({
         url: "/talk/delete",
@@ -323,7 +423,6 @@ export default {
       this.commentSetForm.commentCharacterId = talk.commentCharacterId;
       this.commentSetForm.anonymous = talk.commentAnonymous;
       this.curTalk = talk;
-      console.log("this.curTalk", this.curTalk);
       this.curTalkIndex = index;
       this.commentSetVisible = true;
     },
@@ -354,7 +453,6 @@ export default {
       this.chooseCharacterDialogVisible = false;
     },
     confirmChooseCharacter(resultData) {
-      console.log("resultData", resultData);
       this.commentSetForm.nickName = resultData.templateCharacter.name;
       this.commentSetForm.avatar = resultData.templateCharacter.avatar;
       this.commentSetForm.commentCharacterId = resultData.templateCharacter.id;
@@ -362,8 +460,6 @@ export default {
     },
     confirmCharacter() {
       if (this.curTalk.commentCharacterId && this.commentSetForm.commentCharacterId) {
-        console.log("this.curTalk.commentCharacterId", this.curTalk.commentCharacterId)
-        console.log("this.commentSetForm.commentCharacterId", this.commentSetForm.commentCharacterId)
         if (this.curTalk.commentCharacterId !== this.commentSetForm.commentCharacterId) {
           this.$message.warning("不能更改评论角色");
           return false;
@@ -373,7 +469,6 @@ export default {
       this.talkList[this.curTalkIndex].commentCharacterAvatar = this.commentSetForm.avatar;
       this.talkList[this.curTalkIndex].commentCharacterName = this.commentSetForm.nickName;
       this.talkList[this.curTalkIndex].commentAnonymous = this.commentSetForm.anonymous;
-      console.log("this.talkList[this.curTalkIndex]", this.talkList[this.curTalkIndex])
       this.resetCommentCharacter();
       this.curTalk = {};
       this.curTalkIndex = -1;
@@ -384,7 +479,43 @@ export default {
       this.curTalk = {};
       this.curTalkIndex = -1;
       this.commentSetVisible = false;
-    }
+    },
+    handleShowCommentBox(comment, talkId, index) {
+      let userId = this.$store.state.userStore.userInfo.id;
+      if (comment) {
+        if (comment.userId === userId) {
+          this.$message.warning("不能回复自己的评论");
+          return false;
+        }
+      }
+      if (this.commentLastIndex != null && this.commentLastIndex != index) {
+        this.$refs.contentInputBox[this.commentLastIndex].style.display = "none"
+      }
+      if (this.commentLastIndex == index) {
+        if (this.$refs.contentInputBox[index].style.display == "block") {
+          this.$refs.contentInputBox[index].style.display = "none"
+        } else {
+          this.$refs.contentInputBox[index].style.display = "block"
+        }
+      } else {
+        this.$refs.contentInputBox[index].style.display = "block"
+      }
+      this.commentLastIndex = index
+
+      if (comment) {
+        this.placeholder = "回复" + comment.userNickname + ":"
+        this.comment.replyUserId = comment.userId
+        this.comment.replyUserNickname = comment.userNickname
+        this.comment.replyCommentId = comment.id
+      } else {
+        this.comment.replyUserId = null
+        this.comment.replyUserNickname = null
+        this.comment.replyCommentId = null
+        this.placeholder = "请输入内容"
+      }
+      this.comment.talkId = talkId
+      this.showCommentBox = !this.showCommentBox
+    },
   }
 }
 </script>
@@ -623,7 +754,7 @@ export default {
           }
 
           .interaction {
-            background-color: #6CC6CB;
+            background-color: #ffffff;
             margin-top: 15px;
             border-radius: 5px;
 
@@ -643,6 +774,75 @@ export default {
 
             .is_border {
               border-bottom: 1px dashed rgb(126, 120, 120);
+            }
+
+            .commentBox {
+              .commentItem {
+                text-align: left;
+                margin-bottom: 5px;
+
+                .comment-content {
+
+                }
+
+                span {
+
+                }
+
+                .comment-avatar {
+                  display: inline-block;
+                }
+
+                &:first-child {
+                  margin-top: 10px;
+                }
+
+                .username {
+                  color: #5597bd;
+                }
+              }
+
+              .contentInputBox {
+                width: 50%;
+                border: 1px solid #67C23A;
+                border-radius: 5px;
+                background-color: #fff;
+                position: relative;
+                min-height: 100px;
+                display: none;
+                margin-left: 10px;
+
+                .comment-textarea {
+                  text-align: left;
+                  min-height: 100px;
+                  outline: none;
+                  padding-left: 10px;
+                  padding-top: 5px;
+
+                  &:empty:before {
+                    content: attr(data-placeholder);
+                    color: #666;
+                  }
+                }
+
+                i {
+                  font-size: 1.3rem;
+                  position: absolute;
+                  right: 80px;
+                  bottom: 20px;
+                }
+
+                .sendBtn {
+                  display: inline-block;
+                  background-color: #67C23A;
+                  color: #fff;
+                  padding: 5px 8px 5px 8px;
+                  border-radius: 5px;
+                  position: absolute;
+                  right: 20px;
+                  bottom: 15px;
+                }
+              }
             }
           }
         }

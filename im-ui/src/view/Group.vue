@@ -7,7 +7,7 @@
 						<el-button slot="append" icon="el-icon-search"></el-button>
 					</el-input>
 				</div>
-				<el-button plain icon="el-icon-plus" style="border: none; padding: 12px; font-size: 20px;color: black;" title="创建群聊"
+				<el-button plain icon="el-icon-plus" style="border: none; color: #d42e07; padding: 12px; font-size: 20px;" title="创建群聊"
                    @click="dialogVisible = true"></el-button>
 			</div>
 			<el-scrollbar class="l-group-list">
@@ -303,7 +303,6 @@
 			handleActiveItem(group, index) {
 				this.$store.commit("activeGroup", index);
 				// store数据不能直接修改，所以深拷贝一份内存
-        console.log("activeGroup", group)
 				this.activeGroup = JSON.parse(JSON.stringify(group));
 				// 重新加载群成员
 				this.loadGroupMembers();
@@ -550,7 +549,6 @@
         this.switchCommonGroupVisible = false;
       },
       doneUploadSuccess(res) {
-		    console.log("doneUploadSuccess", res)
         this.commonGroup.headImage = res.data.originUrl;
         this.commonGroup.headImageThumb = res.data.thumbUrl;
       },

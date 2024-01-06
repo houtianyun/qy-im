@@ -1,6 +1,6 @@
 <template>
   <div class="avatar" @click="showUserInfo($event)">
-    <el-avatar :src="url ? url : require('../../assets/anonymousAvatar.jpeg')" fit="fill" alt=""></el-avatar>
+    <el-avatar :src="url ? url : require('../../assets/anonymousAvatar.jpeg')" fit="fill" alt="" :size="size"></el-avatar>
   </div>
 </template>
 
@@ -16,6 +16,10 @@ export default {
     },
     url: {
       type: String,
+    },
+    size: {
+      type: String,
+      default: 'large'
     }
   },
   methods:{
