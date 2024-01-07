@@ -81,7 +81,7 @@
             <div class="interaction">
               <div v-if="item.talkStarVOS"
                    :class="item.talkStarVOS && item.talkCommentVOS ? 'like-container is_border' : 'like-container'">
-                <span class="star-user" v-for="(user, user_index) in item.talkStarVOS" :key="user_index" @click="showUserInfo($event, user)">
+                <span class="star-user" v-for="(user, user_index) in item.talkStarVOS" :key="user_index" @click="showUserInfo($event, user.userId)">
                   <i class="el-icon-star-on" style="color: yellow"></i> {{ user.nickname }}
                   <span v-if="user_index < item.talkStarVOS.length - 1">，</span>
                 </span>
@@ -91,18 +91,30 @@
                      :key="comment_index">
                   <div class="comment-content">
                     <avatar :url="comment.userAvatar" :userId="comment.userId" :size="'small'" class="comment-avatar"></avatar>
-                    <span class="username" v-if="!comment.replyCommentId">
+                    <span class="username" v-if="!comment.replyCommentId" @click="showUserInfo($event, comment.userId)">
                         {{ comment.userNickname }}：
                     </span>
 
                     <span v-else>
-                      <span class="username">{{ comment.userNickname }}</span>
+                      <span class="username" @click="showUserInfo($event, comment.userId)">{{ comment.userNickname }}</span>
                         回复
                       <avatar :url="comment.replyUserAvatar" :userId="comment.replyUserId" :size="'small'" class="comment-avatar"></avatar>
-                      <span class="username">{{ comment.replyUserNickname }}：</span>
+                      <span class="username" @click="showUserInfo($event, comment.replyUserId)">{{ comment.replyUserNickname }}：</span>
                     </span>
                     <span class="content point" v-html="comment.content"
                           @click="handleShowCommentBox(comment, item.id, index)">
+                    </span>
+                    <span class="del-btn" v-if="comment.isOwner">
+                      <el-popconfirm
+                          confirm-button-text='确认'
+                          cancel-button-text='取消'
+                          icon="el-icon-info"
+                          icon-color="red"
+                          title="确认删除当前评论吗？"
+                          @confirm="delComment(item, comment.id)"
+                      >
+                    <el-button slot="reference" icon="el-icon-delete-solid" size="mini" type="danger" circle @click.stop></el-button>
+                  </el-popconfirm>
                     </span>
                   </div>
                 </div>
@@ -284,10 +296,10 @@ export default {
         this.placeholder = '请输入内容';
       })
     },
-    showUserInfo(e, talkStar){
-      if(talkStar.userId && talkStar.userId>0){
+    showUserInfo(e, userId){
+      if(userId && userId>0){
         this.$http({
-          url: `/user/find/${talkStar.userId}`,
+          url: `/user/find/${userId}`,
           method: 'get'
         }).then((user) => {
           this.$store.commit("setUserInfoBoxPos",e);
@@ -374,18 +386,18 @@ export default {
       let params = {
         talkId: talk.id
       }
-      let userId = this.$store.state.userStore.userInfo.id;
+      //let userId = this.$store.state.userStore.userInfo.id;
       this.$http({
         url: "/talk/cancelLike",
         method: 'post',
         data: params
       }).then((data) => {
         talk.isLike = false;
-        talk.commentCharacterId = null;
-        talk.commentCharacterName = null;
-        talk.commentCharacterAvatar = null;
+        //talk.commentCharacterId = null;
+        //talk.commentCharacterName = null;
+        //talk.commentCharacterAvatar = null;
         talk.talkStarVOS = talk.talkStarVOS.filter(function (item) {
-          return item.userId !== userId;
+          return !item.isOwner;
         });
         this.$message.success("取消成功");
       }).finally(() => {
@@ -481,12 +493,10 @@ export default {
       this.commentSetVisible = false;
     },
     handleShowCommentBox(comment, talkId, index) {
-      let userId = this.$store.state.userStore.userInfo.id;
-      if (comment) {
-        if (comment.userId === userId) {
-          this.$message.warning("不能回复自己的评论");
-          return false;
-        }
+      //let userId = this.$store.state.userStore.userInfo.id;
+      if (comment && comment.isOwner) {
+        this.$message.warning("不能回复自己的评论");
+        return false;
       }
       if (this.commentLastIndex != null && this.commentLastIndex != index) {
         this.$refs.contentInputBox[this.commentLastIndex].style.display = "none"
@@ -516,6 +526,19 @@ export default {
       this.comment.talkId = talkId
       this.showCommentBox = !this.showCommentBox
     },
+    delComment(talk, commentId) {
+      this.$http({
+        url: `/talkComment/delete/${commentId}`,
+        method: 'delete'
+      }).then((data) => {
+        talk.talkCommentVOS = talk.talkCommentVOS.filter(function (item) {
+          return item.id !== commentId;
+        });
+        this.$message.success("删除成功");
+      }).finally(() => {
+
+      })
+    }
   }
 }
 </script>
@@ -799,6 +822,17 @@ export default {
 
                 .username {
                   color: #5597bd;
+                  cursor: pointer;
+                }
+
+                .content {
+                  cursor: pointer;
+                }
+
+                .del-btn {
+                  color: #d42e07;
+                  font-size: 12px;
+                  float: right;
                 }
               }
 
@@ -833,6 +867,7 @@ export default {
                 }
 
                 .sendBtn {
+                  cursor: pointer;
                   display: inline-block;
                   background-color: #67C23A;
                   color: #fff;
