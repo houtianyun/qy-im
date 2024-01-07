@@ -58,7 +58,7 @@ public class TalkCommentServiceImpl extends ServiceImpl<TalkCommentMapper, TalkC
         }
         if (!Objects.isNull(talkCommentDTO.getCharacterId())) {
             if (talkService.verifyTalkCommentCharacter(talkId, talkCommentDTO.getCharacterId())) {
-                throw new GlobalException("当前角色已被选择");
+                throw new GlobalException("只能使用选择过的角色");
             }
         }
 

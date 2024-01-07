@@ -57,7 +57,7 @@ public class TalkStarServiceImpl extends ServiceImpl<TalkStarMapper, TalkStar> i
         }
         if (!Objects.isNull(talkStarDTO.getCharacterId())) {
             if (talkService.verifyTalkCommentCharacter(talkId, talkStarDTO.getCharacterId())) {
-                throw new GlobalException("当前角色已被选择");
+                throw new GlobalException("只能使用选择过的角色");
             }
         }
         TalkStar talkStar = new TalkStar();

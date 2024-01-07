@@ -175,8 +175,9 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
         // 动态评论数据(包含删除的)
         List<TalkComment> allTalkCommentList = talkCommentService.lambdaQuery().in(TalkComment::getTalkId, talkIds)
                 .orderByAsc(TalkComment::getCreateTime).list();
-
+        // 根据评论id分组
         Map<Long, TalkComment> allTalkCommentMap = allTalkCommentList.stream().collect(Collectors.toMap(TalkComment::getId, Function.identity(), (key1, key2) -> key2));
+        Map<Long, List<TalkComment>> allTalkCommentGroupMap = allTalkCommentList.stream().collect(Collectors.groupingBy(TalkComment::getTalkId));
 
         // 动态评论数据-未删除
         List<TalkComment> talkCommentList = allTalkCommentList.stream().filter(item -> !item.getDeleted()).collect(Collectors.toList());
@@ -238,17 +239,19 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
             } else {
                 talkVO.setTalkStarVOS(Collections.emptyList());
             }
+            if (allTalkCommentGroupMap.containsKey(talkVO.getId())) {
+                // 找到当前用户评论，并且角色id不为空的数据
+                Optional<TalkComment> talkCommentOptional = allTalkCommentGroupMap.get(talkVO.getId()).stream().filter(item -> item.getUserId().equals(myUserId)
+                        && !Objects.isNull(item.getCharacterId())).findFirst();
+                talkCommentOptional.ifPresent(talkComment -> {
+                    talkVO.setCommentCharacterId(talkComment.getCharacterId());
+                    talkVO.setCommentCharacterName(talkComment.getUserNickname());
+                    talkVO.setCommentCharacterAvatar(talkComment.getUserAvatar());
+                    talkVO.setCommentAnonymous(talkComment.getAnonymous());
+                });
+            }
             if (talkCommentMap.containsKey(talkVO.getId())) {
                 talkVO.setTalkCommentVOS(talkCommentMap.get(talkVO.getId()));
-                // 找到当前用户评论，并且角色id不为空的数据
-                Optional<TalkCommentVO> talkCommentVOOptional = talkVO.getTalkCommentVOS().stream().filter(item -> item.getUserId().equals(myUserId)
-                        && !Objects.isNull(item.getCharacterId())).findFirst();
-                talkCommentVOOptional.ifPresent(talkCommentVO -> {
-                    talkVO.setCommentCharacterId(talkCommentVO.getCharacterId());
-                    talkVO.setCommentCharacterName(talkCommentVO.getUserNickname());
-                    talkVO.setCommentCharacterAvatar(talkCommentVO.getUserAvatar());
-                    talkVO.setCommentAnonymous(talkCommentVO.getAnonymous());
-                });
                 talkVO.getTalkCommentVOS().forEach(item -> {
                     if (myUserId.equals(item.getUserId())) {
                         item.setIsOwner(Boolean.TRUE);
@@ -327,30 +330,59 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
         if (Objects.isNull(talk) || talk.getDeleted()) {
             throw new GlobalException("当前动态已被删除");
         }
+        // 自己选择过的角色与入参的角色不一致
         if (userId.equals(talk.getUserId())
                 && !Objects.isNull(talk.getCharacterId())) {
             if (!talk.getCharacterId().equals(characterId)) {
                 return true;
             }
         }
+
+        // 自己选择的角色与其他人选择的角色一样
+        if (!userId.equals(talk.getUserId())
+                && !Objects.isNull(talk.getCharacterId())) {
+            if (talk.getCharacterId().equals(characterId)) {
+                return true;
+            }
+        }
+
         List<TalkStar> talkStarList = talkStarService.lambdaQuery()
                 .eq(TalkStar::getTalkId, talkId)
                 .eq(TalkStar::getDeleted, false).list();
         if (CollectionUtils.isNotEmpty(talkStarList)) {
-            Optional<TalkStar> optional = talkStarList.stream().filter(item -> characterId.equals(item.getCharacterId())
+            // 自己选择的角色与其他人选择的角色一样
+            Optional<TalkStar> optional1 = talkStarList.stream().filter(item -> !Objects.isNull(item.getCharacterId())
+                    && characterId.equals(item.getCharacterId())
                     && !item.getUserId().equals(userId)).findFirst();
-            if (optional.isPresent()) {
+            if (optional1.isPresent()) {
+                return true;
+            }
+
+            // 自己选择过的角色与入参的角色不一致
+            Optional<TalkStar> optional2 = talkStarList.stream().filter(item -> !Objects.isNull(item.getCharacterId())
+                    && !characterId.equals(item.getCharacterId())
+                    && item.getUserId().equals(userId)).findFirst();
+            if (optional2.isPresent()) {
                 return true;
             }
         }
 
         List<TalkComment> talkCommentList = talkCommentService.lambdaQuery()
-                .eq(TalkComment::getTalkId, talkId)
-                .eq(TalkComment::getDeleted, false).list();
+                .eq(TalkComment::getTalkId, talkId).list();
         if (CollectionUtils.isNotEmpty(talkCommentList)) {
-            Optional<TalkComment> optional = talkCommentList.stream().filter(item -> characterId.equals(item.getCharacterId())
+            // 自己选择的角色与其他人选择的角色一样
+            Optional<TalkComment> optional1 = talkCommentList.stream().filter(item -> !Objects.isNull(item.getCharacterId())
+                    && characterId.equals(item.getCharacterId())
                     && !item.getUserId().equals(userId)).findFirst();
-            if (optional.isPresent()) {
+            if (optional1.isPresent()) {
+                return true;
+            }
+
+            // 自己选择过的角色与入参的角色不一致
+            Optional<TalkComment> optional2 = talkCommentList.stream().filter(item -> !Objects.isNull(item.getCharacterId())
+                    && !characterId.equals(item.getCharacterId()) &&
+                    item.getUserId().equals(userId)).findFirst();
+            if (optional2.isPresent()) {
                 return true;
             }
         }
