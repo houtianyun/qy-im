@@ -43,6 +43,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -171,10 +172,14 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
                 .orderByAsc(TalkStar::getCreateTime)
                 .list();
 
-        // 动态评论数据
-        List<TalkComment> talkCommentList = talkCommentService.lambdaQuery().in(TalkComment::getTalkId, talkIds)
-                .eq(TalkComment::getDeleted, false)
+        // 动态评论数据(包含删除的)
+        List<TalkComment> allTalkCommentList = talkCommentService.lambdaQuery().in(TalkComment::getTalkId, talkIds)
                 .orderByAsc(TalkComment::getCreateTime).list();
+
+        Map<Long, TalkComment> allTalkCommentMap = allTalkCommentList.stream().collect(Collectors.toMap(TalkComment::getId, Function.identity(), (key1, key2) -> key2));
+
+        // 动态评论数据-未删除
+        List<TalkComment> talkCommentList = allTalkCommentList.stream().filter(item -> !item.getDeleted()).collect(Collectors.toList());
 
         List<TalkStarVO> talkStarVOS = BeanUtils.copyProperties(talkStarList, TalkStarVO.class);
 
@@ -223,6 +228,9 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
                         .anyMatch(item -> item.getUserId().equals(myUserId)));
 
                 talkVO.getTalkStarVOS().forEach(item -> {
+                    if (myUserId.equals(item.getUserId())) {
+                        item.setIsOwner(Boolean.TRUE);
+                    }
                     if (item.getAnonymous()) {
                         item.setUserId(Constant.ANONYMOUS_USER_ID);
                     }
@@ -242,10 +250,19 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
                     talkVO.setCommentAnonymous(talkCommentVO.getAnonymous());
                 });
                 talkVO.getTalkCommentVOS().forEach(item -> {
+                    if (myUserId.equals(item.getUserId())) {
+                        item.setIsOwner(Boolean.TRUE);
+                    }
                     if (item.getAnonymous()) {
                         item.setUserId(Constant.ANONYMOUS_USER_ID);
                     }
-                    item.setReplyUserId(Constant.ANONYMOUS_USER_ID);
+                    if (item.getReplyCommentId() != null &&
+                            allTalkCommentMap.containsKey(item.getReplyCommentId())) {
+                        TalkComment talkComment = allTalkCommentMap.get(item.getReplyCommentId());
+                        if (talkComment.getDeleted() || talkComment.getAnonymous()) {
+                            item.setReplyUserId(Constant.ANONYMOUS_USER_ID);
+                        }
+                    }
                 });
                 characterIds.addAll(talkVO.getTalkCommentVOS().stream().map(TalkCommentVO::getCharacterId).collect(Collectors.toSet()));
             } else {

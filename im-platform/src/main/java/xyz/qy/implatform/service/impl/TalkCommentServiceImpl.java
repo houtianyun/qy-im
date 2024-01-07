@@ -1,6 +1,7 @@
 package xyz.qy.implatform.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ import java.util.Objects;
  * @author: HouTianYun
  * @create: 2023-12-24 15:42
  **/
+@Slf4j
 @Service
 public class TalkCommentServiceImpl extends ServiceImpl<TalkCommentMapper, TalkComment> implements ITalkCommentService {
     @Autowired
@@ -76,7 +78,7 @@ public class TalkCommentServiceImpl extends ServiceImpl<TalkCommentMapper, TalkC
             talkComment.setCharacterId(templateCharacter.getId());
             talkComment.setUserNickname(talkCommentDTO.getUserNickname());
             talkComment.setUserAvatar(talkCommentDTO.getUserAvatar());
-        } else {
+        } else if (!talkCommentDTO.getAnonymous()){
             talkComment.setUserAvatar(user.getHeadImage());
         }
 
@@ -102,10 +104,37 @@ public class TalkCommentServiceImpl extends ServiceImpl<TalkCommentMapper, TalkC
 
         this.save(talkComment);
         TalkCommentVO talkCommentVO = BeanUtils.copyProperties(talkComment, TalkCommentVO.class);
+        if (talkCommentVO.getAnonymous()) {
+            talkCommentVO.setUserId(Constant.ANONYMOUS_USER_ID);
+        }
+        talkCommentVO.setIsOwner(Boolean.TRUE);
         if (!Objects.isNull(replyTalkComment) && replyTalkComment.getAnonymous()) {
             assert talkCommentVO != null;
             talkCommentVO.setReplyUserId(Constant.ANONYMOUS_USER_ID);
         }
         return talkCommentVO;
+    }
+
+    @Override
+    public void deleteTalkComment(Long commentId) {
+        UserSession session = SessionContext.getSession();
+        Long myUserId = session.getId();
+
+        TalkComment talkComment = this.getById(commentId);
+        if (Objects.isNull(talkComment)) {
+            throw new GlobalException("评论不存在");
+        }
+        if (!myUserId.equals(talkComment.getUserId())) {
+            throw new GlobalException("您不是当前评论的作者");
+        }
+        talkComment.setUpdateBy(myUserId);
+        talkComment.setDeleted(Boolean.TRUE);
+        boolean update = this.updateById(talkComment);
+        if (update) {
+            log.info("删除动态评论成功，id:{}", talkComment.getId());
+        } else {
+            log.error("删除动态评论失败，id:{}", talkComment.getId());
+            throw new GlobalException("删除动态评论失败");
+        }
     }
 }

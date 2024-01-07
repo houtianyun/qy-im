@@ -33,4 +33,7 @@ public class TalkStarVO {
 
     @ApiModelProperty(value = "是否匿名")
     private Boolean anonymous = Boolean.FALSE;
+
+    @ApiModelProperty(value = "是否自己的")
+    private Boolean isOwner = Boolean.FALSE;
 }

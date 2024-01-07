@@ -55,4 +55,7 @@ public class TalkCommentVO {
 
     @ApiModelProperty(value = "IP来源")
     private String ipAddress;
+
+    @ApiModelProperty(value = "是否评论作者")
+    private Boolean isOwner = Boolean.FALSE;
 }

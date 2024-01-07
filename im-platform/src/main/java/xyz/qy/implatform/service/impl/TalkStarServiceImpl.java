@@ -83,7 +83,12 @@ public class TalkStarServiceImpl extends ServiceImpl<TalkStarMapper, TalkStar> i
         }
 
         this.save(talkStar);
-        return BeanUtils.copyProperties(talkStar, TalkStarVO.class);
+        TalkStarVO talkStarVO = BeanUtils.copyProperties(talkStar, TalkStarVO.class);
+        if (talkStarVO.getAnonymous()) {
+            talkStarVO.setUserId(Constant.ANONYMOUS_USER_ID);
+        }
+        talkStarVO.setIsOwner(Boolean.TRUE);
+        return talkStarVO;
     }
 
     @Lock(prefix = "im:talk:comment", key = "#talkStarDTO.getTalkId()")

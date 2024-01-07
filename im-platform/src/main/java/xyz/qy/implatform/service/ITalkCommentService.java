@@ -18,4 +18,11 @@ public interface ITalkCommentService extends IService<TalkComment> {
      * @return 动态评论
      */
     TalkCommentVO addTalkComment(TalkCommentDTO talkCommentDTO);
+
+    /**
+     * 删除动态评论
+     *
+     * @param commentId 评论id
+     */
+    void deleteTalkComment(Long commentId);
 }
