@@ -113,8 +113,8 @@
                           title="确认删除当前评论吗？"
                           @confirm="delComment(item, comment.id)"
                       >
-                    <el-button slot="reference" icon="el-icon-delete-solid" size="mini" type="danger" circle @click.stop></el-button>
-                  </el-popconfirm>
+                        <el-button slot="reference" icon="el-icon-delete-solid" size="mini" type="danger" circle @click.stop></el-button>
+                      </el-popconfirm>
                     </span>
                   </div>
                 </div>
@@ -471,12 +471,12 @@ export default {
       this.chooseCharacterDialogVisible = false;
     },
     confirmCharacter() {
-      if (this.curTalk.commentCharacterId && this.commentSetForm.commentCharacterId) {
-        if (this.curTalk.commentCharacterId !== this.commentSetForm.commentCharacterId) {
-          this.$message.warning("不能更改评论角色");
-          return false;
-        }
-      }
+      // if (this.curTalk.commentCharacterId && this.commentSetForm.commentCharacterId) {
+      //   if (this.curTalk.commentCharacterId !== this.commentSetForm.commentCharacterId) {
+      //     this.$message.warning("不能更改评论角色");
+      //     return false;
+      //   }
+      // }
       this.talkList[this.curTalkIndex].commentCharacterId = this.commentSetForm.commentCharacterId;
       this.talkList[this.curTalkIndex].commentCharacterAvatar = this.commentSetForm.avatar;
       this.talkList[this.curTalkIndex].commentCharacterName = this.commentSetForm.nickName;
