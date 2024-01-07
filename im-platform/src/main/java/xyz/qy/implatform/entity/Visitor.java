@@ -32,28 +32,22 @@ public class Visitor extends Model<Visitor> {
     private String ip;
 
     /**
+     * 国家
+     */
+    @TableField("nation")
+    private String nation;
+
+    /**
      * 省
      */
     @TableField("pro")
     private String pro;
 
     /**
-     * 省编码
-     */
-    @TableField("pro_code")
-    private String proCode;
-
-    /**
      * 市
      */
     @TableField("city")
     private String city;
-
-    /**
-     * 市编码
-     */
-    @TableField("city_code")
-    private String cityCode;
 
     /**
      * IP地址信息
@@ -78,6 +72,12 @@ public class Visitor extends Model<Visitor> {
      */
     @TableField("create_time")
     private Date createTime;
+
+    /**
+     * 位置新增JSON结果
+     */
+    @TableField("location_info")
+    private String locationInfo;
 
     @Override
     protected Serializable pkVal() {

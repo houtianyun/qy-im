@@ -3,10 +3,11 @@ package xyz.qy.implatform.util;
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import xyz.qy.implatform.vo.IpGeoInfoVO;
 import eu.bitwalker.useragentutils.UserAgent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.util.DigestUtils;
+import xyz.qy.implatform.vo.IpGeoInfoVO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
@@ -14,6 +15,7 @@ import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +28,21 @@ import java.util.Map;
 @Slf4j
 public class IpUtils {
     private static final String WHOIS_IP = "http://whois.pconline.com.cn/ipJson.jsp?ip=%s&json=true";
+
+    /**
+     * 腾讯位置服务
+     */
+    private static final String TENCENT_LOCATION_SERVICE = "https://apis.map.qq.com/ws/location/v1/ip?ip=%s&key=%s&sig=%s";
+
+    /**
+     * 百度位置服务
+     */
+    private static final String BAIDU_LOCATION_SERVICE = "http://opendata.baidu.com/api.php?query=%s&co=&resource_id=6006&oe=utf8";
+
+    /**
+     * 参与加密路径
+     */
+    private static final String ENCRYPTION_PATH = "/ws/location/v1/ip?ip=%s&key=%s%s";
 
     /**
      * 获取用户ip地址
@@ -77,7 +94,7 @@ public class IpUtils {
      */
     public static String getIpSource(String ipAddress) {
         try {
-            URL url = new URL("http://opendata.baidu.com/api.php?query=" + ipAddress + "&co=&resource_id=6006&oe=utf8");
+            URL url = new URL(String.format(BAIDU_LOCATION_SERVICE, ipAddress));
             BufferedReader reader = new BufferedReader(new InputStreamReader(url.openConnection().getInputStream(), "utf-8"));
             String line = null;
             StringBuffer result = new StringBuffer();
@@ -99,7 +116,7 @@ public class IpUtils {
      * @param request 请求
      * @return {@link UserAgent} 访问设备
      */
-    public static UserAgent getUserAgent(HttpServletRequest request){
+    public static UserAgent getUserAgent(HttpServletRequest request) {
         return UserAgent.parseUserAgentString(request.getHeader("User-Agent"));
     }
 
@@ -110,7 +127,7 @@ public class IpUtils {
      * @return IpGeoInfoVO
      */
     public static IpGeoInfoVO getIpGeoInfo(String ipAddress) {
-        IpGeoInfoVO  ipGeoInfoVO = null;
+        IpGeoInfoVO ipGeoInfoVO = null;
         try {
             String api = String.format(WHOIS_IP, ipAddress);
             String result = HttpUtil.get(api);
@@ -122,5 +139,37 @@ public class IpUtils {
         } finally {
             return ipGeoInfoVO;
         }
+    }
+
+    /**
+     * 从腾讯位置服务根据IP获取地址信息
+     *
+     * @param ip   IP地址
+     * @param key  key
+     * @param sign 签名密钥
+     * @return 位置信息
+     */
+    public static JSONObject getIpLocationInfoByTencent(String ip, String key, String sign) {
+        try {
+            String url = String.format(TENCENT_LOCATION_SERVICE, ip, key, sign);
+            String result = HttpUtil.get(url);
+            log.info("tencent location result:{}", result);
+            return JSONObject.parseObject(result);
+        } catch (Exception e) {
+            log.error("tencent location error:{}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 获取加密内容签名
+     *
+     * @param ip  ip
+     * @param key key
+     * @param sk  密钥
+     * @return 签名
+     */
+    public static String getSign(String ip, String key, String sk) {
+        return DigestUtils.md5DigestAsHex(String.format(ENCRYPTION_PATH, ip, key, sk).getBytes(StandardCharsets.UTF_8));
     }
 }
