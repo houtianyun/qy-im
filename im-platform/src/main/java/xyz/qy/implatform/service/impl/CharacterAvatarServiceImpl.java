@@ -67,14 +67,14 @@ public class CharacterAvatarServiceImpl extends ServiceImpl<CharacterAvatarMappe
             throw new GlobalException("当前人物头像不存在");
         }
         characterAvatar.setDeleted(Boolean.TRUE);
-        characterAvatar.setUpdateBy(session.getId().toString());
+        characterAvatar.setUpdateBy(session.getUserId().toString());
         baseMapper.updateById(characterAvatar);
     }
 
     @Override
     public void addOrModifyCharacterAvatars(TemplateCharacterVO templateCharacterVO) {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
 
         Long templateCharacterId = templateCharacterVO.getId();
 
@@ -112,7 +112,7 @@ public class CharacterAvatarServiceImpl extends ServiceImpl<CharacterAvatarMappe
     @Override
     public void submitForApproval(Long templateCharacterId) {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         TemplateCharacter templateCharacter = templateCharacterService.getById(templateCharacterId);
         if (ObjectUtil.isNull(templateCharacter) || Constant.YES_STR.equals(templateCharacter.getDeleted())) {
             throw new GlobalException("当前模板人物不存在");
@@ -146,7 +146,7 @@ public class CharacterAvatarServiceImpl extends ServiceImpl<CharacterAvatarMappe
     @Override
     public void withdrawalOfApproval(Long templateCharacterId) {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         TemplateCharacter templateCharacter = templateCharacterService.getById(templateCharacterId);
         if (ObjectUtil.isNull(templateCharacter) || Constant.YES_STR.equals(templateCharacter.getDeleted())) {
             throw new GlobalException("当前模板人物不存在");
@@ -171,7 +171,7 @@ public class CharacterAvatarServiceImpl extends ServiceImpl<CharacterAvatarMappe
     @Override
     public void submitAuditConclusion(ReviewVO reviewVO) {
         UserSession session = SessionContext.getSession();
-        Long userid = session.getId();
+        Long userid = session.getUserId();
         if (!userid.equals(Constant.ADMIN_USER_ID)) {
             throw new GlobalException("当前只有管理员才能审批");
         }
@@ -202,7 +202,7 @@ public class CharacterAvatarServiceImpl extends ServiceImpl<CharacterAvatarMappe
     @Override
     public List<TemplateCharacterVO> findReviewingCharacterAvatar() {
         UserSession session = SessionContext.getSession();
-        Long userid = session.getId();
+        Long userid = session.getUserId();
         if (!userid.equals(Constant.ADMIN_USER_ID)) {
             throw new GlobalException("当前只有管理员才能审批");
         }

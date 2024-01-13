@@ -124,8 +124,10 @@
 				});
 			},
 			handlePrivateMessage(msg) {
-				// 好友列表存在好友信息，直接插入私聊消息
-				let friend = this.$store.state.friendStore.friends.find((f) => f.id == msg.sendId);
+        // 好友列表存在好友信息，直接插入私聊消息
+        msg.selfSend = msg.sendId==this.$store.state.userStore.userInfo.id;
+        let friendId = msg.selfSend?msg.recvId:msg.sendId;
+        let friend = this.$store.state.friendStore.friends.find((f) => f.id == friendId);
 				if (friend) {
 					this.insertPrivateMessage(friend, msg);
 					return;
@@ -165,7 +167,7 @@
 				this.$store.commit("openChat", chatInfo);
 				// 插入消息
 				this.$store.commit("insertMessage", msg);
-        if (msg.playAudio) {
+        if (msg.playAudio && !msg.selfSend) {
           // 播放提示音
           this.playAudioTip();
         }

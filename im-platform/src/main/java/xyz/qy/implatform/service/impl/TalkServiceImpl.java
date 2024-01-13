@@ -75,11 +75,11 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
     @Override
     public void addTalk(TalkAddDTO talkAddDTO) {
         UserSession session = SessionContext.getSession();
-        User user = userService.getById(session.getId());
+        User user = userService.getById(session.getUserId());
         Talk talk = BeanUtils.copyProperties(talkAddDTO, Talk.class);
         assert talk != null;
-        talk.setUserId(session.getId());
-        talk.setCreateBy(session.getId());
+        talk.setUserId(session.getUserId());
+        talk.setCreateBy(session.getUserId());
         talk.setAddress(user.getProvince());
         if (CollectionUtils.isNotEmpty(talkAddDTO.getImgUrls())) {
             talk.setImgUrl(String.join(Constant.COMMA, talkAddDTO.getImgUrls()));
@@ -107,7 +107,7 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
     @Override
     public void updateTalk(TalkUpdateDTO talkUpdateDTO) {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         User user = userService.getById(userId);
 
         Talk talk = this.baseMapper.selectById(talkUpdateDTO.getId());
@@ -144,7 +144,7 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
     public PageResultVO pageQueryTalkList() {
         TalkQueryDTO dto = new TalkQueryDTO();
         UserSession session = SessionContext.getSession();
-        Long myUserId = session.getId();
+        Long myUserId = session.getUserId();
         dto.setOwnerId(myUserId);
 
         // 查询获取好友用户id
@@ -286,7 +286,7 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
     @Override
     public void delTalk(TalkDelDTO talkDelDTO) {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
 
         Talk talk = this.baseMapper.selectById(talkDelDTO.getId());
         if (Objects.isNull(talk)) {
@@ -325,7 +325,7 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
             throw new GlobalException("参数异常");
         }
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         Talk talk = baseMapper.selectById(talkId);
         if (Objects.isNull(talk) || talk.getDeleted()) {
             throw new GlobalException("当前动态已被删除");

@@ -47,7 +47,7 @@ public class TalkCommentServiceImpl extends ServiceImpl<TalkCommentMapper, TalkC
     @Override
     public TalkCommentVO addTalkComment(TalkCommentDTO talkCommentDTO) {
         UserSession session = SessionContext.getSession();
-        Long myUserId = session.getId();
+        Long myUserId = session.getUserId();
 
         User user = userService.getById(myUserId);
 
@@ -118,7 +118,7 @@ public class TalkCommentServiceImpl extends ServiceImpl<TalkCommentMapper, TalkC
     @Override
     public void deleteTalkComment(Long commentId) {
         UserSession session = SessionContext.getSession();
-        Long myUserId = session.getId();
+        Long myUserId = session.getUserId();
 
         TalkComment talkComment = this.getById(commentId);
         if (Objects.isNull(talkComment)) {

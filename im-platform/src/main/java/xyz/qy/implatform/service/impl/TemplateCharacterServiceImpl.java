@@ -51,7 +51,7 @@ public class TemplateCharacterServiceImpl extends ServiceImpl<TemplateCharacterM
     @Override
     public List<TemplateCharacterVO> findTemplateCharactersByGroupId(Long templateGroupId) {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         LambdaQueryWrapper<TemplateCharacter> queryWrapper = new LambdaQueryWrapper<>();
         if (ObjectUtil.isNull(templateGroupId)) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "模板群聊id为空");
@@ -134,7 +134,7 @@ public class TemplateCharacterServiceImpl extends ServiceImpl<TemplateCharacterM
         if (CollectionUtils.isEmpty(templateCharacterVOList)) {
             throw new GlobalException("模板人物数据为空");
         }
-        if (!session.getId().equals(Constant.ADMIN_USER_ID)
+        if (!session.getUserId().equals(Constant.ADMIN_USER_ID)
                 && templateGroupVO.getTemplateCharacterVOList().size() > Constant.USER_MAX_TEMPLATE_CHARACTER_NUM) {
             throw new GlobalException("每个模板群聊最多只能创建" + Constant.USER_MAX_TEMPLATE_CHARACTER_NUM + "个模板人物");
         }
@@ -142,12 +142,12 @@ public class TemplateCharacterServiceImpl extends ServiceImpl<TemplateCharacterM
         List<TemplateCharacter> templateCharacters = BeanUtils.copyProperties(templateCharacterVOList, TemplateCharacter.class);
         templateCharacters.forEach(item -> {
             item.setTemplateGroupId(templateGroup.getId());
-            item.setCreateBy(session.getId().toString());
-            item.setUpdateBy(session.getId().toString());
+            item.setCreateBy(session.getUserId().toString());
+            item.setUpdateBy(session.getUserId().toString());
             item.setStatus(ReviewEnum.TO_BE_REVIEW.getCode());
         });
         templateGroup.setStatus(ReviewEnum.TO_BE_REVIEW.getCode());
-        templateGroup.setUpdateBy(session.getId().toString());
+        templateGroup.setUpdateBy(session.getUserId().toString());
         templateGroup.setCount(templateCharacters.size());
 
         templateGroupService.updateById(templateGroup);
@@ -162,15 +162,15 @@ public class TemplateCharacterServiceImpl extends ServiceImpl<TemplateCharacterM
         if (ObjectUtil.isNull(templateCharacter)) {
             throw new GlobalException("当前模板人物不存在");
         }
-        if (session.getId().toString().equals(templateCharacter.getCreateBy())) {
+        if (session.getUserId().toString().equals(templateCharacter.getCreateBy())) {
             throw new GlobalException("只有创建人才能删除");
         }
         Long templateGroupId = templateCharacter.getTemplateGroupId();
         TemplateGroup templateGroup = templateGroupService.getById(templateGroupId);
-        templateGroup.setUpdateBy(session.getId().toString());
+        templateGroup.setUpdateBy(session.getUserId().toString());
 
         templateCharacter.setDeleted(Constant.YES_STR);
-        templateCharacter.setUpdateBy(session.getId().toString());
+        templateCharacter.setUpdateBy(session.getUserId().toString());
         baseMapper.updateById(templateCharacter);
 
         int count = this.countUserTemplateCharacter(templateGroupId);
@@ -183,7 +183,7 @@ public class TemplateCharacterServiceImpl extends ServiceImpl<TemplateCharacterM
         UserSession session = SessionContext.getSession();
         LambdaQueryWrapper<TemplateCharacter> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TemplateCharacter::getDeleted, Constant.NO);
-        queryWrapper.eq(TemplateCharacter::getCreateBy, session.getId());
+        queryWrapper.eq(TemplateCharacter::getCreateBy, session.getUserId());
         queryWrapper.eq(TemplateCharacter::getTemplateGroupId, templateGroupId);
         return this.count(queryWrapper);
     }

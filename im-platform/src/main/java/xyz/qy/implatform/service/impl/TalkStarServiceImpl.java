@@ -46,7 +46,7 @@ public class TalkStarServiceImpl extends ServiceImpl<TalkStarMapper, TalkStar> i
     @Override
     public TalkStarVO like(TalkStarDTO talkStarDTO) {
         UserSession session = SessionContext.getSession();
-        Long myUserId = session.getId();
+        Long myUserId = session.getUserId();
 
         User user = userService.getById(myUserId);
 
@@ -95,7 +95,7 @@ public class TalkStarServiceImpl extends ServiceImpl<TalkStarMapper, TalkStar> i
     @Override
     public void cancelLike(TalkStarDTO talkStarDTO) {
         UserSession session = SessionContext.getSession();
-        Long myUserId = session.getId();
+        Long myUserId = session.getUserId();
         LambdaQueryWrapper<TalkStar> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TalkStar::getTalkId, talkStarDTO.getTalkId());
         wrapper.eq(TalkStar::getUserId, myUserId);

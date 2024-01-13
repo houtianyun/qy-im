@@ -102,9 +102,11 @@ public class JwtUtil {
      * @param user 用户信息
      * @return 用户token
      */
-    public LoginVO createToken(User user) {
+    public LoginVO createToken(User user, Integer terminal) {
         // 生成token
         UserSession session = BeanUtils.copyProperties(user, UserSession.class);
+        session.setUserId(user.getId());
+        session.setTerminal(terminal);
         String strJson = JSON.toJSONString(session);
         String accessToken = JwtUtil.sign(user.getId(),strJson,jwtProperties.getAccessTokenExpireIn(),jwtProperties.getAccessTokenSecret());
         String refreshToken = JwtUtil.sign(user.getId(),strJson,jwtProperties.getAccessTokenExpireIn(),jwtProperties.getAccessTokenSecret());

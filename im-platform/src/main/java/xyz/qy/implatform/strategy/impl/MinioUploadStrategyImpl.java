@@ -40,7 +40,7 @@
 //
 //    @Override
 //    public UploadImageVO uploadImage(String path, String fileName, MultipartFile file) throws IOException {
-//        Long userId = SessionContext.getSession().getId();
+//        Long userId = SessionContext.getSession().getUserId();
 //        // 上传原图
 //        UploadImageVO vo = new UploadImageVO();
 //        String miniofileName = minioUtil.upload(bucketName, imagePath, file);
@@ -78,7 +78,7 @@
 //
 //    @Override
 //    public String uploadFile(String path, String fileName, MultipartFile file) throws IOException {
-//        Long userId = SessionContext.getSession().getId();
+//        Long userId = SessionContext.getSession().getUserId();
 //        // 上传
 //        String minioFileName = minioUtil.upload(bucketName, filePath, file);
 //        if (StringUtils.isEmpty(fileName)) {

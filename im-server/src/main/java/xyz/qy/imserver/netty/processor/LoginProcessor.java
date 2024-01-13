@@ -1,13 +1,16 @@
 package xyz.qy.imserver.netty.processor;
 
 import cn.hutool.core.bean.BeanUtil;
+import com.alibaba.fastjson.JSON;
 import org.springframework.beans.factory.annotation.Value;
 import xyz.qy.imcommon.contant.Constant;
 import xyz.qy.imcommon.contant.RedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.model.IMSendInfo;
+import xyz.qy.imcommon.model.IMSessionInfo;
 import xyz.qy.imcommon.model.LoginInfo;
 import xyz.qy.imcommon.util.JwtUtil;
+import xyz.qy.imserver.constant.ChannelAttrKey;
 import xyz.qy.imserver.netty.IMServerGroup;
 import xyz.qy.imserver.netty.UserChannelCtxMap;
 import xyz.qy.imserver.netty.ws.WebSocketServer;
@@ -39,9 +42,12 @@ public class LoginProcessor extends   MessageProcessor<LoginInfo> {
             ctx.channel().close();
             log.warn("用户token校验不通过，强制下线,token:{}",loginInfo.getAccessToken());
         }
-        Long userId = JwtUtil.getUserId(loginInfo.getAccessToken());
+        String strInfo = JwtUtil.getInfo(loginInfo.getAccessToken());
+        IMSessionInfo sessionInfo = JSON.parseObject(strInfo,IMSessionInfo.class);
+        Long userId = sessionInfo.getUserId();
+        Integer terminal = sessionInfo.getTerminal();
         log.info("用户登录，userId:{}",userId);
-        ChannelHandlerContext context = UserChannelCtxMap.getChannelCtx(userId);
+        ChannelHandlerContext context = UserChannelCtxMap.getChannelCtx(userId,terminal);
         if(context != null && !ctx.channel().id().equals(context.channel().id())){
             // 不允许多地登录,强制下线
             IMSendInfo sendInfo = new IMSendInfo();
@@ -51,15 +57,18 @@ public class LoginProcessor extends   MessageProcessor<LoginInfo> {
             log.info("异地登录，强制下线,userId:{}",userId);
         }
         // 绑定用户和channel
-        UserChannelCtxMap.addChannelCtx(userId,ctx);
+        UserChannelCtxMap.addChannelCtx(userId,terminal,ctx);
         // 设置用户id属性
-        AttributeKey<Long> attr = AttributeKey.valueOf("USER_ID");
-        ctx.channel().attr(attr).set(userId);
-        // 心跳次数
-        attr = AttributeKey.valueOf("HEARTBEAt_TIMES");
-        ctx.channel().attr(attr).set(0L);
+        AttributeKey<Long> userIdAttr = AttributeKey.valueOf(ChannelAttrKey.USER_ID);
+        ctx.channel().attr(userIdAttr).set(userId);
+        // 设置用户终端类型
+        AttributeKey<Integer> terminalAttr = AttributeKey.valueOf(ChannelAttrKey.TERMINAL_TYPE);
+        ctx.channel().attr(terminalAttr).set(terminal);
+        // 初始化心跳次数
+        AttributeKey<Long> heartBeatAttr = AttributeKey.valueOf("HEARTBEAt_TIMES");
+        ctx.channel().attr(heartBeatAttr).set(0L);
         // 在redis上记录每个user的channelId，15秒没有心跳，则自动过期
-        String key = RedisKey.IM_USER_SERVER_ID+userId;
+        String key = String.join(":",RedisKey.IM_USER_SERVER_ID,userId.toString(), terminal.toString());
         redisTemplate.opsForValue().set(key, IMServerGroup.serverId, Constant.ONLINE_TIMEOUT_SECOND, TimeUnit.SECONDS);
         // 响应ws
         IMSendInfo sendInfo = new IMSendInfo();

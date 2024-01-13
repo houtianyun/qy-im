@@ -20,7 +20,7 @@ public class GroupMessageListener implements MessageListener {
 
     @Override
     public void process(SendResult result){
-        GroupMessageInfo messageInfo = (GroupMessageInfo) result.getMessageInfo();
+        GroupMessageInfo messageInfo = (GroupMessageInfo) result.getData();
         if(messageInfo.getType().equals(MessageType.TIP.code())){
             // 提示类数据不记录
             return;

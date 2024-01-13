@@ -141,6 +141,7 @@ import WaveSurfer from "wavesurfer.js";
 			return {
         codeUrl: '',
 				loginForm: {
+          terminal: 0,
           userName: '',
 					password: '',
           code: '',

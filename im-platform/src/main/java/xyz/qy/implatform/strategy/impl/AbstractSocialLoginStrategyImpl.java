@@ -78,7 +78,7 @@ public abstract class AbstractSocialLoginStrategyImpl implements SocialLoginStra
         } else {
             user = updateUser(user, ipAddress, ipSource);
         }
-        return jwtUtil.createToken(user);
+        return jwtUtil.createToken(user, 0);
     }
 
     /**

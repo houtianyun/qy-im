@@ -6,13 +6,22 @@ public enum IMSendCode {
     NOT_FIND_CHANNEL(2,"未找到对方的channel"),
     UNKONW_ERROR(9999,"未知异常");
 
-    private int code;
+    private Integer code;
     private String desc;
 
     // 构造方法
     IMSendCode(int code, String desc) {
         this.code = code;
         this.desc = desc;
+    }
+
+    public static IMSendCode fromCode(Integer code){
+        for (IMSendCode typeEnum:values()) {
+            if (typeEnum.code.equals(code)) {
+                return typeEnum;
+            }
+        }
+        return null;
     }
 
     public String description() {

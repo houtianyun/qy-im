@@ -5,11 +5,19 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 
 @Data
 @ApiModel("用户登录VO")
 public class LoginDTO {
+    @Max(value = 1,message = "登录终端类型取值范围:0,1")
+    @Min(value = 0,message = "登录终端类型取值范围:0,1")
+    @NotNull(message="登录终端类型不可为空")
+    @ApiModelProperty(value = "登录终端 0:web  1:app")
+    private Integer terminal;
 
     @NotEmpty(message="用户名不可为空")
     @ApiModelProperty(value = "用户名")

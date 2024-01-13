@@ -222,7 +222,7 @@ public class GroupMemberServiceImpl extends ServiceImpl<GroupMemberMapper, Group
         // 查询当前用户的群用户信息
         QueryWrapper<GroupMember> wrapper = new QueryWrapper();
         wrapper.lambda().eq(GroupMember::getGroupId, groupMemberVO.getGroupId())
-        .eq(GroupMember::getUserId, session.getId());
+        .eq(GroupMember::getUserId, session.getUserId());
         GroupMember groupMember = this.getOne(wrapper);
         if (ObjectUtil.isNull(groupMember) || groupMember.getQuit()) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "您已不在群聊里面，无法切换模板人物");
@@ -283,7 +283,7 @@ public class GroupMemberServiceImpl extends ServiceImpl<GroupMemberMapper, Group
         // 查询当前用户的群用户信息
         QueryWrapper<GroupMember> wrapper = new QueryWrapper();
         wrapper.lambda().eq(GroupMember::getGroupId, avatarVO.getGroupId())
-                .eq(GroupMember::getUserId, session.getId());
+                .eq(GroupMember::getUserId, session.getUserId());
         GroupMember groupMember = this.getOne(wrapper);
         if (ObjectUtil.isNull(groupMember) || groupMember.getQuit()) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "您已不在群聊里面，无法切换模板人物头像");

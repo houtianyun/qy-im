@@ -52,13 +52,13 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
     public void addOrModify(TemplateGroupVO vo) {
         UserSession session = SessionContext.getSession();
         // 新增判断用户已创建的模板群聊数量是否大于10
-        if (ObjectUtil.isNull(vo.getId()) && !session.getId().equals(Constant.ADMIN_USER_ID)) {
+        if (ObjectUtil.isNull(vo.getId()) && !session.getUserId().equals(Constant.ADMIN_USER_ID)) {
             int count = this.countUserTemplateGroup();
             if (count >= Constant.USER_MAX_TEMPLATE_GROUP_NUM) {
                 throw new GlobalException("每位用户最多只能创建" + Constant.USER_MAX_TEMPLATE_GROUP_NUM + "个模板群聊");
             }
         }
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         if (StringUtils.isBlank(vo.getGroupName())) {
             throw new GlobalException("模板群聊名称为空");
         }
@@ -80,7 +80,7 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
     @Transactional
     public void delete(Long id) {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         TemplateGroup templateGroup = baseMapper.selectById(id);
         if (ObjectUtil.isNull(templateGroup)) {
             throw new GlobalException("当前模板群聊已被删除");
@@ -118,7 +118,7 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
     @Override
     public List<TemplateGroupVO> findMyTemplateGroups() {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         LambdaQueryWrapper<TemplateGroup> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TemplateGroup::getCreateBy, userId);
         queryWrapper.eq(TemplateGroup::getDeleted, Constant.NO);
@@ -134,7 +134,7 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
     @Override
     public List<TemplateGroupVO> pageAllTemplateGroups() {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         LambdaQueryWrapper<TemplateGroup> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TemplateGroup::getDeleted, Constant.NO);
         Page<TemplateGroup> pageResult = baseMapper.selectPage(new Page<>(PageUtils.getPageNo(), PageUtils.getPageSize()), queryWrapper);
@@ -162,7 +162,7 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
     @Override
     public int countUserTemplateGroup() {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         LambdaQueryWrapper<TemplateGroup> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TemplateGroup::getCreateBy, userId);
         queryWrapper.eq(TemplateGroup::getDeleted, Constant.NO);
@@ -180,11 +180,11 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
         if (ReviewEnum.REVIEWING.getCode().equals(templateGroup.getStatus())) {
             throw new GlobalException("数据已在审核中，请勿重复提交");
         }
-        if (!session.getId().toString().equals(templateGroup.getCreateBy())) {
+        if (!session.getUserId().toString().equals(templateGroup.getCreateBy())) {
             throw new GlobalException("您不是创建人");
         }
         templateGroup.setStatus(ReviewEnum.REVIEWING.getCode());
-        templateGroup.setUpdateBy(session.getId().toString());
+        templateGroup.setUpdateBy(session.getUserId().toString());
 
         LambdaQueryWrapper<TemplateCharacter> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TemplateCharacter::getTemplateGroupId, templateGroup.getId());
@@ -196,7 +196,7 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
         }
         templateCharacters.forEach(item -> {
             item.setStatus(ReviewEnum.REVIEWING.getCode());
-            item.setUpdateBy(session.getId().toString());
+            item.setUpdateBy(session.getUserId().toString());
         });
         baseMapper.updateById(templateGroup);
         templateCharacterService.updateBatchById(templateCharacters);
@@ -213,11 +213,11 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
         if (!ReviewEnum.REVIEWING.getCode().equals(templateGroup.getStatus())) {
             throw new GlobalException("当前数据不是审核中的状态");
         }
-        if (!session.getId().toString().equals(templateGroup.getCreateBy())) {
+        if (!session.getUserId().toString().equals(templateGroup.getCreateBy())) {
             throw new GlobalException("您不是创建人");
         }
         templateGroup.setStatus(ReviewEnum.TO_BE_REVIEW.getCode());
-        templateGroup.setUpdateBy(session.getId().toString());
+        templateGroup.setUpdateBy(session.getUserId().toString());
 
         LambdaQueryWrapper<TemplateCharacter> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TemplateCharacter::getTemplateGroupId, templateGroup.getId());
@@ -228,7 +228,7 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
         if (CollectionUtils.isNotEmpty(templateCharacters)) {
             templateCharacters.forEach(item -> {
                 item.setStatus(ReviewEnum.TO_BE_REVIEW.getCode());
-                item.setUpdateBy(session.getId().toString());
+                item.setUpdateBy(session.getUserId().toString());
             });
             templateCharacterService.updateBatchById(templateCharacters);
         }
@@ -237,7 +237,7 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
     @Override
     public List<TemplateGroupVO> findReviewingTemplateGroups() {
         UserSession session = SessionContext.getSession();
-        Long userid = session.getId();
+        Long userid = session.getUserId();
         if (!userid.equals(Constant.ADMIN_USER_ID)) {
             throw new GlobalException("当前只有管理员才能审批");
         }
@@ -267,7 +267,7 @@ public class TemplateGroupServiceImpl extends ServiceImpl<TemplateGroupMapper, T
     @Override
     public void submitAuditConclusion(ReviewVO reviewVO) {
         UserSession session = SessionContext.getSession();
-        Long userid = session.getId();
+        Long userid = session.getUserId();
         if (!userid.equals(Constant.ADMIN_USER_ID)) {
             throw new GlobalException("当前只有管理员才能审批");
         }

@@ -124,7 +124,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         recordLoginInfo(user);
         redisCache.deleteObject(RedisKey.CAPTCHA_CODE_KEY + dto.getUuid());
         // 生成token
-        return jwtUtil.createToken(user);
+        return jwtUtil.createToken(user, dto.getTerminal());
     }
 
     private void recordLoginInfo(User user) {
@@ -269,7 +269,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public void update(UserVO vo) {
         UserSession session = SessionContext.getSession();
-        if (!session.getId().equals(vo.getId())) {
+        if (!session.getUserId().equals(vo.getId())) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "不允许修改其他用户的信息!");
         }
         User user = this.getById(vo.getId());
@@ -279,7 +279,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         // 更新好友昵称和头像
         if (!user.getNickName().equals(vo.getNickName()) || !user.getHeadImageThumb().equals(vo.getHeadImageThumb())) {
             QueryWrapper<Friend> queryWrapper = new QueryWrapper<>();
-            queryWrapper.lambda().eq(Friend::getFriendId, session.getId());
+            queryWrapper.lambda().eq(Friend::getFriendId, session.getUserId());
             List<Friend> friends = friendService.list(queryWrapper);
             for (Friend friend : friends) {
                 friend.setFriendNickName(vo.getNickName());
@@ -289,7 +289,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         // 更新群聊中的头像
         if (!user.getHeadImageThumb().equals(vo.getHeadImageThumb())) {
-            List<GroupMember> members = groupMemberService.findByUserId(session.getId());
+            List<GroupMember> members = groupMemberService.findByUserId(session.getUserId());
             for (GroupMember member : members) {
                 // 模板群聊不能修改用户聊天头像
                 if (Constant.YES == member.getIsTemplate()) {
@@ -318,7 +318,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public PageResultVO findUserByNickName(String nickname) {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.lambda()
                 .ne(User::getId, userId)
@@ -382,7 +382,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public void modifyPassword(PasswordVO passwordVO) {
         UserSession session = SessionContext.getSession();
-        Long userId = session.getId();
+        Long userId = session.getUserId();
 
         User user = baseMapper.selectById(userId);
         if (!passwordEncoder.matches(passwordVO.getOldPassword(), user.getPassword())) {
