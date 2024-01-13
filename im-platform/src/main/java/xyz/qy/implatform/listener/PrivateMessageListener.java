@@ -47,6 +47,7 @@ public class PrivateMessageListener implements MessageListener {
                 sendMessage.setSendTime(new Date());
                 imClient.sendPrivateMessage(sendMessage.getRecvId(),sendMessage);
             }
+            return;
         }
         // 更新消息状态
         if(result.getCode().equals(IMSendCode.SUCCESS)){

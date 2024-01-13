@@ -91,7 +91,7 @@
 				this.$store.commit("setUserInfo", userInfo);
 				this.$store.commit("setUserState", this.$enums.USER_STATE.FREE);
 				this.$store.commit("initStore");
-				this.$wsApi.createWebSocket(process.env.VUE_APP_WS_URL, userInfo.id);
+				this.$wsApi.createWebSocket(process.env.VUE_APP_WS_URL, userInfo.id, sessionStorage.getItem("accessToken"));
 				this.$wsApi.onopen(() => {
 					this.pullUnreadMessage();
 				});
@@ -102,7 +102,6 @@
 						setTimeout(() => {
 							location.href = "/";
 						}, 1000)
-
 					} else if (cmd == 3) {
 						// 插入私聊消息
 						this.handlePrivateMessage(msgInfo);
@@ -205,7 +204,7 @@
 			},
 			handleExit() {
         this.$wsApi.closeWebSocket();
-        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("accessToken");
         location.href = "/";
 			},
 			playAudioTip(){

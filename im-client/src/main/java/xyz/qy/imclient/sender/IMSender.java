@@ -111,4 +111,9 @@ public class IMSender {
             }
         }
     }
+
+    public Boolean isOnline(Long userId){
+        String key = RedisKey.IM_USER_SERVER_ID + userId;
+        return  redisTemplate.hasKey(key);
+    }
 }

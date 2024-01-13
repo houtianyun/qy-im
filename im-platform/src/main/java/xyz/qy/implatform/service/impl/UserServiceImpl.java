@@ -4,7 +4,6 @@ import cn.hutool.core.lang.UUID;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
-import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -18,7 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import xyz.qy.imclient.IMClient;
 import xyz.qy.imcommon.contant.RedisKey;
+import xyz.qy.implatform.config.JwtProperties;
 import xyz.qy.implatform.contant.Constant;
 import xyz.qy.implatform.dto.LoginDTO;
 import xyz.qy.implatform.dto.RegisterDTO;
@@ -100,6 +101,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Autowired
     private IPrivateMessageService privateMessageService;
 
+    @Autowired
+    private JwtProperties jwtProperties;
+
+    @Autowired
+    private IMClient imClient;
+
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @Override
     public LoginVO login(LoginDTO dto) {
         // 验证码校验
@@ -113,7 +123,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         recordLoginInfo(user);
         redisCache.deleteObject(RedisKey.CAPTCHA_CODE_KEY + dto.getUuid());
-        return JwtUtil.createToken(user);
+        // 生成token
+        return jwtUtil.createToken(user);
     }
 
     private void recordLoginInfo(User user) {
@@ -139,22 +150,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public LoginVO refreshToken(String refreshToken) {
-        try {
-            //验证 token
-            JwtUtil.checkSign(refreshToken, Constant.REFRESH_TOKEN_SECRET);
-            String strJson = JwtUtil.getInfo(refreshToken);
-            Long userId = JwtUtil.getUserId(refreshToken);
-            String accessToken = JwtUtil.sign(userId, strJson, Constant.ACCESS_TOKEN_EXPIRE, Constant.ACCESS_TOKEN_SECRET);
-            String newRefreshToken = JwtUtil.sign(userId, strJson, Constant.REFRESH_TOKEN_EXPIRE, Constant.REFRESH_TOKEN_SECRET);
-            LoginVO vo = new LoginVO();
-            vo.setAccessToken(accessToken);
-            vo.setAccessTokenExpiresIn(Constant.ACCESS_TOKEN_EXPIRE);
-            vo.setRefreshToken(newRefreshToken);
-            vo.setRefreshTokenExpiresIn(Constant.REFRESH_TOKEN_EXPIRE);
-            return vo;
-        } catch (JWTVerificationException e) {
-            throw new GlobalException("refreshToken已失效");
+        //验证 token
+        if(JwtUtil.checkSign(refreshToken, jwtProperties.getRefreshTokenSecret())){
+            throw new GlobalException("refreshToken无效或已过期");
         }
+        String strJson = JwtUtil.getInfo(refreshToken);
+        Long userId = JwtUtil.getUserId(refreshToken);
+        String accessToken = JwtUtil.sign(userId,strJson,jwtProperties.getAccessTokenExpireIn(),jwtProperties.getAccessTokenSecret());
+        String newRefreshToken = JwtUtil.sign(userId,strJson,jwtProperties.getAccessTokenExpireIn(),jwtProperties.getAccessTokenSecret());
+        LoginVO vo =new LoginVO();
+        vo.setAccessToken(accessToken);
+        vo.setAccessTokenExpiresIn(jwtProperties.getAccessTokenExpireIn());
+        vo.setRefreshToken(newRefreshToken);
+        vo.setRefreshTokenExpiresIn(jwtProperties.getRefreshTokenExpireIn());
+        return vo;
     }
 
     /**
@@ -325,7 +334,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         List<UserVO> vos = users.stream().map(u -> {
             UserVO vo = BeanUtils.copyProperties(u, UserVO.class);
-            vo.setOnline(isOnline(u.getId()));
+            vo.setOnline(imClient.isOnline(u.getId()));
             return vo;
         }).collect(Collectors.toList());
         return PageResultVO.builder().data(vos).total(page.getTotal()).build();
@@ -342,18 +351,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         String[] idArr = userIds.split(",");
         List<Long> onlineIds = new LinkedList<>();
         for (String userId : idArr) {
-            if (isOnline(Long.parseLong(userId))) {
+            if (imClient.isOnline(Long.parseLong(userId))) {
                 onlineIds.add(Long.parseLong(userId));
             }
         }
         return onlineIds;
-    }
-
-
-    private boolean isOnline(Long userId) {
-        String key = RedisKey.IM_USER_SERVER_ID + userId;
-        Integer serverId = (Integer) redisTemplate.opsForValue().get(key);
-        return serverId != null && serverId >= 0;
     }
 
     @Override

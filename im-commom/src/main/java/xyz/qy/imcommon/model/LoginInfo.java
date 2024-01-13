@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data
 public class LoginInfo {
-    private long userId;
+    private String accessToken;
 }

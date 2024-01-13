@@ -51,6 +51,14 @@ webrtc:
   iceServers:
     - urls: stun:stun.l.google.com:19302
 
+jwt:
+  accessToken:
+    expireIn: 1800  #半个小时
+    secret: MIIBIjANBgkq
+  refreshToken:
+    expireIn: 604800 #7天
+    secret: IKDiqVmn0VFU
+
 # 上传模式 可选 oss或local或qiniu  （http://和最后的/一定不能去！！！）
 upload:
   mode: local

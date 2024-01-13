@@ -10,7 +10,7 @@ public enum ResultCode {
     SUCCESS(200,"成功"),
     LOGIN_ERROR(400,"登录异常"),
     NO_LOGIN(400,"未登录"),
-    INVALID_TOKEN(401,"token已失效"),
+    INVALID_TOKEN(401,"token无效或已过期"),
     FORBIDDEN(403,"禁止访问"),
     NOT_FIND(404,"无法找到文件"),
     PROGRAM_ERROR(500,"系统繁忙，请稍后再试"),

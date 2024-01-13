@@ -5,14 +5,24 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
-import xyz.qy.implatform.contant.Constant;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import xyz.qy.imclient.IMClient;
+import xyz.qy.implatform.config.JwtProperties;
 import xyz.qy.implatform.entity.User;
 import xyz.qy.implatform.session.UserSession;
 import xyz.qy.implatform.vo.LoginVO;
 
 import java.util.Date;
 
+@Component
 public class JwtUtil {
+    @Autowired
+    private JwtProperties jwtProperties;
+
+    @Autowired
+    private IMClient imClient;
+
     /**
      * 生成jwt字符串，30分钟后过期  JWT(json web token)
      *
@@ -92,17 +102,17 @@ public class JwtUtil {
      * @param user 用户信息
      * @return 用户token
      */
-    public static LoginVO createToken(User user) {
+    public LoginVO createToken(User user) {
         // 生成token
         UserSession session = BeanUtils.copyProperties(user, UserSession.class);
         String strJson = JSON.toJSONString(session);
-        String accessToken = JwtUtil.sign(user.getId(), strJson, Constant.ACCESS_TOKEN_EXPIRE, Constant.ACCESS_TOKEN_SECRET);
-        String refreshToken = JwtUtil.sign(user.getId(), strJson, Constant.REFRESH_TOKEN_EXPIRE, Constant.REFRESH_TOKEN_SECRET);
+        String accessToken = JwtUtil.sign(user.getId(),strJson,jwtProperties.getAccessTokenExpireIn(),jwtProperties.getAccessTokenSecret());
+        String refreshToken = JwtUtil.sign(user.getId(),strJson,jwtProperties.getAccessTokenExpireIn(),jwtProperties.getAccessTokenSecret());
         LoginVO vo = new LoginVO();
         vo.setAccessToken(accessToken);
-        vo.setAccessTokenExpiresIn(Constant.ACCESS_TOKEN_EXPIRE);
+        vo.setAccessTokenExpiresIn(jwtProperties.getAccessTokenExpireIn());
         vo.setRefreshToken(refreshToken);
-        vo.setRefreshTokenExpiresIn(Constant.REFRESH_TOKEN_EXPIRE);
+        vo.setRefreshTokenExpiresIn(jwtProperties.getRefreshTokenExpireIn());
         return vo;
     }
 }

@@ -61,6 +61,9 @@ public abstract class AbstractSocialLoginStrategyImpl implements SocialLoginStra
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     @Override
     public LoginVO login(String data) {
         // 获取第三方token信息
@@ -75,7 +78,7 @@ public abstract class AbstractSocialLoginStrategyImpl implements SocialLoginStra
         } else {
             user = updateUser(user, ipAddress, ipSource);
         }
-        return JwtUtil.createToken(user);
+        return jwtUtil.createToken(user);
     }
 
     /**

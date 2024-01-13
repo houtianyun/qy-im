@@ -155,9 +155,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
     public void pullUnreadMessage() {
         // 获取当前连接的channelId
         Long userId = SessionContext.getSession().getId();
-        String key = RedisKey.IM_USER_SERVER_ID + userId;
-        Integer serverId = (Integer) redisTemplate.opsForValue().get(key);
-        if (serverId == null) {
+        if (!imClient.isOnline(userId)) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "用户未建立连接");
         }
         // 获取当前用户所有未读消息

@@ -29,7 +29,7 @@ public class Constant {
     public static final long ADMIN_USER_ID = 1L;
     // 管理员欢迎语
     public static final String ADMIN_WELCOME_MSG = "感谢您的到来#玫瑰;";
-    // accessToken 过期时间(1小时)
+    // accessToken 过期时间(半小时)
     public static final Integer ACCESS_TOKEN_EXPIRE = 30 * 60;
     // refreshToken 过期时间(7天)
     public static final Integer REFRESH_TOKEN_EXPIRE = 7 * 24 * 60 * 60 ;

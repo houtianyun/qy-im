@@ -1,11 +1,13 @@
 package xyz.qy.imserver.netty.processor;
 
 import cn.hutool.core.bean.BeanUtil;
+import org.springframework.beans.factory.annotation.Value;
 import xyz.qy.imcommon.contant.Constant;
 import xyz.qy.imcommon.contant.RedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.model.IMSendInfo;
 import xyz.qy.imcommon.model.LoginInfo;
+import xyz.qy.imcommon.util.JwtUtil;
 import xyz.qy.imserver.netty.IMServerGroup;
 import xyz.qy.imserver.netty.UserChannelCtxMap;
 import xyz.qy.imserver.netty.ws.WebSocketServer;
@@ -28,26 +30,36 @@ public class LoginProcessor extends   MessageProcessor<LoginInfo> {
     @Autowired
     RedisTemplate<String,Object> redisTemplate;
 
+    @Value("${jwt.accessToken.secret}")
+    private String accessTokenSecret;
+
     @Override
     synchronized public void process(ChannelHandlerContext ctx, LoginInfo loginInfo) {
-        log.info("用户登录，userId:{}",loginInfo.getUserId());
-        ChannelHandlerContext context = UserChannelCtxMap.getChannelCtx(loginInfo.getUserId());
-        if(context != null){
+        if(!JwtUtil.checkSign(loginInfo.getAccessToken(),accessTokenSecret)){
+            ctx.channel().close();
+            log.warn("用户token校验不通过，强制下线,token:{}",loginInfo.getAccessToken());
+        }
+        Long userId = JwtUtil.getUserId(loginInfo.getAccessToken());
+        log.info("用户登录，userId:{}",userId);
+        ChannelHandlerContext context = UserChannelCtxMap.getChannelCtx(userId);
+        if(context != null && !ctx.channel().id().equals(context.channel().id())){
             // 不允许多地登录,强制下线
             IMSendInfo sendInfo = new IMSendInfo();
             sendInfo.setCmd(IMCmdType.FORCE_LOGUT.code());
+            sendInfo.setData("您已在其他地方登陆，将被强制下线");
             context.channel().writeAndFlush(sendInfo);
+            log.info("异地登录，强制下线,userId:{}",userId);
         }
         // 绑定用户和channel
-        UserChannelCtxMap.addChannelCtx(loginInfo.getUserId(),ctx);
+        UserChannelCtxMap.addChannelCtx(userId,ctx);
         // 设置用户id属性
         AttributeKey<Long> attr = AttributeKey.valueOf("USER_ID");
-        ctx.channel().attr(attr).set(loginInfo.getUserId());
+        ctx.channel().attr(attr).set(userId);
         // 心跳次数
         attr = AttributeKey.valueOf("HEARTBEAt_TIMES");
         ctx.channel().attr(attr).set(0L);
         // 在redis上记录每个user的channelId，15秒没有心跳，则自动过期
-        String key = RedisKey.IM_USER_SERVER_ID+loginInfo.getUserId();
+        String key = RedisKey.IM_USER_SERVER_ID+userId;
         redisTemplate.opsForValue().set(key, IMServerGroup.serverId, Constant.ONLINE_TIMEOUT_SECOND, TimeUnit.SECONDS);
         // 响应ws
         IMSendInfo sendInfo = new IMSendInfo();
