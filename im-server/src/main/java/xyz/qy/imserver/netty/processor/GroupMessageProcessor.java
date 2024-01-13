@@ -6,11 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import xyz.qy.imcommon.contant.Constant;
 import xyz.qy.imcommon.contant.RedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.enums.IMSendCode;
-import xyz.qy.imcommon.model.GroupMessageInfo;
 import xyz.qy.imcommon.model.IMRecvInfo;
 import xyz.qy.imcommon.model.IMSendInfo;
 import xyz.qy.imcommon.model.SendResult;
@@ -20,7 +18,7 @@ import java.util.List;
 
 @Slf4j
 @Component
-public class GroupMessageProcessor extends  MessageProcessor<IMRecvInfo> {
+public class GroupMessageProcessor extends AbstractMessageProcessor<IMRecvInfo> {
 
     @Autowired
     private RedisTemplate<String,Object> redisTemplate;

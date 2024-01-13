@@ -62,7 +62,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         this.save(msg);
         // 推送消息
         PrivateMessageInfo msgInfo = BeanUtils.copyProperties(msg, PrivateMessageInfo.class);
-        IMPrivateMessage sendMessage = new IMPrivateMessage();
+        IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage();
         sendMessage.setSendId(msgInfo.getSendId());
         sendMessage.setRecvId(msgInfo.getRecvId());
         sendMessage.setSendTerminal(session.getTerminal());
@@ -88,7 +88,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         this.save(msg);
         // 推送消息
         PrivateMessageInfo msgInfo = BeanUtils.copyProperties(msg, PrivateMessageInfo.class);
-        IMPrivateMessage sendMessage = new IMPrivateMessage();
+        IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage();
         sendMessage.setSendId(msgInfo.getSendId());
         sendMessage.setRecvId(msgInfo.getRecvId());
         sendMessage.setSendTerminal(session.getTerminal());
@@ -124,7 +124,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         msgInfo.setType(MessageType.TIP.code());
         msgInfo.setSendTime(new Date());
         msgInfo.setContent("对方撤回了一条消息");
-        IMPrivateMessage sendMessage = new IMPrivateMessage();
+        IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage();
         sendMessage.setSendId(msgInfo.getSendId());
         sendMessage.setRecvId(msgInfo.getRecvId());
         sendMessage.setSendTerminal(session.getTerminal());
@@ -159,11 +159,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
                 .last("limit " + stIdx + "," + size);
 
         List<PrivateMessage> messages = this.list(wrapper);
-        List<PrivateMessageInfo> messageInfos = messages.stream().map(m -> {
-            PrivateMessageInfo info = BeanUtils.copyProperties(m, PrivateMessageInfo.class);
-            return info;
-        }).collect(Collectors.toList());
-
+        List<PrivateMessageInfo> messageInfos = messages.stream().map(m -> BeanUtils.copyProperties(m, PrivateMessageInfo.class)).collect(Collectors.toList());
         log.info("拉取聊天记录，用户id:{},好友id:{}，数量:{}", userId, friendId, messageInfos.size());
         return messageInfos;
     }
@@ -188,10 +184,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         // 上传至redis，等待推送
         if (!messages.isEmpty()) {
             // 推送消息
-            List<PrivateMessageInfo> messageInfos = messages.stream().map(m -> {
-                PrivateMessageInfo msgInfo = BeanUtils.copyProperties(m, PrivateMessageInfo.class);
-                return msgInfo;
-            }).collect(Collectors.toList());
+            List<PrivateMessageInfo> messageInfos = messages.stream().map(m -> BeanUtils.copyProperties(m, PrivateMessageInfo.class)).collect(Collectors.toList());
             // 不止一条未读消息
             if (messageInfos.size() > 1) {
                 for (int i = 0; i < messageInfos.size(); i++) {

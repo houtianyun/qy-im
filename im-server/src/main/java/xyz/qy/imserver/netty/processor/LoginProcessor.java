@@ -26,10 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-public class LoginProcessor extends   MessageProcessor<LoginInfo> {
-    @Autowired
-    private WebSocketServer WSServer;
-
+public class LoginProcessor extends AbstractMessageProcessor<LoginInfo> {
     @Autowired
     RedisTemplate<String,Object> redisTemplate;
 

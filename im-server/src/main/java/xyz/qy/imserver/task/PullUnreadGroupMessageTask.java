@@ -2,10 +2,9 @@ package xyz.qy.imserver.task;
 
 import xyz.qy.imcommon.contant.RedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
-import xyz.qy.imcommon.model.GroupMessageInfo;
 import xyz.qy.imcommon.model.IMRecvInfo;
 import xyz.qy.imserver.netty.IMServerGroup;
-import xyz.qy.imserver.netty.processor.MessageProcessor;
+import xyz.qy.imserver.netty.processor.AbstractMessageProcessor;
 import xyz.qy.imserver.netty.processor.ProcessorFactory;
 import xyz.qy.imserver.netty.ws.WebSocketServer;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +31,7 @@ public class PullUnreadGroupMessageTask extends  AbstractPullMessageTask {
         for(Object o: messageInfos){
             redisTemplate.opsForList().leftPop(key);
             IMRecvInfo recvInfo = (IMRecvInfo)o;
-            MessageProcessor processor = ProcessorFactory.createProcessor(IMCmdType.GROUP_MESSAGE);
+            AbstractMessageProcessor processor = ProcessorFactory.createProcessor(IMCmdType.GROUP_MESSAGE);
             processor.process(recvInfo);
         }
     }

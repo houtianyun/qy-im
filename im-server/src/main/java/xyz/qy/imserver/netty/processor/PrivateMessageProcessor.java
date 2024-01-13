@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-public class PrivateMessageProcessor extends  MessageProcessor<IMRecvInfo> {
+public class PrivateMessageProcessor extends AbstractMessageProcessor<IMRecvInfo> {
 
     @Autowired
     private RedisTemplate<String,Object> redisTemplate;
