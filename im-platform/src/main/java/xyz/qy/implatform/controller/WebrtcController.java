@@ -14,6 +14,7 @@ import xyz.qy.imcommon.model.IMPrivateMessage;
 import xyz.qy.imcommon.model.PrivateMessageInfo;
 import xyz.qy.implatform.config.ICEServerConfig;
 import xyz.qy.implatform.enums.MessageType;
+import xyz.qy.implatform.exception.GlobalException;
 import xyz.qy.implatform.result.Result;
 import xyz.qy.implatform.result.ResultUtils;
 import xyz.qy.implatform.session.SessionContext;
@@ -35,6 +36,9 @@ public class WebrtcController {
     @ApiOperation(httpMethod = "POST", value = "呼叫视频通话")
     @PostMapping("/call")
     public Result call(@RequestParam Long uid, @RequestBody String offer) {
+        if(!imClient.isOnline(uid)){
+            throw new GlobalException("对方目前不在线");
+        }
         imClient.sendPrivateMessage(buildSendMessage(MessageType.RTC_CALL,uid,offer));
         return ResultUtils.success();
     }
