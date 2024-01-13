@@ -47,6 +47,7 @@
 		},
 		data() {
 			return {
+        callerId: null,
 				stream: null,
 				audio: new Audio(),
 				loading: false,
@@ -140,34 +141,46 @@
 
 			},
 			handleMessage(msg) {
-				if (msg.type == this.$enums.MESSAGE_TYPE.RTC_ACCEPT) {
-					this.peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(msg.content)));
-					// 关闭等待提示
-					this.loading = false;
-					// 状态为连接中
-					this.state = 'CONNECTED';
-					// 停止播放语音
-					this.audio.pause();
-					// 发送candidate
-					this.candidates.forEach((candidate) => {
-						this.sendCandidate(candidate);
-					})
-				}
-				else if (msg.type == this.$enums.MESSAGE_TYPE.RTC_REJECT) {
-					this.$message.error("对方拒绝了您的视频请求");
-					this.close();
-				}
-				else if (msg.type == this.$enums.MESSAGE_TYPE.RTC_FAILED) {
-					this.$message.error(msg.content)
-					this.close();
-				}
-				else if (msg.type == this.$enums.MESSAGE_TYPE.RTC_CANDIDATE) {
-					this.peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(msg.content)));
-				}
-				else if (msg.type == this.$enums.MESSAGE_TYPE.RTC_HANDUP) {
-					this.$message.success("对方挂断了视频通话");
-					this.close();
-				}
+        if (msg.type == this.$enums.MESSAGE_TYPE.RTC_ACCEPT) {
+          if (msg.sendId == this.$store.state.userStore.userInfo.id) {
+            // 我在其他终端接受了对方的通话
+            this.$message.success("已在其他设备接听");
+            this.close();
+          } else {
+            // 对方接受了我的通话
+            this.peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(msg.content)));
+            // 关闭等待提示
+            this.loading = false;
+            // 状态为连接中
+            this.state = 'CONNECTED';
+            // 停止播放语音
+            this.audio.pause();
+            // 发送candidate
+            this.candidates.forEach((candidate) => {
+              this.sendCandidate(candidate);
+            })
+          }
+
+        } else if (msg.type == this.$enums.MESSAGE_TYPE.RTC_REJECT) {
+          console.log(msg)
+          if (msg.sendId == this.$store.state.userStore.userInfo.id) {
+            // 我在其他终端拒绝了对方的通话
+            this.$message.success("已在其他设备拒绝通话");
+            this.close();
+          } else {
+            // 对方拒绝了我的通话
+            this.$message.error("对方拒绝了您的视频请求");
+            this.close();
+          }
+        } else if (msg.type == this.$enums.MESSAGE_TYPE.RTC_FAILED) {
+          this.$message.error(msg.content)
+          this.close();
+        } else if (msg.type == this.$enums.MESSAGE_TYPE.RTC_CANDIDATE) {
+          this.peerConnection.addIceCandidate(new RTCIceCandidate(JSON.parse(msg.content)));
+        } else if (msg.type == this.$enums.MESSAGE_TYPE.RTC_HANDUP) {
+          this.$message.success("对方挂断了视频通话");
+          this.close();
+        }
 			},
 			call() {
 				this.peerConnection.createOffer((offer) => {
@@ -177,6 +190,7 @@
 							method: 'post',
 							data: JSON.stringify(offer)
 						}).then(() => {
+              this.callId = this.$store.state.userStore.userInfo.id;
 							this.loading = true;
 							this.state = 'CONNECTING';
 							this.audio.play();
@@ -195,7 +209,10 @@
 							url: `/webrtc/private/accept?uid=${this.friend.id}`,
 							method: 'post',
 							data: JSON.stringify(answer)
-						})
+						}).then(() => {
+              this.state = 'CONNECTED';
+              this.callerId = this.friend.id;
+            })
 						this.state = 'CONNECTED';
 					},
 					(error) => {
@@ -233,19 +250,23 @@
 				})
 			},
 			close() {
-				this.$emit("close");
-				this.closeCamera();
-				this.loading = false;
-				this.state = 'NOT_CONNECTED';
-				this.videoTime = 0;
-				this.videoTimer && clearInterval(this.videoTimer);
-				this.audio.pause();
-				this.candidates = [];
-				this.$store.commit("setUserState", this.$enums.USER_STATE.FREE);
-				this.$refs.friendVideo.srcObject = null;
-				this.peerConnection.close();
-				this.peerConnection.onicecandidate = null;
-				this.peerConnection.onaddstream = null;
+        this.$emit("close");
+        this.closeCamera();
+        this.loading = false;
+        this.state = 'NOT_CONNECTED';
+        this.videoTime = 0;
+        this.videoTimer && clearInterval(this.videoTimer);
+        this.audio.pause();
+        this.candidates = [];
+        this.$store.commit("setUserState", this.$enums.USER_STATE.FREE);
+        if (this.peerConnection) {
+          this.peerConnection.close();
+          this.peerConnection.onicecandidate = null;
+          this.peerConnection.onaddstream = null;
+        }
+        if (this.$refs.friendVideo) {
+          this.$refs.friendVideo.srcObject = null;
+        }
 			},
 			resetTime(){
 				this.videoTime = 0;

@@ -25,6 +25,7 @@ import xyz.qy.implatform.util.BeanUtils;
 import xyz.qy.implatform.vo.PrivateMessageVO;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -88,12 +89,12 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         this.save(msg);
         // 推送消息
         PrivateMessageInfo msgInfo = BeanUtils.copyProperties(msg, PrivateMessageInfo.class);
-        IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage();
+        IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
         sendMessage.setSendId(msgInfo.getSendId());
         sendMessage.setRecvId(msgInfo.getRecvId());
         sendMessage.setSendTerminal(session.getTerminal());
         sendMessage.setSendToSelf(true);
-        sendMessage.setDatas(Arrays.asList(msgInfo));
+        sendMessage.setDatas(Collections.singletonList(msgInfo));
         imClient.sendPrivateMessage(sendMessage);
         log.info("发送私聊消息，发送id:{},接收id:{}，内容:{}", session.getUserId(), vo.getRecvId(), vo.getContent());
     }
@@ -124,12 +125,12 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         msgInfo.setType(MessageType.TIP.code());
         msgInfo.setSendTime(new Date());
         msgInfo.setContent("对方撤回了一条消息");
-        IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage();
+        IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
         sendMessage.setSendId(msgInfo.getSendId());
         sendMessage.setRecvId(msgInfo.getRecvId());
         sendMessage.setSendTerminal(session.getTerminal());
         sendMessage.setSendToSelf(true);
-        sendMessage.setDatas(Arrays.asList(msgInfo));
+        sendMessage.setDatas(Collections.singletonList(msgInfo));
         imClient.sendPrivateMessage(sendMessage);
         log.info("撤回私聊消息，发送id:{},接收id:{}，内容:{}", msg.getSendId(), msg.getRecvId(), msg.getContent());
     }
@@ -147,7 +148,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         page = page > 0 ? page : 1;
         size = size > 0 ? size : 10;
         Long userId = SessionContext.getSession().getUserId();
-        Long stIdx = (page - 1) * size;
+        long stIdx = (page - 1) * size;
         QueryWrapper<PrivateMessage> wrapper = new QueryWrapper<>();
         wrapper.lambda().and(wrap -> wrap.and(
                 wp -> wp.eq(PrivateMessage::getSendId, userId)
@@ -194,7 +195,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
                     }
                 }
             }
-            IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage();
+            IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
             sendMessage.setRecvId(userId);
             sendMessage.setSendToSelf(false);
             sendMessage.setDatas(messageInfos);

@@ -33,9 +33,10 @@ public class IMSender {
     private MessageListenerMulticaster listenerMulticaster;
 
     public void sendPrivateMessage(IMPrivateMessage message) {
-        for (IMTerminalType terminal : IMTerminalType.values()) {
+        List<Integer> terminals = message.getRecvTerminals();
+        for (Integer terminal : terminals) {
             // 获取对方连接的channelId
-            String key = String.join(":",RedisKey.IM_USER_SERVER_ID, message.getRecvId().toString(), terminal.code().toString());
+            String key = String.join(":",RedisKey.IM_USER_SERVER_ID, message.getRecvId().toString(), terminal.toString());
             Integer serverId = (Integer) redisTemplate.opsForValue().get(key);
             // 如果对方在线，将数据存储至redis，等待拉取推送
             if (serverId != null) {
@@ -44,22 +45,21 @@ public class IMSender {
                 for (int i = 0; i < message.getDatas().size(); i++) {
                     IMRecvInfo recvInfo = new IMRecvInfo();
                     recvInfo.setCmd(IMCmdType.PRIVATE_MESSAGE.code());
-                    recvInfo.setRecvTerminal(terminal.code());
-                    recvInfo.setNeedSendResult(true);
-                    List recvIds = new LinkedList();
+                    recvInfo.setRecvTerminal(terminal);
+                    recvInfo.setSendResult(message.getSendResult());
+                    List<Long> recvIds = new LinkedList<>();
                     recvIds.add(message.getRecvId());
                     recvInfo.setRecvIds(recvIds);
                     recvInfo.setData(message.getDatas().get(i));
                     recvInfos[i]=recvInfo;
                 }
                 redisTemplate.opsForList().rightPushAll(sendKey, recvInfos);
-
-            } else {
+            } else if(message.getSendResult()){
                 // 回复消息状态
                 for (int i = 0; i < message.getDatas().size(); i++) {
                     SendResult result = new SendResult();
                     result.setRecvId(message.getRecvId());
-                    result.setRecvTerminal(terminal.code());
+                    result.setRecvTerminal(terminal);
                     result.setCode(IMSendCode.NOT_ONLINE.code());
                     result.setData(message.getDatas().get(i));
                     listenerMulticaster.multicast(IMListenerType.PRIVATE_MESSAGE, result);
@@ -67,9 +67,9 @@ public class IMSender {
 
             }
             // 推送给自己的其他终端
-            if (message.getSendToSelf() && !message.getSendTerminal().equals(terminal.code())) {
+            if (message.getSendToSelf() && !message.getSendTerminal().equals(terminal)) {
                 // 获取终端连接的channelId
-                key = String.join(":",RedisKey.IM_USER_SERVER_ID, message.getSendId().toString(), terminal.code().toString());
+                key = String.join(":",RedisKey.IM_USER_SERVER_ID, message.getSendId().toString(), terminal.toString());
                 serverId = (Integer) redisTemplate.opsForValue().get(key);
                 // 如果终端在线，将数据存储至redis，等待拉取推送
                 if (serverId != null) {
@@ -78,10 +78,10 @@ public class IMSender {
                     for (int i = 0; i < message.getDatas().size(); i++) {
                         IMRecvInfo recvInfo = new IMRecvInfo();
                         recvInfo.setCmd(IMCmdType.PRIVATE_MESSAGE.code());
-                        recvInfo.setRecvTerminal(terminal.code());
+                        recvInfo.setRecvTerminal(terminal);
                         // 自己的消息不需要回推消息结果
-                        recvInfo.setNeedSendResult(false);
-                        List recvIds = new LinkedList();
+                        recvInfo.setSendResult(false);
+                        LinkedList<Long> recvIds = new LinkedList<>();
                         recvIds.add(message.getSendId());
                         recvInfo.setRecvIds(recvIds);
                         recvInfo.setData(message.getDatas().get(i));

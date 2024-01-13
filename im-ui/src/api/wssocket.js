@@ -18,6 +18,7 @@ let createWebSocket = (url, id, token) => {
 let initWebSocket = () => {
 	try {
 		console.log("初始化WebSocket");
+		closeWebSocket();
 		hasLogin = false;
 		websock = new WebSocket(wsurl);
 		websock.onmessage = function(e) {
@@ -39,6 +40,7 @@ let initWebSocket = () => {
 		websock.onclose = function(e) {
 			console.log('WebSocket连接关闭')
 			isConnect = false; //断开后修改标识
+			reConnect();
 		}
 		websock.onopen = function() {
 			console.log("WebSocket连接成功");
@@ -77,7 +79,7 @@ let reConnect = () => {
 };
 //设置关闭连接
 let closeWebSocket = () => {
-	websock.close();
+	websock && websock.close();
 };
 
 

@@ -21,4 +21,6 @@ public class RedisKey {
     public static final String LOGIN_MEDIA = IM_CACHE + "media";
     // 是否开启媒体播放
     public static final String ON_OFF_DISPLAY_MEDIA = IM_CACHE + "display_media";
+    // webrtc 会话信息
+    public final static String IM_WEBRTC_SESSION = "im:webrtc:session";
 }

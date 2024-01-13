@@ -152,6 +152,7 @@
 						this.$store.commit("showVideoAcceptorBox",friend);
 						this.$refs.videoAcceptor.handleMessage(msg)
 					}else {
+            this.$refs.videoAcceptor.close()
 						this.$refs.privateVideo.handleMessage(msg)
 					}
 					return ;
