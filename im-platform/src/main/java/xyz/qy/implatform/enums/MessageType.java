@@ -2,8 +2,8 @@ package xyz.qy.implatform.enums;
 
 public enum MessageType {
     TEXT(0,"文字"),
-    FILE(1,"文件"),
-    IMAGE(2,"图片"),
+    IMAGE(1,"图片"),
+    FILE(2,"文件"),
     AUDIO(3,"音频"),
     VIDEO(4,"视频"),
     RECALL(10,"撤回"),
