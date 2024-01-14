@@ -200,6 +200,7 @@ create table im_user
     head_image_thumb varchar(255)  default ''                  null comment '用户头像缩略图',
     password         varchar(255)                              not null comment '密码(明文)',
     sex              tinyint(1)    default 0                   null comment '性别 0:男 1::女',
+    type             smallint(1)   default 1                   null comment '用户类型 1:普通用户 2:审核账户',
     signature        varchar(1024) default ''                  null comment '个性签名',
     qq_open_id       varchar(255)                              null comment 'QQ开放id',
     qq_access_token  varchar(255)                              null comment 'QQ访问令牌',
@@ -225,13 +226,13 @@ create table im_visitor
     id               int auto_increment comment '主键'
         primary key,
     ip               varchar(50)                          null comment 'IP地址',
+    nation           varchar(50)                          null comment '国家',
     pro              varchar(50)                          null comment '省',
-    pro_code         varchar(50)                          null comment '省编码',
     city             varchar(50)                          null comment '市',
-    city_code        varchar(50)                          null comment '市编码',
     browser          varchar(100)                         null comment '浏览器',
     operating_system varchar(100)                         null comment '操作系统',
     addr             varchar(200)                         null comment '地址',
+    location_info    varchar(1000)                        null comment '位置信息json结果',
     create_time      datetime default current_timestamp() not null comment '创建时间'
 )
     comment '访客信息表';
@@ -289,24 +290,25 @@ create table im_group_msg_read_position
 
 create table im_talk
 (
-    id          int auto_increment comment '主键'
+    id           int auto_increment comment '主键'
         primary key,
-    user_id     bigint               not null comment '用户id',
-    nick_name   varchar(50)          null comment '用户昵称',
-    avatar      varchar(1000)        null comment '用户头像',
-    content     varchar(500)         not null comment '内容',
-    img_url     varchar(2000)        null comment '图片（多个使用,隔开）',
-    video_url   varchar(500)         null comment '视频连接',
-    scope       tinyint(1)           not null comment '公布范围（1：私密；2：好友可见；3：群友可见；4：公开）',
-    address     varchar(200)         null comment '发布地址',
-    anonymous   tinyint(1) default 0 not null comment '是否匿名：0-否；1-是',
-    create_time datetime             not null comment '创建时间',
-    create_by   bigint               not null comment '创建人',
-    update_time datetime             null comment '更新时间',
-    update_by   bigint               null comment '更新人',
-    deleted     tinyint(1) default 0 not null comment '是否删除（1：是；0：否）'
+    user_id      bigint               not null comment '用户id',
+    character_id bigint               null comment '角色人物id',
+    nick_name    varchar(50)          null comment '用户昵称',
+    avatar       varchar(1000)        null comment '用户头像',
+    content      varchar(500)         not null comment '内容',
+    img_url      varchar(2000)        null comment '图片（多个使用,隔开）',
+    video_url    varchar(500)         null comment '视频连接',
+    scope        tinyint(1)           not null comment '公布范围（1：私密；2：好友可见；3：群友可见；4：公开）',
+    address      varchar(200)         null comment '发布地址',
+    anonymous    tinyint(1) default 0 not null comment '是否匿名：0-否；1-是',
+    create_time  datetime             not null comment '创建时间',
+    create_by    bigint               not null comment '创建人',
+    update_time  datetime             null comment '更新时间',
+    update_by    bigint               null comment '更新人',
+    deleted      tinyint(1) default 0 not null comment '是否删除（1：是；0：否）'
 )
-    comment '说说表';
+    comment '动态表';
 
 
 create table im_talk_star
@@ -338,7 +340,7 @@ create table im_talk_comment
     user_id             bigint               not null comment '用户id',
     user_nickname       varchar(50)          not null comment '用户昵称',
     user_avatar         varchar(1000)        null comment '用户头像',
-    content             varchar(50)          not null comment '评论内容',
+    content             varchar(1000)        not null comment '评论内容',
     character_id        bigint               null comment '角色id',
     reply_comment_id    bigint               null comment '回复的评论id',
     reply_user_id       bigint               null comment '回复用户id',

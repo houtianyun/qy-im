@@ -50,6 +50,12 @@ public class User extends Model<User> {
     private Integer sex;
 
     /**
+     * 用户类型  1:普通用户 2:审核专用账户
+     */
+    @TableField("type")
+    private Integer type;
+
+    /**
      * 头像
      */
     @TableField("head_image")
