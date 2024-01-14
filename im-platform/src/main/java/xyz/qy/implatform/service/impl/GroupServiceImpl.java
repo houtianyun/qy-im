@@ -83,28 +83,25 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
      **/
     @Transactional
     @Override
-    public GroupVO createGroup(String groupName) {
+    public GroupVO createGroup(GroupVO vo) {
         UserSession session = SessionContext.getSession();
         User user = userService.getById(session.getUserId());
         // 保存群组数据
-        Group group = new Group();
-        group.setName(groupName);
+        Group group = BeanUtils.copyProperties(vo, Group.class);
         group.setOwnerId(user.getId());
-        group.setHeadImage(user.getHeadImage());
-        group.setHeadImageThumb(user.getHeadImageThumb());
         this.save(group);
         // 把群主加入群
         GroupMember groupMember = new GroupMember();
         groupMember.setGroupId(group.getId());
         groupMember.setUserId(user.getId());
-        groupMember.setAliasName(user.getNickName());
-        groupMember.setRemark(groupName);
+        groupMember.setAliasName(StringUtils.isEmpty(vo.getAliasName())?session.getNickName():vo.getAliasName());
+        groupMember.setRemark(StringUtils.isEmpty(vo.getRemark())?group.getName():vo.getRemark());
         groupMember.setHeadImage(user.getHeadImageThumb());
         groupMemberService.save(groupMember);
-        GroupVO vo = BeanUtils.copyProperties(group, GroupVO.class);
-        assert vo != null;
-        vo.setAliasName(user.getNickName());
-        vo.setRemark(groupName);
+
+        vo.setId(group.getId());
+        vo.setAliasName(groupMember.getAliasName());
+        vo.setRemark(groupMember.getRemark());
         log.info("创建群聊，群聊id:{},群聊名称:{}",group.getId(),group.getName());
         return vo;
     }

@@ -19,7 +19,7 @@ import java.util.List;
 public interface IGroupService extends IService<Group> {
 
 
-    GroupVO createGroup(String groupName);
+    GroupVO createGroup(GroupVO vo);
 
     GroupVO modifyGroup(GroupVO vo);
 
