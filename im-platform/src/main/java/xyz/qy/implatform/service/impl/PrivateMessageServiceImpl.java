@@ -14,6 +14,7 @@ import xyz.qy.imcommon.enums.IMTerminalType;
 import xyz.qy.imcommon.model.IMPrivateMessage;
 import xyz.qy.imcommon.model.IMUserInfo;
 import xyz.qy.implatform.dto.PrivateMessageDTO;
+import xyz.qy.implatform.entity.Friend;
 import xyz.qy.implatform.entity.PrivateMessage;
 import xyz.qy.implatform.enums.MessageStatus;
 import xyz.qy.implatform.enums.MessageType;
@@ -184,10 +185,14 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         if (!imClient.isOnline(session.getUserId())) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "用户未建立连接");
         }
+        List<Friend> friends = friendService.findFriendByUserId(session.getUserId());
+        List<Long> friendIds = friends.stream().map(Friend::getFriendId).collect(Collectors.toList());
+
         // 获取当前用户所有未读消息
         LambdaQueryWrapper<PrivateMessage> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(PrivateMessage::getRecvId, session.getUserId())
-                .eq(PrivateMessage::getStatus, MessageStatus.UNREAD);
+                .eq(PrivateMessage::getStatus, MessageStatus.UNREAD)
+                .in(PrivateMessage::getSendId, friendIds);
         List<PrivateMessage> messages = this.list(queryWrapper);
         // 上传至redis，等待推送
         for (PrivateMessage message : messages) {
