@@ -91,11 +91,12 @@
 				this.$store.commit("setUserInfo", userInfo);
 				this.$store.commit("setUserState", this.$enums.USER_STATE.FREE);
 				this.$store.commit("initStore");
-				this.$wsApi.createWebSocket(process.env.VUE_APP_WS_URL, userInfo.id, sessionStorage.getItem("accessToken"));
-				this.$wsApi.onopen(() => {
-					this.pullUnreadMessage();
-				});
-				this.$wsApi.onmessage((cmd,msgInfo) => {
+        this.$wsApi.init(process.env.VUE_APP_WS_URL, sessionStorage.getItem("accessToken"));
+        this.$wsApi.connect();
+        this.$wsApi.onOpen(() => {
+          this.pullUnreadMessage();
+        });
+				this.$wsApi.onMessage((cmd,msgInfo) => {
 					if (cmd == 2) {
 						// 异地登录，强制下线
 						this.$message.error("您已在其他地方登陆，将被强制下线");
@@ -114,6 +115,16 @@
 						this.handleGroupMessage(msgInfo);
 					} 
 				})
+        this.$wsApi.onClose((e) => {
+          console.log(e);
+          if(e.code == 1006){
+            // 服务器主动断开
+            this.$message.error("连接已断开，请重新登录");
+            location.href = "/";
+          }else{
+            this.$wsApi.connect();
+          }
+        });
 			},
 			pullUnreadMessage() {
 				// 拉取未读私聊消息
@@ -209,7 +220,7 @@
         }
 			},
 			handleExit() {
-        this.$wsApi.closeWebSocket();
+        this.$wsApi.close();
         sessionStorage.removeItem("accessToken");
         location.href = "/";
 			},
@@ -263,7 +274,7 @@
 			})
 		},
 		unmounted() {
-			this.$wsApi.closeWebSocket();
+      this.$wsApi.close();
 		}
 	}
 </script>
