@@ -24,6 +24,7 @@ import xyz.qy.implatform.config.JwtProperties;
 import xyz.qy.implatform.contant.Constant;
 import xyz.qy.implatform.dto.GroupMessageDTO;
 import xyz.qy.implatform.dto.LoginDTO;
+import xyz.qy.implatform.dto.ModifyPwdDTO;
 import xyz.qy.implatform.dto.PrivateMessageDTO;
 import xyz.qy.implatform.dto.RegisterDTO;
 import xyz.qy.implatform.entity.Friend;
@@ -393,6 +394,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         user.setPassword(passwordEncoder.encode(passwordVO.getNewPassWord()));
         baseMapper.updateById(user);
+    }
+
+    @Override
+    public void modifyPassword(ModifyPwdDTO dto) {
+        UserSession session = SessionContext.getSession();
+        User user = this.getById(session.getUserId());
+        if(!passwordEncoder.matches(dto.getOldPassword(),user.getPassword())){
+            throw  new GlobalException("旧密码不正确");
+        }
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        this.updateById(user);
+        log.info("用户修改密码，用户id:{},用户名:{},昵称:{}",user.getId(),user.getUserName(),user.getNickName());
     }
 
     /**

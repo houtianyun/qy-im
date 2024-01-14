@@ -2,6 +2,7 @@ package xyz.qy.implatform.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import xyz.qy.implatform.dto.LoginDTO;
+import xyz.qy.implatform.dto.ModifyPwdDTO;
 import xyz.qy.implatform.dto.RegisterDTO;
 import xyz.qy.implatform.entity.User;
 import xyz.qy.implatform.vo.LoginVO;
@@ -41,6 +42,8 @@ public interface IUserService extends IService<User> {
      * @param passwordVO 密码信息
      */
     void modifyPassword(PasswordVO passwordVO);
+
+    void modifyPassword(ModifyPwdDTO dto);
 
     List<UserVO> findUserByName(String name);
 }

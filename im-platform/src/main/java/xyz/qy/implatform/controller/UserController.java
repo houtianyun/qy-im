@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import xyz.qy.implatform.dto.ModifyPwdDTO;
 import xyz.qy.implatform.entity.User;
 import xyz.qy.implatform.result.Result;
 import xyz.qy.implatform.result.ResultUtils;
@@ -80,6 +81,13 @@ public class UserController {
     @PostMapping("/modifyPassword")
     public Result modifyPassword(@Valid @RequestBody PasswordVO passwordVO) {
         userService.modifyPassword(passwordVO);
+        return ResultUtils.success();
+    }
+
+    @PutMapping("/modifyPwd")
+    @ApiOperation(value = "修改密码",notes="修改用户密码")
+    public Result update(@Valid @RequestBody ModifyPwdDTO dto){
+        userService.modifyPassword(dto);
         return ResultUtils.success();
     }
 }
