@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import xyz.qy.imclient.IMClient;
 import xyz.qy.imcommon.model.IMPrivateMessage;
+import xyz.qy.imcommon.model.IMUserInfo;
 import xyz.qy.imcommon.model.PrivateMessageInfo;
 import xyz.qy.implatform.config.ICEServer;
 import xyz.qy.implatform.config.ICEServerConfig;
@@ -59,8 +60,7 @@ public class WebrtcServiceImpl implements IWebrtcService {
         messageInfo.setContent(offer);
 
         IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
-        sendMessage.setSendId(session.getUserId());
-        sendMessage.setSendTerminal(session.getTerminal());
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
         sendMessage.setRecvId(uid);
         sendMessage.setSendToSelf(false);
         sendMessage.setSendResult(false);
@@ -87,8 +87,7 @@ public class WebrtcServiceImpl implements IWebrtcService {
         messageInfo.setContent(answer);
 
         IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
-        sendMessage.setSendId(session.getUserId());
-        sendMessage.setSendTerminal(session.getTerminal());
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
         sendMessage.setRecvId(uid);
         // 告知其他终端已经接受会话,中止呼叫
         sendMessage.setSendToSelf(true);
@@ -112,8 +111,7 @@ public class WebrtcServiceImpl implements IWebrtcService {
         messageInfo.setSendId(session.getUserId());
 
         IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
-        sendMessage.setSendId(session.getUserId());
-        sendMessage.setSendTerminal(session.getTerminal());
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
         sendMessage.setRecvId(uid);
         // 告知其他终端已经拒绝会话,中止呼叫
         sendMessage.setSendToSelf(true);
@@ -135,8 +133,7 @@ public class WebrtcServiceImpl implements IWebrtcService {
         messageInfo.setSendId(session.getUserId());
 
         IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
-        sendMessage.setSendId(session.getUserId());
-        sendMessage.setSendTerminal(session.getTerminal());
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
         sendMessage.setRecvId(uid);
         sendMessage.setSendToSelf(false);
         sendMessage.setSendResult(false);
@@ -159,8 +156,7 @@ public class WebrtcServiceImpl implements IWebrtcService {
         messageInfo.setSendId(session.getUserId());
 
         IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
-        sendMessage.setSendId(session.getUserId());
-        sendMessage.setSendTerminal(session.getTerminal());
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
         sendMessage.setRecvId(uid);
         // 告知其他终端已经会话失败,中止呼叫
         sendMessage.setSendToSelf(true);
@@ -186,8 +182,7 @@ public class WebrtcServiceImpl implements IWebrtcService {
         messageInfo.setSendId(session.getUserId());
 
         IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
-        sendMessage.setSendId(session.getUserId());
-        sendMessage.setSendTerminal(session.getTerminal());
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
         sendMessage.setRecvId(uid);
         sendMessage.setSendToSelf(false);
         sendMessage.setSendResult(false);
@@ -211,8 +206,7 @@ public class WebrtcServiceImpl implements IWebrtcService {
         messageInfo.setContent(candidate);
 
         IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
-        sendMessage.setSendId(session.getUserId());
-        sendMessage.setSendTerminal(session.getTerminal());
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
         sendMessage.setRecvId(uid);
         sendMessage.setSendToSelf(false);
         sendMessage.setSendResult(false);

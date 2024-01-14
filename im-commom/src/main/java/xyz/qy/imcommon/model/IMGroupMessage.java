@@ -5,18 +5,24 @@ import xyz.qy.imcommon.enums.IMTerminalType;
 
 import java.util.List;
 
-
+/**
+ * @description:
+ * @author: HouTianYun
+ * @create: 2024-01-14 08:40
+ **/
 @Data
-public class IMPrivateMessage<T> {
+public class IMGroupMessage<T> {
+
     /**
      * 发送方
      */
     private IMUserInfo sender;
 
     /**
-     * 接收者id
+     * 接收者id列表(群成员列表)
      */
-    private Long recvId;
+    private List<Long> recvIds;
+
 
     /**
      * 接收者终端类型,默认全部
@@ -34,7 +40,7 @@ public class IMPrivateMessage<T> {
     private Boolean sendResult = true;
 
     /**
-     *  消息内容(可一次性发送多条)
+     *  消息内容
      */
-    private List<T> datas;
+    private T data;
 }

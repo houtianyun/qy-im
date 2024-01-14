@@ -9,7 +9,9 @@ import org.springframework.stereotype.Service;
 import xyz.qy.imclient.IMClient;
 import xyz.qy.imcommon.contant.Constant;
 import xyz.qy.imcommon.contant.RedisKey;
+import xyz.qy.imcommon.enums.IMTerminalType;
 import xyz.qy.imcommon.model.IMPrivateMessage;
+import xyz.qy.imcommon.model.IMUserInfo;
 import xyz.qy.imcommon.model.PrivateMessageInfo;
 import xyz.qy.implatform.entity.PrivateMessage;
 import xyz.qy.implatform.enums.MessageStatus;
@@ -64,9 +66,8 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         // 推送消息
         PrivateMessageInfo msgInfo = BeanUtils.copyProperties(msg, PrivateMessageInfo.class);
         IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage();
-        sendMessage.setSendId(msgInfo.getSendId());
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
         sendMessage.setRecvId(msgInfo.getRecvId());
-        sendMessage.setSendTerminal(session.getTerminal());
         sendMessage.setSendToSelf(true);
         sendMessage.setDatas(Arrays.asList(msgInfo));
         imClient.sendPrivateMessage(sendMessage);
@@ -76,7 +77,6 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
 
     @Override
     public void sendPrivateMessage(PrivateMessageVO vo, Long sendUserId) {
-        UserSession session = SessionContext.getSession();
         Boolean isFriends = friendService.isFriend(sendUserId, vo.getRecvId());
         if (!isFriends) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "您已不是对方好友，无法发送消息");
@@ -90,13 +90,12 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         // 推送消息
         PrivateMessageInfo msgInfo = BeanUtils.copyProperties(msg, PrivateMessageInfo.class);
         IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
-        sendMessage.setSendId(msgInfo.getSendId());
+        sendMessage.setSender(new IMUserInfo(sendUserId, IMTerminalType.WEB.code()));
         sendMessage.setRecvId(msgInfo.getRecvId());
-        sendMessage.setSendTerminal(session.getTerminal());
         sendMessage.setSendToSelf(true);
         sendMessage.setDatas(Collections.singletonList(msgInfo));
         imClient.sendPrivateMessage(sendMessage);
-        log.info("发送私聊消息，发送id:{},接收id:{}，内容:{}", session.getUserId(), vo.getRecvId(), vo.getContent());
+        log.info("发送私聊消息，发送id:{},接收id:{}，内容:{}", sendUserId, vo.getRecvId(), vo.getContent());
     }
 
     /**
@@ -126,9 +125,8 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         msgInfo.setSendTime(new Date());
         msgInfo.setContent("对方撤回了一条消息");
         IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
-        sendMessage.setSendId(msgInfo.getSendId());
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
         sendMessage.setRecvId(msgInfo.getRecvId());
-        sendMessage.setSendTerminal(session.getTerminal());
         sendMessage.setSendToSelf(true);
         sendMessage.setDatas(Collections.singletonList(msgInfo));
         imClient.sendPrivateMessage(sendMessage);
@@ -172,35 +170,28 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
      */
     @Override
     public void pullUnreadMessage() {
+        UserSession session = SessionContext.getSession();
         // 获取当前连接的channelId
-        Long userId = SessionContext.getSession().getUserId();
-        if (!imClient.isOnline(userId)) {
+        if (!imClient.isOnline(session.getUserId())) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "用户未建立连接");
         }
         // 获取当前用户所有未读消息
         QueryWrapper<PrivateMessage> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(PrivateMessage::getRecvId, userId)
+        queryWrapper.lambda().eq(PrivateMessage::getRecvId, session.getUserId())
                 .eq(PrivateMessage::getStatus, MessageStatus.UNREAD);
         List<PrivateMessage> messages = this.list(queryWrapper);
         // 上传至redis，等待推送
         if (!messages.isEmpty()) {
-            // 推送消息
             List<PrivateMessageInfo> messageInfos = messages.stream().map(m -> BeanUtils.copyProperties(m, PrivateMessageInfo.class)).collect(Collectors.toList());
-            // 不止一条未读消息
-            if (messageInfos.size() > 1) {
-                for (int i = 0; i < messageInfos.size(); i++) {
-                    // 最后一条消息发送完成才播放提示音
-                    if (i != messageInfos.size() - 1) {
-                        messageInfos.get(i).setPlayAudio(false);
-                    }
-                }
-            }
+            // 推送消息
             IMPrivateMessage<PrivateMessageInfo> sendMessage = new IMPrivateMessage<>();
-            sendMessage.setRecvId(userId);
+            sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
+            sendMessage.setRecvId(session.getUserId());
+            sendMessage.setRecvTerminals(Collections.singletonList(session.getTerminal()));
             sendMessage.setSendToSelf(false);
             sendMessage.setDatas(messageInfos);
             imClient.sendPrivateMessage(sendMessage);
-            log.info("拉取未读私聊消息，用户id:{},数量:{}", userId, messageInfos.size());
+            log.info("拉取未读私聊消息，用户id:{},数量:{}", session.getUserId(), messageInfos.size());
         }
     }
 }

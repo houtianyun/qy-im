@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -27,14 +28,11 @@ public class PullUnreadPrivateMessageTask extends  AbstractPullMessageTask {
     @Override
     public void pullMessage() {
         // 从redis拉取未读消息
-        String key = RedisKey.IM_UNREAD_PRIVATE_QUEUE + IMServerGroup.serverId;
-        List recvInfos = redisTemplate.opsForList().range(key,0,-1);
-        for(Object o: recvInfos){
-            redisTemplate.opsForList().leftPop(key);
-            IMRecvInfo recvInfo = (IMRecvInfo)o;
+        String key = String.join(":",RedisKey.IM_UNREAD_PRIVATE_QUEUE ,IMServerGroup.serverId+"");
+        IMRecvInfo recvInfo = (IMRecvInfo)redisTemplate.opsForList().leftPop(key,10, TimeUnit.SECONDS);
+        if(recvInfo != null) {
             AbstractMessageProcessor processor = ProcessorFactory.createProcessor(IMCmdType.PRIVATE_MESSAGE);
             processor.process(recvInfo);
-
         }
     }
 }

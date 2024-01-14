@@ -96,6 +96,8 @@
 					this.pullUnreadMessage();
 				});
 				this.$wsApi.onmessage((cmd,msgInfo) => {
+          // 标记这条消息是不是自己发的
+          msgInfo.selfSend = msgInfo.sendId==this.$store.state.userStore.userInfo.id;
 					if (cmd == 2) {
 						// 异地登录，强制下线
 						this.$message.error("您已在其他地方登陆，将被强制下线");
@@ -125,7 +127,6 @@
 			},
 			handlePrivateMessage(msg) {
         // 好友列表存在好友信息，直接插入私聊消息
-        msg.selfSend = msg.sendId==this.$store.state.userStore.userInfo.id;
         let friendId = msg.selfSend?msg.recvId:msg.sendId;
         let friend = this.$store.state.friendStore.friends.find((f) => f.id == friendId);
 				if (friend) {
@@ -200,7 +201,7 @@
 				this.$store.commit("openChat", chatInfo);
 				// 插入消息
 				this.$store.commit("insertMessage", msg);
-        if (msg.playAudio) {
+        if (msg.playAudio && !msg.selfSend) {
           // 播放提示音
           this.playAudioTip();
         }

@@ -3,16 +3,16 @@ package xyz.qy.imcommon.model;
 import lombok.Data;
 
 @Data
-public class SendResult<T> {
+public class SendResult {
     /**
-     * 接收者id
+     * 发送方
      */
-    private Long recvId;
+    private IMUserInfo sender;
 
     /**
-     * 接收者终端类型 IMTerminalType
+     * 接收方
      */
-    private Integer recvTerminal;
+    private IMUserInfo receiver;
 
     /**
      * 发送状态 IMCmdType
@@ -22,6 +22,5 @@ public class SendResult<T> {
     /**
      *  消息内容
      */
-    private T data;
-
+    private Object data;
 }

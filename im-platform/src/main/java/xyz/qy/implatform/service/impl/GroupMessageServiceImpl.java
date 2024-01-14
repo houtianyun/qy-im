@@ -11,7 +11,10 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import xyz.qy.imclient.IMClient;
 import xyz.qy.imcommon.contant.Constant;
+import xyz.qy.imcommon.enums.IMTerminalType;
 import xyz.qy.imcommon.model.GroupMessageInfo;
+import xyz.qy.imcommon.model.IMGroupMessage;
+import xyz.qy.imcommon.model.IMUserInfo;
 import xyz.qy.implatform.contant.RedisKey;
 import xyz.qy.implatform.entity.Group;
 import xyz.qy.implatform.entity.GroupMember;
@@ -27,6 +30,7 @@ import xyz.qy.implatform.service.IGroupMemberService;
 import xyz.qy.implatform.service.IGroupMessageService;
 import xyz.qy.implatform.service.IGroupService;
 import xyz.qy.implatform.session.SessionContext;
+import xyz.qy.implatform.session.UserSession;
 import xyz.qy.implatform.util.BeanUtils;
 import xyz.qy.implatform.vo.GroupMessageVO;
 
@@ -63,7 +67,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
      */
     @Override
     public Long sendMessage(GroupMessageVO vo) {
-        Long userId = SessionContext.getSession().getUserId();
+        UserSession session = SessionContext.getSession();
         Group group = groupService.getById(vo.getGroupId());
         if (group == null) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "群聊不存在");
@@ -73,20 +77,24 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         }
         // 判断是否在群里
         List<Long> userIds = groupMemberService.findUserIdsByGroupId(group.getId());
-        if (!userIds.contains(userId)) {
+        if (!userIds.contains(session.getUserId())) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "您已不在群聊里面，无法发送消息");
         }
         // 保存消息
         GroupMessage msg = BeanUtils.copyProperties(vo, GroupMessage.class);
-        msg.setSendId(userId);
+        msg.setSendId(session.getUserId());
         msg.setSendTime(new Date());
         this.save(msg);
         // 不用发给自己
-        userIds = userIds.stream().filter(id -> !userId.equals(id)).collect(Collectors.toList());
+        userIds = userIds.stream().filter(id -> !session.getUserId().equals(id)).collect(Collectors.toList());
         // 群发
         GroupMessageInfo msgInfo = BeanUtils.copyProperties(msg, GroupMessageInfo.class);
-        imClient.sendGroupMessage(userIds, msgInfo);
-        log.info("发送群聊消息，发送id:{},群聊id:{},内容:{}", userId, vo.getGroupId(), vo.getContent());
+        IMGroupMessage sendMessage = new IMGroupMessage();
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
+        sendMessage.setRecvIds(userIds);
+        sendMessage.setData(msgInfo);
+        imClient.sendGroupMessage(sendMessage);
+        log.info("发送群聊消息，发送id:{},群聊id:{},内容:{}",session.getUserId(),vo.getGroupId(),vo.getContent());
         return msg.getId();
     }
 
@@ -113,7 +121,12 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         //userIds = userIds.stream().filter(id-> !sendUserId.equals(id)).collect(Collectors.toList());
         // 群发
         GroupMessageInfo msgInfo = BeanUtils.copyProperties(msg, GroupMessageInfo.class);
-        imClient.sendGroupMessage(userIds, msgInfo);
+        IMGroupMessage sendMessage = new IMGroupMessage();
+        sendMessage.setSender(new IMUserInfo(sendUserId, IMTerminalType.WEB.code()));
+        sendMessage.setRecvIds(userIds);
+        sendMessage.setData(msgInfo);
+        imClient.sendGroupMessage(sendMessage);
+        log.info("发送群聊消息，发送id:{},群聊id:{},内容:{}",sendUserId,vo.getGroupId(),vo.getContent());
         log.info("发送群聊消息，发送id:{},群聊id:{},内容:{}", sendUserId, vo.getGroupId(), vo.getContent());
     }
 
@@ -124,19 +137,19 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
      */
     @Override
     public void recallMessage(Long id) {
-        Long userId = SessionContext.getSession().getUserId();
+        UserSession session = SessionContext.getSession();
         GroupMessage msg = this.getById(id);
         if (msg == null) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "消息不存在");
         }
-        if (!msg.getSendId().equals(userId)) {
+        if (!msg.getSendId().equals(session.getUserId())) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "这条消息不是由您发送,无法撤回");
         }
         if (System.currentTimeMillis() - msg.getSendTime().getTime() > Constant.ALLOW_RECALL_SECOND * 1000) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "消息已发送超过5分钟，无法撤回");
         }
         // 判断是否在群里
-        GroupMember member = groupMemberService.findByGroupAndUserId(msg.getGroupId(), userId);
+        GroupMember member = groupMemberService.findByGroupAndUserId(msg.getGroupId(), session.getUserId());
         if (member == null) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "您已不在群聊里面，无法撤回消息");
         }
@@ -146,14 +159,20 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         // 群发
         List<Long> userIds = groupMemberService.findUserIdsByGroupId(msg.getGroupId());
         // 不用发给自己
-        userIds = userIds.stream().filter(uid -> userId.equals(uid)).collect(Collectors.toList());
+        userIds = userIds.stream().filter(uid -> !session.getUserId().equals(uid)).collect(Collectors.toList());
         GroupMessageInfo msgInfo = BeanUtils.copyProperties(msg, GroupMessageInfo.class);
         msgInfo.setType(MessageType.TIP.code());
         String content = String.format("'%s'撤回了一条消息", member.getAliasName());
         msgInfo.setContent(content);
         msgInfo.setSendTime(new Date());
-        imClient.sendGroupMessage(userIds, msgInfo);
-        log.info("撤回群聊消息，发送id:{},群聊id:{},内容:{}", userId, msg.getGroupId(), msg.getContent());
+
+        IMGroupMessage sendMessage = new IMGroupMessage();
+        sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
+        sendMessage.setRecvIds(userIds);
+        sendMessage.setData(msgInfo);
+        sendMessage.setSendResult(false);
+        imClient.sendGroupMessage(sendMessage);
+        log.info("撤回群聊消息，发送id:{},群聊id:{},内容:{}",session.getUserId(),msg.getGroupId(),msg.getContent());
     }
 
     /**
@@ -163,18 +182,17 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
      */
     @Override
     public void pullUnreadMessage() {
-        Long userId = SessionContext.getSession().getUserId();
+        UserSession session = SessionContext.getSession();
         List<Long> recvIds = new LinkedList();
-        recvIds.add(userId);
-        List<GroupMember> members = groupMemberService.findByUserId(userId);
-        List<GroupMessageInfo> allGroupMessageInfo = new LinkedList<>();
+        recvIds.add(session.getUserId());
+        List<GroupMember> members = groupMemberService.findByUserId(session.getUserId());
         for (GroupMember member : members) {
             // 获取群聊已读的最大消息id，只推送未读消息
-            Integer maxReadedId = getGroupMsgReadId(member.getGroupId(), userId);
+            Integer maxReadedId = getGroupMsgReadId(member.getGroupId(), session.getUserId());
             QueryWrapper<GroupMessage> wrapper = new QueryWrapper();
             wrapper.lambda().eq(GroupMessage::getGroupId, member.getGroupId())
                     .ge(GroupMessage::getSendTime, member.getCreatedTime())
-                    .ne(GroupMessage::getSendId, userId)
+                    .ne(GroupMessage::getSendId, session.getUserId())
                     .ne(GroupMessage::getStatus, MessageStatus.RECALL.code());
             if (maxReadedId != null) {
                 wrapper.lambda().gt(GroupMessage::getId, maxReadedId);
@@ -184,31 +202,25 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
             if (messages.isEmpty()) {
                 continue;
             }
-            // 组装消息，准备推送
-            List<GroupMessageInfo> messageInfos = messages.stream().map(m ->
-                    BeanUtils.copyProperties(m, GroupMessageInfo.class)).collect(Collectors.toList());
-            allGroupMessageInfo.addAll(messageInfos);
-            log.info("拉取未读群聊消息，用户id:{},群聊id:{},数量:{}", userId, member.getGroupId(), messageInfos.size());
-        }
-        if (CollectionUtils.isEmpty(allGroupMessageInfo)) {
-            return;
-        }
-        // 发送消息
-        GroupMessageInfo[] infoArr = allGroupMessageInfo.toArray(new GroupMessageInfo[0]);
-        // 不止一条未读群聊消息
-        if (infoArr.length > 1) {
-            for (int i = 0; i < infoArr.length; i++) {
-                // 最后一条消息发送完才播放提示音
-                if (i != infoArr.length - 1) {
-                    infoArr[i].setPlayAudio(false);
-                }
+
+            // 推送
+            for (GroupMessage message : messages){
+                GroupMessageInfo msgInfo = BeanUtils.copyProperties(message, GroupMessageInfo.class);
+                IMGroupMessage sendMessage = new IMGroupMessage();
+                sendMessage.setSender(new IMUserInfo(session.getUserId(),session.getTerminal()));
+                // 只推给自己当前终端
+                sendMessage.setRecvIds(Collections.singletonList(session.getUserId()));
+                sendMessage.setRecvTerminals(Collections.singletonList(session.getTerminal()));
+                sendMessage.setData(msgInfo);
+                imClient.sendGroupMessage(sendMessage);
             }
+            // 发送消息
+            log.info("拉取未读群聊消息，用户id:{},群聊id:{},数量:{}",session.getUserId(),member.getGroupId(),messages.size());
         }
-        imClient.sendGroupMessage(Collections.singletonList(userId), infoArr);
     }
 
     private Integer getGroupMsgReadId(Long groupId, Long userId) {
-        String key = RedisKey.IM_GROUP_READED_POSITION + groupId + ":" + userId;
+        String key = String.join(":",RedisKey.IM_GROUP_READED_POSITION,groupId.toString(),userId.toString());
         Integer maxReadedId = (Integer) redisTemplate.opsForValue().get(key);
         if (ObjectUtil.isNull(maxReadedId)) {
             GroupMsgReadPosition groupMsgReadPosition = groupMsgReadPositionMapper.selectOne(new LambdaQueryWrapper<GroupMsgReadPosition>()
