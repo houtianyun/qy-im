@@ -154,7 +154,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public LoginVO refreshToken(String refreshToken) {
         //验证 token
-        if(JwtUtil.checkSign(refreshToken, jwtProperties.getRefreshTokenSecret())){
+        if(!JwtUtil.checkSign(refreshToken, jwtProperties.getRefreshTokenSecret())){
             throw new GlobalException("refreshToken无效或已过期");
         }
         String strJson = JwtUtil.getInfo(refreshToken);
