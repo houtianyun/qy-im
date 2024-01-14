@@ -20,7 +20,7 @@ public interface IUserService extends IService<User> {
 
     void register(RegisterDTO registerDTO);
 
-    User findUserByName(String username);
+    User findUserByUserName(String username);
 
     void update(UserVO vo);
 
@@ -41,4 +41,6 @@ public interface IUserService extends IService<User> {
      * @param passwordVO 密码信息
      */
     void modifyPassword(PasswordVO passwordVO);
+
+    List<UserVO> findUserByName(String name);
 }

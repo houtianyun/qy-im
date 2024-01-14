@@ -117,7 +117,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public LoginVO login(LoginDTO dto) {
         // 验证码校验
         validateCaptcha(dto.getCode(), dto.getUuid());
-        User user = findUserByName(dto.getUserName());
+        User user = findUserByUserName(dto.getUserName());
         if (null == user) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "用户不存在");
         }
@@ -183,7 +183,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (!Validator.isGeneral(vo.getUserName())) {
             throw new GlobalException("用户名只能包含数字，字母，下划线");
         }
-        User user = findUserByName(vo.getUserName());
+        User user = findUserByUserName(vo.getUserName());
         if (null != user) {
             throw new GlobalException(ResultCode.USERNAME_ALREADY_REGISTER);
         }
@@ -256,7 +256,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return
      */
     @Override
-    public User findUserByName(String username) {
+    public User findUserByUserName(String username) {
         LambdaQueryWrapper<User> queryWrapper =  Wrappers.lambdaQuery();
         queryWrapper.eq(User::getUserName,username);
         return this.getOne(queryWrapper);
@@ -393,5 +393,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         }
         user.setPassword(passwordEncoder.encode(passwordVO.getNewPassWord()));
         baseMapper.updateById(user);
+    }
+
+    /**
+     * 根据用户昵称查询用户，最多返回20条数据
+     *
+     * @param name 用户名或昵称
+     * @return
+     */
+    @Override
+    public List<UserVO> findUserByName(String name) {
+        LambdaQueryWrapper<User> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.like(User::getUserName,name)
+                .or()
+                .like(User::getNickName,name)
+                .last("limit 20");
+        List<User> users = this.list(queryWrapper);
+        return users.stream().map(u-> {
+            UserVO vo = BeanUtils.copyProperties(u,UserVO.class);
+            vo.setOnline(imClient.isOnline(u.getId()));
+            return vo;
+        }).collect(Collectors.toList());
     }
 }
