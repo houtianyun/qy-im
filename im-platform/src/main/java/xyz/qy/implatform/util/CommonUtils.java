@@ -1,6 +1,8 @@
 package xyz.qy.implatform.util;
 
 import xyz.qy.implatform.contant.Constant;
+import xyz.qy.implatform.dto.GroupMessageDTO;
+import xyz.qy.implatform.dto.PrivateMessageDTO;
 import xyz.qy.implatform.entity.GroupMember;
 import xyz.qy.implatform.entity.User;
 import xyz.qy.implatform.vo.GroupMessageVO;
@@ -94,16 +96,16 @@ public class CommonUtils {
         return result;
     }
 
-    public static GroupMessageVO buildGroupMessageVO(Long groupId, String content, Integer type) {
-        GroupMessageVO groupMessageVO = new GroupMessageVO();
+    public static GroupMessageDTO buildGroupMessageVO(Long groupId, String content, Integer type) {
+        GroupMessageDTO groupMessageVO = new GroupMessageDTO();
         groupMessageVO.setGroupId(groupId);
         groupMessageVO.setContent(content);
         groupMessageVO.setType(type);
         return groupMessageVO;
     }
 
-    public static PrivateMessageVO buildPrivateMessageVO(Long recvId, String content, Integer type) {
-        PrivateMessageVO privateMessageVO = new PrivateMessageVO();
+    public static PrivateMessageDTO buildPrivateMessageVO(Long recvId, String content, Integer type) {
+        PrivateMessageDTO privateMessageVO = new PrivateMessageDTO();
         privateMessageVO.setRecvId(recvId);
         privateMessageVO.setContent(content);
         privateMessageVO.setType(type);

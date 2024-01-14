@@ -12,7 +12,7 @@ import java.io.*;
 public class CacheHttpServletRequestWrapper extends HttpServletRequestWrapper {
     private byte[] requestBody;
 
-    private HttpServletRequest request;
+    private final HttpServletRequest request;
 
     public CacheHttpServletRequestWrapper(HttpServletRequest request) throws IOException {
         super(request);
@@ -47,10 +47,6 @@ public class CacheHttpServletRequestWrapper extends HttpServletRequestWrapper {
                 return bais.read();
             }
         };
-    }
-
-    public byte[] getRequestBody() {
-        return requestBody;
     }
 
     @Override

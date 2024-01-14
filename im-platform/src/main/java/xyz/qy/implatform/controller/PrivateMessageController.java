@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import xyz.qy.imcommon.model.PrivateMessageInfo;
+import xyz.qy.implatform.dto.PrivateMessageDTO;
 import xyz.qy.implatform.result.Result;
 import xyz.qy.implatform.result.ResultUtils;
 import xyz.qy.implatform.service.IPrivateMessageService;
@@ -31,7 +31,7 @@ public class PrivateMessageController {
 
     @PostMapping("/send")
     @ApiOperation(value = "发送消息", notes = "发送私聊消息")
-    public Result<Long> sendMessage(@Valid @RequestBody PrivateMessageVO vo) {
+    public Result<Long> sendMessage(@Valid @RequestBody PrivateMessageDTO vo) {
         return ResultUtils.success(privateMessageService.sendMessage(vo));
     }
 
@@ -51,9 +51,9 @@ public class PrivateMessageController {
 
     @GetMapping("/history")
     @ApiOperation(value = "查询聊天记录", notes = "查询聊天记录")
-    public Result<List<PrivateMessageInfo>> recallMessage(@NotNull(message = "好友id不能为空") @RequestParam Long friendId,
-                                                          @NotNull(message = "页码不能为空") @RequestParam Long page,
-                                                          @NotNull(message = "size不能为空") @RequestParam Long size) {
+    public Result<List<PrivateMessageVO>> recallMessage(@NotNull(message = "好友id不能为空") @RequestParam Long friendId,
+                                                        @NotNull(message = "页码不能为空") @RequestParam Long page,
+                                                        @NotNull(message = "size不能为空") @RequestParam Long size) {
         return ResultUtils.success(privateMessageService.findHistoryMessage(friendId, page, size));
     }
 }

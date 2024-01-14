@@ -5,13 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-import xyz.qy.imcommon.contant.RedisKey;
+import xyz.qy.imcommon.contant.IMRedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.enums.IMSendCode;
 import xyz.qy.imcommon.model.IMRecvInfo;
 import xyz.qy.imcommon.model.IMSendInfo;
 import xyz.qy.imcommon.model.IMUserInfo;
-import xyz.qy.imcommon.model.SendResult;
+import xyz.qy.imcommon.model.IMSendResult;
 import xyz.qy.imserver.netty.UserChannelCtxMap;
 
 @Slf4j
@@ -50,13 +50,13 @@ public class PrivateMessageProcessor extends AbstractMessageProcessor<IMRecvInfo
 
     private void sendResult(IMRecvInfo recvInfo, IMSendCode sendCode) {
         if (recvInfo.getSendResult()) {
-            SendResult result = new SendResult();
+            IMSendResult result = new IMSendResult();
             result.setSender(recvInfo.getSender());
             result.setReceiver(recvInfo.getReceivers().get(0));
             result.setCode(sendCode.code());
             result.setData(recvInfo.getData());
             // 推送到结果队列
-            String key = RedisKey.IM_RESULT_PRIVATE_QUEUE;
+            String key = IMRedisKey.IM_RESULT_PRIVATE_QUEUE;
             redisTemplate.opsForList().rightPush(key, result);
         }
     }

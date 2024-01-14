@@ -6,13 +6,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import xyz.qy.imcommon.contant.RedisKey;
+import xyz.qy.imcommon.contant.IMRedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.enums.IMSendCode;
 import xyz.qy.imcommon.model.IMRecvInfo;
 import xyz.qy.imcommon.model.IMSendInfo;
 import xyz.qy.imcommon.model.IMUserInfo;
-import xyz.qy.imcommon.model.SendResult;
+import xyz.qy.imcommon.model.IMSendResult;
 import xyz.qy.imserver.netty.UserChannelCtxMap;
 
 import java.util.List;
@@ -57,13 +57,13 @@ public class GroupMessageProcessor extends AbstractMessageProcessor<IMRecvInfo> 
 
     private void sendResult(IMRecvInfo recvInfo, IMUserInfo receiver, IMSendCode sendCode) {
         if (recvInfo.getSendResult()) {
-            SendResult result = new SendResult();
+            IMSendResult result = new IMSendResult();
             result.setSender(recvInfo.getSender());
             result.setReceiver(receiver);
             result.setCode(sendCode.code());
             result.setData(recvInfo.getData());
             // 推送到结果队列
-            String key = RedisKey.IM_RESULT_GROUP_QUEUE;
+            String key = IMRedisKey.IM_RESULT_GROUP_QUEUE;
             redisTemplate.opsForList().rightPush(key, result);
         }
     }

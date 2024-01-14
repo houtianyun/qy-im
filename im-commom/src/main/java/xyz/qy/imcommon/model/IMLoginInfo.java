@@ -3,5 +3,6 @@ package xyz.qy.imcommon.model;
 import lombok.Data;
 
 @Data
-public class HeartbeatInfo {
+public class IMLoginInfo {
+    private String accessToken;
 }

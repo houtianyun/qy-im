@@ -1,31 +1,33 @@
 package xyz.qy.imclient.task;
 
-import xyz.qy.imclient.listener.MessageListenerMulticaster;
-import xyz.qy.imcommon.contant.RedisKey;
-import xyz.qy.imcommon.enums.IMListenerType;
-import xyz.qy.imcommon.model.SendResult;
+import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import xyz.qy.imclient.listener.MessageListenerMulticaster;
+import xyz.qy.imcommon.contant.IMRedisKey;
+import xyz.qy.imcommon.enums.IMListenerType;
+import xyz.qy.imcommon.model.IMSendResult;
 
 import java.util.concurrent.TimeUnit;
 
 @Component
-public class PullSendResultGroupMessageTask extends  AbstractPullMessageTask{
+public class PullSendResultGroupMessageTask extends AbstractPullMessageTask {
     @Qualifier("IMRedisTemplate")
     @Autowired
-    private RedisTemplate<String,Object> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
     private MessageListenerMulticaster listenerMulticaster;
 
     @Override
     public void pullMessage() {
-        String key = RedisKey.IM_RESULT_GROUP_QUEUE;
-        SendResult result =  (SendResult)redisTemplate.opsForList().leftPop(key,10, TimeUnit.SECONDS);
-        if(result != null) {
-            listenerMulticaster.multicast(IMListenerType.GROUP_MESSAGE,result);
+        String key = IMRedisKey.IM_RESULT_GROUP_QUEUE;
+        JSONObject jsonObject = (JSONObject) redisTemplate.opsForList().leftPop(key, 10, TimeUnit.SECONDS);
+        if (jsonObject != null) {
+            IMSendResult result = jsonObject.toJavaObject(IMSendResult.class);
+            listenerMulticaster.multicast(IMListenerType.GROUP_MESSAGE, result);
         }
     }
 }

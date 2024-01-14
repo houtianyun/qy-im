@@ -4,6 +4,8 @@ import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import org.apache.commons.lang3.StringUtils;
 import xyz.qy.implatform.contant.Constant;
+import xyz.qy.implatform.dto.GroupMessageDTO;
+import xyz.qy.implatform.dto.PrivateMessageDTO;
 import xyz.qy.implatform.dto.SocialTokenDTO;
 import xyz.qy.implatform.dto.SocialUserInfoDTO;
 import xyz.qy.implatform.entity.GroupMember;
@@ -136,12 +138,12 @@ public abstract class AbstractSocialLoginStrategyImpl implements SocialLoginStra
         try {
             GroupMember groupMember = groupService.addToCommonGroup(user);
             if (ObjectUtil.isNotNull(groupMember)) {
-                GroupMessageVO groupMessageVO = CommonUtils.buildGroupMessageVO(Constant.COMMON_GROUP_ID, CommonUtils.buildWelcomeMessage(user, groupMember), MessageType.TEXT.code());
+                GroupMessageDTO groupMessageVO = CommonUtils.buildGroupMessageVO(Constant.COMMON_GROUP_ID, CommonUtils.buildWelcomeMessage(user, groupMember), MessageType.TEXT.code());
                 groupMessageService.sendGroupMessage(groupMessageVO, Constant.ADMIN_USER_ID);
             }
             if (!user.getId().equals(Constant.ADMIN_USER_ID)) {
                 friendService.addFriend(user.getId(), Constant.ADMIN_USER_ID);
-                PrivateMessageVO privateMessageVO = CommonUtils.buildPrivateMessageVO(user.getId(), Constant.ADMIN_WELCOME_MSG, MessageType.TEXT.code());
+                PrivateMessageDTO privateMessageVO = CommonUtils.buildPrivateMessageVO(user.getId(), Constant.ADMIN_WELCOME_MSG, MessageType.TEXT.code());
                 privateMessageService.sendPrivateMessage(privateMessageVO, Constant.ADMIN_USER_ID);
             }
         } catch (Exception e) {

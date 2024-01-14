@@ -36,5 +36,5 @@ public class IMPrivateMessage<T> {
     /**
      *  消息内容(可一次性发送多条)
      */
-    private List<T> datas;
+    private T data;
 }

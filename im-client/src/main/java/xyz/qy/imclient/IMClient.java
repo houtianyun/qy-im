@@ -1,14 +1,10 @@
 package xyz.qy.imclient;
 
-import xyz.qy.imclient.sender.IMSender;
-import xyz.qy.imcommon.model.GroupMessageInfo;
-import xyz.qy.imcommon.model.IMGroupMessage;
-import xyz.qy.imcommon.model.IMPrivateMessage;
-import xyz.qy.imcommon.model.PrivateMessageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
+import xyz.qy.imclient.sender.IMSender;
+import xyz.qy.imcommon.model.IMGroupMessage;
+import xyz.qy.imcommon.model.IMPrivateMessage;
 
 @Configuration
 public class IMClient {
@@ -21,7 +17,7 @@ public class IMClient {
      *
      * @param userId 用户id
      */
-    public Boolean isOnline(Long userId){
+    public Boolean isOnline(Long userId) {
         return imSender.isOnline(userId);
     }
 
@@ -30,7 +26,7 @@ public class IMClient {
      *
      * @param message 私有消息
      */
-    public void sendPrivateMessage(IMPrivateMessage<?> message){
+    public void sendPrivateMessage(IMPrivateMessage<?> message) {
         imSender.sendPrivateMessage(message);
     }
 
@@ -39,7 +35,7 @@ public class IMClient {
      *
      * @param message 群聊消息
      */
-    public void sendGroupMessage(IMGroupMessage<?> message){
+    public void sendGroupMessage(IMGroupMessage<?> message) {
         imSender.sendGroupMessage(message);
     }
 }

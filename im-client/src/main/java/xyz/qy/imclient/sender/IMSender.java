@@ -5,19 +5,16 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import xyz.qy.imclient.listener.MessageListenerMulticaster;
-import xyz.qy.imcommon.contant.Constant;
-import xyz.qy.imcommon.contant.RedisKey;
+import xyz.qy.imcommon.contant.IMRedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.enums.IMListenerType;
 import xyz.qy.imcommon.enums.IMSendCode;
 import xyz.qy.imcommon.enums.IMTerminalType;
-import xyz.qy.imcommon.model.GroupMessageInfo;
 import xyz.qy.imcommon.model.IMGroupMessage;
 import xyz.qy.imcommon.model.IMPrivateMessage;
 import xyz.qy.imcommon.model.IMRecvInfo;
+import xyz.qy.imcommon.model.IMSendResult;
 import xyz.qy.imcommon.model.IMUserInfo;
-import xyz.qy.imcommon.model.PrivateMessageInfo;
-import xyz.qy.imcommon.model.SendResult;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -37,54 +34,48 @@ public class IMSender {
     public void sendPrivateMessage(IMPrivateMessage<?> message) {
         for (Integer terminal : message.getRecvTerminals()) {
             // 获取对方连接的channelId
-            String key = String.join(":",RedisKey.IM_USER_SERVER_ID, message.getRecvId().toString(), terminal.toString());
-            Integer serverId = (Integer) redisTemplate.opsForValue().get(key);
+            String key = String.join(":", IMRedisKey.IM_USER_SERVER_ID, message.getRecvId().toString(), terminal.toString());
+            Integer serverId = (Integer)redisTemplate.opsForValue().get(key);
             // 如果对方在线，将数据存储至redis，等待拉取推送
             if (serverId != null) {
-                IMRecvInfo[] recvInfos = new IMRecvInfo[message.getDatas().size()];
-                String sendKey = String.join(":",RedisKey.IM_UNREAD_PRIVATE_QUEUE,serverId.toString());
-                for (int i = 0; i < message.getDatas().size(); i++) {
-                    IMRecvInfo recvInfo = new IMRecvInfo();
-                    recvInfo.setCmd(IMCmdType.PRIVATE_MESSAGE.code());
-                    recvInfo.setSendResult(message.getSendResult());
-                    recvInfo.setSender(message.getSender());
-                    recvInfo.setReceivers(Collections.singletonList(new IMUserInfo(message.getRecvId(), terminal)));
-                    recvInfo.setData(message.getDatas().get(i));
-                    recvInfos[i]=recvInfo;
-                }
-                redisTemplate.opsForList().rightPushAll(sendKey, recvInfos);
-            } else if(message.getSendResult()){
+                String sendKey = String.join(":", IMRedisKey.IM_UNREAD_PRIVATE_QUEUE, serverId.toString());
+                IMRecvInfo recvInfo = new IMRecvInfo();
+                recvInfo.setCmd(IMCmdType.PRIVATE_MESSAGE.code());
+                recvInfo.setSendResult(message.getSendResult());
+                recvInfo.setSender(message.getSender());
+                recvInfo.setReceivers(Collections.singletonList(new IMUserInfo(message.getRecvId(), terminal)));
+                recvInfo.setData(message.getData());
+                redisTemplate.opsForList().rightPush(sendKey, recvInfo);
+            } else if (message.getSendResult()) {
                 // 回复消息状态
-                for (int i = 0; i < message.getDatas().size(); i++) {
-                    SendResult result = new SendResult();
-                    result.setSender(message.getSender());
-                    result.setReceiver(new IMUserInfo(message.getRecvId(), terminal));
-                    result.setCode(IMSendCode.NOT_ONLINE.code());
-                    result.setData(message.getDatas().get(i));
-                    listenerMulticaster.multicast(IMListenerType.PRIVATE_MESSAGE, result);
-                }
-
+                IMSendResult result = new IMSendResult();
+                result.setSender(message.getSender());
+                result.setReceiver(new IMUserInfo(message.getRecvId(), terminal));
+                result.setCode(IMSendCode.NOT_ONLINE.code());
+                result.setData(message.getData());
+                listenerMulticaster.multicast(IMListenerType.PRIVATE_MESSAGE, result);
             }
-            // 推送给自己的其他终端
-            if (message.getSendToSelf() && !message.getSender().getTerminal().equals(terminal)) {
+        }
+        // 推送给自己的其他终端
+        if(message.getSendToSelf()){
+            for (Integer terminal : IMTerminalType.codes()) {
+                if (message.getSender().getTerminal().equals(terminal)) {
+                    continue;
+                }
                 // 获取终端连接的channelId
-                key = String.join(":",RedisKey.IM_USER_SERVER_ID, message.getSender().getId().toString(), terminal.toString());
-                serverId = (Integer) redisTemplate.opsForValue().get(key);
+                String key = String.join(":", IMRedisKey.IM_USER_SERVER_ID, message.getSender().getId().toString(), terminal.toString());
+                Integer serverId = (Integer)redisTemplate.opsForValue().get(key);
                 // 如果终端在线，将数据存储至redis，等待拉取推送
                 if (serverId != null) {
-                    String sendKey = String.join(":",RedisKey.IM_UNREAD_PRIVATE_QUEUE, serverId.toString());
-                    IMRecvInfo[] recvInfos = new IMRecvInfo[message.getDatas().size()];
-                    for (int i = 0; i < message.getDatas().size(); i++) {
-                        IMRecvInfo recvInfo = new IMRecvInfo();
-                        // 自己的消息不需要回推消息结果
-                        recvInfo.setSendResult(false);
-                        recvInfo.setCmd(IMCmdType.PRIVATE_MESSAGE.code());
-                        recvInfo.setSender(message.getSender());
-                        recvInfo.setReceivers(Collections.singletonList(new IMUserInfo(message.getSender().getId(),terminal)));
-                        recvInfo.setData(message.getDatas().get(i));
-                        recvInfos[i]=recvInfo;
-                    }
-                    redisTemplate.opsForList().rightPushAll(sendKey, recvInfos);
+                    String sendKey = String.join(":", IMRedisKey.IM_UNREAD_PRIVATE_QUEUE, serverId.toString());
+                    IMRecvInfo recvInfo = new IMRecvInfo();
+                    // 自己的消息不需要回推消息结果
+                    recvInfo.setSendResult(false);
+                    recvInfo.setCmd(IMCmdType.PRIVATE_MESSAGE.code());
+                    recvInfo.setSender(message.getSender());
+                    recvInfo.setReceivers(Collections.singletonList(new IMUserInfo(message.getSender().getId(), terminal)));
+                    recvInfo.setData(message.getData());
+                    redisTemplate.opsForList().rightPush(sendKey, recvInfo);
                 }
             }
         }
@@ -97,14 +88,14 @@ public class IMSender {
         Map<Integer, List<IMUserInfo>> serverMap = new ConcurrentHashMap<>();
         for (Integer terminal : message.getRecvTerminals()) {
             message.getRecvIds().parallelStream().forEach(id -> {
-                String key = String.join(":",RedisKey.IM_USER_SERVER_ID, id.toString(),terminal.toString());
+                String key = String.join(":", IMRedisKey.IM_USER_SERVER_ID, id.toString(), terminal.toString());
                 Integer serverId = (Integer)redisTemplate.opsForValue().get(key);
                 if (serverId != null) {
-                    List<IMUserInfo> list = serverMap.computeIfAbsent(serverId,o->Collections.synchronizedList(new LinkedList<>()));
-                    list.add(new IMUserInfo(id,terminal));
+                    List<IMUserInfo> list = serverMap.computeIfAbsent(serverId, o -> Collections.synchronizedList(new LinkedList<>()));
+                    list.add(new IMUserInfo(id, terminal));
                 } else {
                     // 加入离线列表
-                    offLineUsers.add(new IMUserInfo(id,terminal));
+                    offLineUsers.add(new IMUserInfo(id, terminal));
                 }
             });
         }
@@ -117,13 +108,13 @@ public class IMSender {
             recvInfo.setSendResult(message.getSendResult());
             recvInfo.setData(message.getData());
             // 推送至队列
-            String key = String.join(":",RedisKey.IM_UNREAD_GROUP_QUEUE,entry.getKey().toString());
+            String key = String.join(":", IMRedisKey.IM_UNREAD_GROUP_QUEUE, entry.getKey().toString());
             redisTemplate.opsForList().rightPush(key, recvInfo);
         }
         // 对离线用户回复消息状态
-        if(message.getSendResult()){
+        if (message.getSendResult()) {
             for (IMUserInfo offLineUser : offLineUsers) {
-                SendResult result = new SendResult();
+                IMSendResult result = new IMSendResult();
                 result.setSender(message.getSender());
                 result.setReceiver(offLineUser);
                 result.setCode(IMSendCode.NOT_ONLINE.code());
@@ -131,26 +122,25 @@ public class IMSender {
                 listenerMulticaster.multicast(IMListenerType.GROUP_MESSAGE, result);
             }
         }
-
         // 推送给自己的其他终端
         if (message.getSendToSelf()) {
-            for (Integer terminal : message.getRecvTerminals()) {
-                if(terminal.equals(message.getSender().getTerminal())){
+            for (Integer terminal : IMTerminalType.codes()) {
+                if (terminal.equals(message.getSender().getTerminal())) {
                     continue;
                 }
                 // 获取终端连接的channelId
-                String key = String.join(":",RedisKey.IM_USER_SERVER_ID, message.getSender().getId().toString(), terminal.toString());
-                Integer serverId = (Integer) redisTemplate.opsForValue().get(key);
+                String key = String.join(":", IMRedisKey.IM_USER_SERVER_ID, message.getSender().getId().toString(), terminal.toString());
+                Integer serverId = (Integer)redisTemplate.opsForValue().get(key);
                 // 如果终端在线，将数据存储至redis，等待拉取推送
                 if (serverId != null) {
                     IMRecvInfo recvInfo = new IMRecvInfo();
                     recvInfo.setCmd(IMCmdType.GROUP_MESSAGE.code());
                     recvInfo.setSender(message.getSender());
-                    recvInfo.setReceivers(Collections.singletonList(new IMUserInfo(message.getSender().getId(),terminal)));
+                    recvInfo.setReceivers(Collections.singletonList(new IMUserInfo(message.getSender().getId(), terminal)));
                     // 自己的消息不需要回推消息结果
                     recvInfo.setSendResult(false);
                     recvInfo.setData(message.getData());
-                    String sendKey = String.join(":",RedisKey.IM_UNREAD_GROUP_QUEUE,serverId.toString());
+                    String sendKey = String.join(":", IMRedisKey.IM_UNREAD_GROUP_QUEUE, serverId.toString());
                     redisTemplate.opsForList().rightPush(sendKey, recvInfo);
                 }
             }
@@ -158,7 +148,7 @@ public class IMSender {
     }
 
     public Boolean isOnline(Long userId) {
-        String key = String.join(":",RedisKey.IM_USER_SERVER_ID,userId.toString(),"*");
+        String key = String.join(":", IMRedisKey.IM_USER_SERVER_ID, userId.toString(), "*");
         return !redisTemplate.keys(key).isEmpty();
     }
 }

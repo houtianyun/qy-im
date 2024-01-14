@@ -1,6 +1,7 @@
 package xyz.qy.imserver.task;
 
-import xyz.qy.imcommon.contant.RedisKey;
+import com.alibaba.fastjson.JSONObject;
+import xyz.qy.imcommon.contant.IMRedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.model.IMRecvInfo;
 import xyz.qy.imserver.netty.IMServerGroup;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -28,9 +28,10 @@ public class PullUnreadPrivateMessageTask extends  AbstractPullMessageTask {
     @Override
     public void pullMessage() {
         // 从redis拉取未读消息
-        String key = String.join(":",RedisKey.IM_UNREAD_PRIVATE_QUEUE ,IMServerGroup.serverId+"");
-        IMRecvInfo recvInfo = (IMRecvInfo)redisTemplate.opsForList().leftPop(key,10, TimeUnit.SECONDS);
-        if(recvInfo != null) {
+        String key = String.join(":", IMRedisKey.IM_UNREAD_PRIVATE_QUEUE ,IMServerGroup.serverId+"");
+        JSONObject jsonObject = (JSONObject)redisTemplate.opsForList().leftPop(key,10, TimeUnit.SECONDS);
+        if(jsonObject!=null){
+            IMRecvInfo recvInfo = jsonObject.toJavaObject(IMRecvInfo.class);
             AbstractMessageProcessor processor = ProcessorFactory.createProcessor(IMCmdType.PRIVATE_MESSAGE);
             processor.process(recvInfo);
         }

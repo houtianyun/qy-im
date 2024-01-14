@@ -37,7 +37,7 @@ public class RedisConfig extends CachingConfigurerSupport {
     @Primary
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate();
+        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(redisConnectionFactory);
 
         // 设置值（value）的序列化采用jackson2JsonRedisSerializer
@@ -50,9 +50,9 @@ public class RedisConfig extends CachingConfigurerSupport {
         return redisTemplate;
     }
 
-    @Bean("myJackson2JsonRedisSerializer")
-    public Jackson2JsonRedisSerializer jackson2JsonRedisSerializer(){
-        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
+    @Bean
+    public Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer(){
+        Jackson2JsonRedisSerializer<Object> jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
         ObjectMapper om = new ObjectMapper();
         om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         // 解决jackson2无法反序列化LocalDateTime的问题

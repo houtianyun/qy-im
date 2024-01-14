@@ -3,6 +3,7 @@ package xyz.qy.implatform.service.impl;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import xyz.qy.imclient.annotation.Lock;
@@ -254,12 +255,12 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         }
         // 群id
         List<Long> ids = groupMembers.stream().map((GroupMember::getGroupId)).collect(Collectors.toList());
-        QueryWrapper<Group> groupWrapper = new QueryWrapper();
-        groupWrapper.lambda().in(Group::getId, ids);
+        LambdaQueryWrapper<Group> groupWrapper = Wrappers.lambdaQuery();
+        groupWrapper.in(Group::getId, ids);
         // 查询用户群聊信息
         List<Group> groups = this.list(groupWrapper);
         // 转vo
-        List<GroupVO> vos = groups.stream().map(g -> {
+        return groups.stream().map(g -> {
             GroupVO vo = BeanUtils.copyProperties(g, GroupVO.class);
             GroupMember member = groupMembers.stream().filter(m -> g.getId().equals(m.getGroupId())).findFirst().get();
             assert vo != null;
@@ -269,7 +270,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
             vo.setTemplateCharacterId(member.getTemplateCharacterId());
             return vo;
         }).collect(Collectors.toList());
-        return vos;
     }
 
     /**
@@ -394,7 +394,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         List<Long> userIds = members.stream().map(GroupMember::getUserId).collect(Collectors.toList());
         List<User> userList = userService.listByIds(userIds);
         Map<Long, User> userMap = userList.stream().collect(Collectors.toMap(User::getId, Function.identity()));
-        List<GroupMemberVO> vos = members.stream().map(m->{
+        return members.stream().map(m->{
             GroupMemberVO vo = BeanUtils.copyProperties(m, GroupMemberVO.class);
             User user = userMap.get(vo.getUserId());
             if (user.getId().equals(group.getOwnerId())) {
@@ -405,7 +405,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
             vo.setUserAvatar(user.getHeadImage());
             return  vo;
         }).collect(Collectors.toList());
-        return vos;
     }
 
     @Override

@@ -1,6 +1,6 @@
 package xyz.qy.imserver.netty;
 
-import xyz.qy.imcommon.contant.RedisKey;
+import xyz.qy.imcommon.contant.IMRedisKey;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -38,7 +38,7 @@ public class IMServerGroup implements CommandLineRunner  {
     @Override
     public void run(String... args) throws Exception {
         // 初始化SERVER_ID
-        String key = RedisKey.IM_MAX_SERVER_ID;
+        String key = IMRedisKey.IM_MAX_SERVER_ID;
         serverId =  redisTemplate.opsForValue().increment(key,1);
         // 启动服务
         for(IMServer imServer:imServers){

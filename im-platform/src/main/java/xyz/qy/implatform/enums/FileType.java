@@ -6,22 +6,13 @@ public enum FileType {
     VIDEO(2,"视频"),
     AUDIO(3,"声音");
 
-    private Integer code;
+    private final Integer code;
 
-    private String desc;
+    private final String desc;
 
     FileType(Integer index, String desc) {
         this.code =index;
         this.desc=desc;
-    }
-
-    public static FileType fromCode(Integer code){
-        for (FileType typeEnum:values()) {
-            if (typeEnum.code.equals(code)) {
-                return typeEnum;
-            }
-        }
-        return null;
     }
 
     public String description() {

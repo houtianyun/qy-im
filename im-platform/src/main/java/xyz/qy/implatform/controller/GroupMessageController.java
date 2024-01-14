@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import xyz.qy.imcommon.model.GroupMessageInfo;
+import xyz.qy.implatform.dto.GroupMessageDTO;
 import xyz.qy.implatform.result.Result;
 import xyz.qy.implatform.result.ResultUtils;
 import xyz.qy.implatform.service.IGroupMessageService;
@@ -31,7 +31,7 @@ public class GroupMessageController {
 
     @PostMapping("/send")
     @ApiOperation(value = "发送群聊消息", notes = "发送群聊消息")
-    public Result<Long> sendMessage(@Valid @RequestBody GroupMessageVO vo) {
+    public Result<Long> sendMessage(@Valid @RequestBody GroupMessageDTO vo) {
         return ResultUtils.success(groupMessageService.sendMessage(vo));
     }
 
@@ -51,9 +51,9 @@ public class GroupMessageController {
 
     @GetMapping("/history")
     @ApiOperation(value = "查询聊天记录", notes = "查询聊天记录")
-    public Result<List<GroupMessageInfo>> recallMessage(@NotNull(message = "群聊id不能为空") @RequestParam Long groupId,
-                                                        @NotNull(message = "页码不能为空") @RequestParam Long page,
-                                                        @NotNull(message = "size不能为空") @RequestParam Long size) {
+    public Result<List<GroupMessageVO>> recallMessage(@NotNull(message = "群聊id不能为空") @RequestParam Long groupId,
+                                                      @NotNull(message = "页码不能为空") @RequestParam Long page,
+                                                      @NotNull(message = "size不能为空") @RequestParam Long size) {
         return ResultUtils.success(groupMessageService.findHistoryMessage(groupId, page, size));
     }
 }

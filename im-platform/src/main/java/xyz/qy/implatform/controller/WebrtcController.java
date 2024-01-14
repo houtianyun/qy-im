@@ -9,20 +9,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import xyz.qy.imclient.IMClient;
-import xyz.qy.imcommon.model.IMPrivateMessage;
-import xyz.qy.imcommon.model.PrivateMessageInfo;
 import xyz.qy.implatform.config.ICEServer;
-import xyz.qy.implatform.config.ICEServerConfig;
-import xyz.qy.implatform.enums.MessageType;
-import xyz.qy.implatform.exception.GlobalException;
 import xyz.qy.implatform.result.Result;
 import xyz.qy.implatform.result.ResultUtils;
 import xyz.qy.implatform.service.IWebrtcService;
-import xyz.qy.implatform.session.SessionContext;
-import xyz.qy.implatform.session.UserSession;
 
-import java.util.Arrays;
 import java.util.List;
 
 @Api(tags = "webrtc视频单人通话")
@@ -35,14 +26,14 @@ public class WebrtcController {
     @ApiOperation(httpMethod = "POST", value = "呼叫视频通话")
     @PostMapping("/call")
     public Result call(@RequestParam Long uid, @RequestBody String offer) {
-        webrtcService.call(uid,offer);
+        webrtcService.call(uid, offer);
         return ResultUtils.success();
     }
 
     @ApiOperation(httpMethod = "POST", value = "接受视频通话")
     @PostMapping("/accept")
-    public Result accept(@RequestParam Long uid,@RequestBody String answer) {
-        webrtcService.accept(uid,answer);
+    public Result accept(@RequestParam Long uid, @RequestBody String answer) {
+        webrtcService.accept(uid, answer);
         return ResultUtils.success();
     }
 
@@ -63,8 +54,8 @@ public class WebrtcController {
 
     @ApiOperation(httpMethod = "POST", value = "呼叫失败")
     @PostMapping("/failed")
-    public Result failed(@RequestParam Long uid,@RequestParam String reason) {
-        webrtcService.failed(uid,reason);
+    public Result failed(@RequestParam Long uid, @RequestParam String reason) {
+        webrtcService.failed(uid, reason);
         return ResultUtils.success();
     }
 
@@ -78,14 +69,14 @@ public class WebrtcController {
 
     @PostMapping("/candidate")
     @ApiOperation(httpMethod = "POST", value = "同步candidate")
-    public Result candidate(@RequestParam Long uid,@RequestBody String candidate ) {
-        webrtcService.candidate(uid,candidate);
+    public Result candidate(@RequestParam Long uid, @RequestBody String candidate) {
+        webrtcService.candidate(uid, candidate);
         return ResultUtils.success();
     }
 
     @GetMapping("/iceservers")
     @ApiOperation(httpMethod = "GET", value = "获取iceservers")
-    public Result<List<ICEServer>>  iceservers() {
+    public Result<List<ICEServer>> iceservers() {
         return ResultUtils.success(webrtcService.getIceServers());
     }
 }

@@ -6,6 +6,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -18,10 +19,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import xyz.qy.imclient.IMClient;
-import xyz.qy.imcommon.contant.RedisKey;
+import xyz.qy.imcommon.contant.IMRedisKey;
 import xyz.qy.implatform.config.JwtProperties;
 import xyz.qy.implatform.contant.Constant;
+import xyz.qy.implatform.dto.GroupMessageDTO;
 import xyz.qy.implatform.dto.LoginDTO;
+import xyz.qy.implatform.dto.PrivateMessageDTO;
 import xyz.qy.implatform.dto.RegisterDTO;
 import xyz.qy.implatform.entity.Friend;
 import xyz.qy.implatform.entity.GroupMember;
@@ -122,7 +125,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new GlobalException(ResultCode.PASSWOR_ERROR);
         }
         recordLoginInfo(user);
-        redisCache.deleteObject(RedisKey.CAPTCHA_CODE_KEY + dto.getUuid());
+        redisCache.deleteObject(IMRedisKey.CAPTCHA_CODE_KEY + dto.getUuid());
         // 生成token
         return jwtUtil.createToken(user, dto.getTerminal());
     }
@@ -207,16 +210,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             user.setCity(ipGeoInfo.getCity());
         }
         this.save(user);
-        redisCache.deleteObject(RedisKey.CAPTCHA_CODE_KEY + vo.getUuid());
+        redisCache.deleteObject(IMRedisKey.CAPTCHA_CODE_KEY + vo.getUuid());
         try {
             GroupMember groupMember = groupService.addToCommonGroup(user);
             if (ObjectUtil.isNotNull(groupMember)) {
-                GroupMessageVO groupMessageVO = CommonUtils.buildGroupMessageVO(Constant.COMMON_GROUP_ID, CommonUtils.buildWelcomeMessage(user, groupMember), MessageType.TEXT.code());
+                GroupMessageDTO groupMessageVO = CommonUtils.buildGroupMessageVO(Constant.COMMON_GROUP_ID, CommonUtils.buildWelcomeMessage(user, groupMember), MessageType.TEXT.code());
                 groupMessageService.sendGroupMessage(groupMessageVO, Constant.ADMIN_USER_ID);
             }
             if (!user.getId().equals(Constant.ADMIN_USER_ID)) {
                 friendService.addFriend(user.getId(), Constant.ADMIN_USER_ID);
-                PrivateMessageVO privateMessageVO = CommonUtils.buildPrivateMessageVO(user.getId(), Constant.ADMIN_WELCOME_MSG, MessageType.TEXT.code());
+                PrivateMessageDTO privateMessageVO = CommonUtils.buildPrivateMessageVO(user.getId(), Constant.ADMIN_WELCOME_MSG, MessageType.TEXT.code());
                 privateMessageService.sendPrivateMessage(privateMessageVO, Constant.ADMIN_USER_ID);
             }
         } catch (Exception e) {
@@ -254,8 +257,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      */
     @Override
     public User findUserByName(String username) {
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda().eq(User::getUserName, username);
+        LambdaQueryWrapper<User> queryWrapper =  Wrappers.lambdaQuery();
+        queryWrapper.eq(User::getUserName,username);
         return this.getOne(queryWrapper);
     }
 
@@ -306,7 +309,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         user.setHeadImage(vo.getHeadImage());
         user.setHeadImageThumb(vo.getHeadImageThumb());
         this.updateById(user);
-        log.info("用户信息更新，用户:{}}", user.toString());
+        log.info("用户信息更新，用户:{}", user);
     }
 
     /**
@@ -319,8 +322,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public PageResultVO findUserByNickName(String nickname) {
         UserSession session = SessionContext.getSession();
         Long userId = session.getUserId();
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.lambda()
+        LambdaQueryWrapper<User> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper
                 .ne(User::getId, userId)
                 .and(StringUtils.isNotBlank(nickname),
                         qw -> qw.like(User::getNickName, nickname)
