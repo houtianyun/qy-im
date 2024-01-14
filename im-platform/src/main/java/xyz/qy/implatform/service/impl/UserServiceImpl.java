@@ -67,6 +67,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -336,9 +337,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         if (CollectionUtils.isEmpty(users)) {
             return PageResultVO.builder().data(Collections.EMPTY_LIST).build();
         }
+        List<Long> userIds = users.stream().map(User::getId).collect(Collectors.toList());
+        List<Long> onlineUserIds = imClient.isOnline(userIds);
         List<UserVO> vos = users.stream().map(u -> {
             UserVO vo = BeanUtils.copyProperties(u, UserVO.class);
-            vo.setOnline(imClient.isOnline(u.getId()));
+            vo.setOnline(onlineUserIds.contains(u.getId()));
             return vo;
         }).collect(Collectors.toList());
         return PageResultVO.builder().data(vos).total(page.getTotal()).build();
@@ -348,18 +351,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * 判断用户是否在线，返回在线的用户id列表
      *
      * @param userIds 用户id，多个用‘,’分割
-     * @return
+     * @return 在线用户id列表
      */
     @Override
     public List<Long> checkOnline(String userIds) {
-        String[] idArr = userIds.split(",");
-        List<Long> onlineIds = new LinkedList<>();
-        for (String userId : idArr) {
-            if (imClient.isOnline(Long.parseLong(userId))) {
-                onlineIds.add(Long.parseLong(userId));
-            }
-        }
-        return onlineIds;
+        List<Long> userIdList = Arrays.stream(userIds.split(","))
+                .map(Long::parseLong).collect(Collectors.toList());
+        return imClient.isOnline(userIdList);
     }
 
     @Override
@@ -422,9 +420,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .like(User::getNickName,name)
                 .last("limit 20");
         List<User> users = this.list(queryWrapper);
+        List<Long> userIds = users.stream().map(User::getId).collect(Collectors.toList());
+        List<Long> onlineUserIds = imClient.isOnline(userIds);
         return users.stream().map(u-> {
             UserVO vo = BeanUtils.copyProperties(u,UserVO.class);
-            vo.setOnline(imClient.isOnline(u.getId()));
+            vo.setOnline(onlineUserIds.contains(u.getId()));
             return vo;
         }).collect(Collectors.toList());
     }

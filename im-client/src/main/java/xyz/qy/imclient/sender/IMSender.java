@@ -1,5 +1,6 @@
 package xyz.qy.imclient.sender;
 
+import cn.hutool.core.collection.CollectionUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -21,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class IMSender {
@@ -157,5 +159,31 @@ public class IMSender {
     public Boolean isOnline(Long userId) {
         String key = String.join(":", IMRedisKey.IM_USER_SERVER_ID, userId.toString(), "*");
         return !redisTemplate.keys(key).isEmpty();
+    }
+
+    public List<Long> isOnline(List<Long> userIds){
+        if(CollectionUtil.isEmpty(userIds)){
+            return Collections.emptyList();
+        }
+        // 把所有用户的key都存起来
+        Map<String,Long> keyMap = new HashMap<>();
+        for(Long id:userIds){
+            for (Integer terminal : IMTerminalType.codes()) {
+                String key = String.join(":", IMRedisKey.IM_USER_SERVER_ID, id.toString(), terminal.toString());
+                keyMap.put(key,id);
+            }
+        }
+        // 批量拉取
+        List<Object> serverIds = redisTemplate.opsForValue().multiGet(keyMap.keySet());
+        int idx = 0;
+        List<Long> onlineIds = new LinkedList<>();
+        for (Map.Entry<String,Long> entry : keyMap.entrySet()) {
+            // serverid有值表示用户在线
+            if(serverIds.get(idx++) != null){
+                onlineIds.add(entry.getValue());
+            }
+        }
+        // 去重并返回
+        return onlineIds.stream().distinct().collect(Collectors.toList());
     }
 }

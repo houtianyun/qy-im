@@ -6,6 +6,8 @@ import xyz.qy.imclient.sender.IMSender;
 import xyz.qy.imcommon.model.IMGroupMessage;
 import xyz.qy.imcommon.model.IMPrivateMessage;
 
+import java.util.List;
+
 @Configuration
 public class IMClient {
 
@@ -19,6 +21,16 @@ public class IMClient {
      */
     public Boolean isOnline(Long userId) {
         return imSender.isOnline(userId);
+    }
+
+    /**
+     * 判断多个用户是否在线
+     *
+     * @param userIds 用户id列表
+     * @return 在线的用户列表
+     */
+    public List<Long> isOnline(List<Long> userIds){
+        return imSender.isOnline(userIds);
     }
 
     /**

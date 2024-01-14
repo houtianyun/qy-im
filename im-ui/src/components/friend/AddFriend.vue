@@ -11,8 +11,13 @@
 						<head-image :url="user.headImage"></head-image>
 					</div>
 					<div class="add-friend-text">
-						<div>{{user.nickName}}</div>
-						<div :class="user.online ? 'online-status  online':'online-status'">{{ user.online?"[在线]":"[离线]"}}</div>
+            <div class="text-user-name">
+              <div>{{user.userName}}</div>
+              <div :class="user.online ? 'online-status  online':'online-status'">{{ user.online?"[在线]":"[离线]"}}</div>
+            </div>
+            <div class="text-nick-name">
+              <div>昵称:{{user.nickName}}</div>
+            </div>
 					</div>
 					 <el-button type="success" v-show="!isFriend(user.id)" plain @click="handleAddFriend(user)">添加</el-button>
 					 <el-button type="info" v-show="isFriend(user.id)" plain disabled>已添加</el-button>
@@ -114,9 +119,12 @@
 </script>
 
 <style scoped lang="scss">
+  .el-dialog {
+    min-width: 400px;
+  }
 
 	.item {
-		height: 80px;
+		height: 65px;
 		display: flex;
 		position: relative;
 		padding-left: 15px;
@@ -124,22 +132,35 @@
 		padding-right: 25px;
 		
 		.add-friend-text {
-			margin-left: 15px;
-			line-height: 80px;
-			flex: 3;
-			display: flex;
-			flex-direction: row;
-			height: 100%;
-			flex-shrink: 0;
-			overflow: hidden;
-		
-			.online-status{
-				font-size: 12px;
-				font-weight: 600;
-				&.online{
-					color: #5fb878;
-				}
-			}
+      margin-left: 15px;
+      flex: 3;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+
+      .text-user-name{
+        display: flex;
+        flex-direction: row;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 25px;
+
+        .online-status{
+          font-size: 12px;
+          font-weight: 600;
+          &.online{
+            color: #5fb878;
+          }
+        }
+      }
+
+      .text-nick-name{
+        display: flex;
+        flex-direction: row;
+        font-size: 12px;
+        line-height: 20px;
+      }
 		}
 	}
 </style>
