@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import xyz.qy.imclient.listener.MessageListenerMulticaster;
+import xyz.qy.imcommon.contant.IMConstant;
 import xyz.qy.imcommon.contant.IMRedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.enums.IMListenerType;
@@ -48,6 +49,7 @@ public class IMSender {
                 recvInfo.setReceivers(Collections.singletonList(new IMUserInfo(message.getRecvId(), terminal)));
                 recvInfo.setData(message.getData());
                 redisTemplate.opsForList().rightPush(sendKey, recvInfo);
+                redisTemplate.convertAndSend(IMConstant.PRIVATE_MSG_TOPIC, sendKey);
             } else if (message.getSendResult()) {
                 // 回复消息状态
                 IMSendResult result = new IMSendResult();
@@ -78,6 +80,7 @@ public class IMSender {
                     recvInfo.setReceivers(Collections.singletonList(new IMUserInfo(message.getSender().getId(), terminal)));
                     recvInfo.setData(message.getData());
                     redisTemplate.opsForList().rightPush(sendKey, recvInfo);
+                    redisTemplate.convertAndSend(IMConstant.PRIVATE_MSG_TOPIC, sendKey);
                 }
             }
         }
@@ -119,6 +122,7 @@ public class IMSender {
             // 推送至队列
             String key = String.join(":", IMRedisKey.IM_UNREAD_GROUP_QUEUE, entry.getKey().toString());
             redisTemplate.opsForList().rightPush(key, recvInfo);
+            redisTemplate.convertAndSend(IMConstant.GROUP_MSG_TOPIC, key);
         }
         // 对离线用户回复消息状态
         if (message.getSendResult()) {
@@ -151,6 +155,7 @@ public class IMSender {
                     recvInfo.setData(message.getData());
                     String sendKey = String.join(":", IMRedisKey.IM_UNREAD_GROUP_QUEUE, serverId.toString());
                     redisTemplate.opsForList().rightPush(sendKey, recvInfo);
+                    redisTemplate.convertAndSend(IMConstant.GROUP_MSG_TOPIC, key);
                 }
             }
         }
