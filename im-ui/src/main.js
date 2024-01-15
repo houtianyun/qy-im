@@ -12,6 +12,7 @@ import element from './api/element.js';
 import store from './store';
 import config from "./assets/js/config";
 import * as  enums from './api/enums.js';
+import * as  date from './api/date.js';
 import './utils/directive/dialogDrag';
 import VueImageSwipe from "vue-image-swipe";
 import "vue-image-swipe/dist/vue-image-swipe.css";
@@ -21,6 +22,7 @@ Vue.use(VueImageSwipe);
 
 // 挂载全局
 Vue.prototype.$wsApi = socketApi;
+Vue.prototype.$date = date;
 Vue.prototype.$http = httpRequest // http请求方法
 Vue.prototype.$emo = emotion; // emo表情
 Vue.prototype.$elm = element; // 元素操作

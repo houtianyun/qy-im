@@ -26,8 +26,9 @@
 				<div v-show="activeGroup.id">
 					<div class="r-group-info">
 						<div>
-							<file-upload class="avatar-uploader" :action="imageAction" :disabled="!isOwner || activeGroup.isTemplate===1" :showLoading="true"
-							 :maxSize="maxSize" @success="handleUploadSuccess" :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp']">
+							<file-upload class="avatar-uploader" :action="imageAction" :disabled="!isOwner || activeGroup.isTemplate===1"
+                 :showLoading="true" :maxSize="maxSize" @success="handleUploadSuccess"
+                 :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp']">
 								<img v-if="activeGroup.headImage" :src="activeGroup.headImage" class="avatar">
 								<i v-else class="el-icon-plus avatar-uploader-icon"></i>
 							</file-upload>
@@ -293,12 +294,12 @@
 					inputErrorMessage: '请输入群聊名称'
 				}).then((o) => {
           let userInfo = this.$store.state.userStore.userInfo;
-          let data= {
+          let data = {
             name: o.value,
             remark: o.value,
             aliasName: userInfo.name,
             headImage: userInfo.headImage,
-            headImageThumb:  userInfo.headImageThumb,
+            headImageThumb: userInfo.headImageThumb,
             ownerId: userInfo.id
           }
 					this.$http({
@@ -366,7 +367,7 @@
 						this.$store.commit("removeGroup", this.activeGroup.id);
 						this.$store.commit("activeGroup", -1);
 						this.$store.commit("removeGroupChat", this.activeGroup.id);
-						this.activeGroup= {};
+						this.activeGroup = {};
 					});
 				})
 
@@ -643,7 +644,7 @@
 			}
 
 			.r-group-container {
-				padding: 20px;
+				padding: 50px;
 
 				.r-group-info {
 					display: flex;
@@ -687,7 +688,7 @@
 					}
 
 					.send-btn {
-						margin-top: 10px;
+						margin-top: 20px;
 					}
 				}
 

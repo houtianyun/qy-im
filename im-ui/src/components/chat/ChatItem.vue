@@ -1,165 +1,168 @@
 <template>
-
-	<div class="chat-item" :class="active ? 'active' : ''">
-		<div class="left">
-			<head-image :url="chat.headImage" :size="40" :id="chat.type=='PRIVATE'?chat.targetId:0"></head-image>
-			<div v-show="chat.unreadCount>0" class="unread-text">{{chat.unreadCount}}</div>
-		</div>
-		<div class="mid">
-			<div>{{ chat.showName}}</div>
-			<div class="msg-text" v-html="$emo.transform(chat.lastContent)"></div>
-		</div>
-		<div class="right ">
-			<div @click.stop="onClickClose()"><i class="el-icon-close close" style="border: none; font-size: 20px;color: black;" title="关闭"></i></div>
-			<div class="msg-time">
-				<chat-time :time="chat.lastSendTime"></chat-time>
-			</div>
-		</div>
-	</div>
+  <div class="chat-item" :class="active ? 'active' : ''" @contextmenu.prevent="showRightMenu($event)">
+    <div class="chat-left">
+      <head-image :url="chat.headImage" :size="50" :id="chat.type=='PRIVATE'?chat.targetId:0"></head-image>
+      <div v-show="chat.unreadCount>0" class="unread-text">{{chat.unreadCount}}</div>
+    </div>
+    <div class="chat-right">
+      <div class="chat-name">
+        {{ chat.showName}}
+      </div>
+      <div class="chat-content">
+        <div class="chat-content-text" v-html="$emo.transform(chat.lastContent)"></div>
+        <div class="chat-time">{{showTime}}</div>
+      </div>
+    </div>
+    <right-menu v-show="rightMenu.show" :pos="rightMenu.pos" :items="rightMenu.items"
+                @close="rightMenu.show=false" @select="handleSelectMenu"></right-menu>
+  </div>
 
 </template>
 
 <script>
-	import ChatTime from "./ChatTime.vue";
-	import HeadImage from '../common/HeadImage.vue';
-	
-	export default {
-		name: "chatItem",
-		components: {
-			ChatTime,
-			HeadImage
-		},
-		data() {
-			return {}
-		},
-		props: {
-			chat: {
-				type: Object
-			},
-			active: {
-				type: Boolean
-			},
-			index: {
-				type: Number
-			}
-		},
-		methods: {
-			
-			onClickClose(){
-				this.$emit("del");
-			}
-		}
-	}
+import HeadImage from '../common/HeadImage.vue';
+import RightMenu from '../common/RightMenu.vue';
+
+export default {
+  name: "chatItem",
+  components: {
+    HeadImage,
+    RightMenu
+  },
+  data() {
+    return {
+      rightMenu: {
+        show: false,
+        pos: {
+          x: 0,
+          y: 0
+        },
+        items: [{
+          key: 'TOP',
+          name: '置顶',
+          icon: 'el-icon-top'
+        }, {
+          key: 'DELETE',
+          name: '删除',
+          icon: 'el-icon-delete'
+        }]
+      }
+    }
+  },
+  props: {
+    chat: {
+      type: Object
+    },
+    active: {
+      type: Boolean
+    },
+    index: {
+      type: Number
+    }
+  },
+  methods: {
+    showRightMenu(e) {
+      this.rightMenu.pos = {
+        x: e.x,
+        y: e.y
+      };
+      this.rightMenu.show = "true";
+    },
+    handleSelectMenu(item) {
+      this.$emit(item.key.toLowerCase(), this.msgInfo);
+    }
+  },
+  computed: {
+    showTime() {
+      return this.$date.toTimeText(this.chat.lastSendTime, true)
+    }
+  }
+}
 </script>
 
 <style lang="scss">
-	.chat-item {
-		height: 65px; 
-		display: flex;
-		margin-bottom: 1px;
-		position: relative;
-		padding-left: 15px;
-		align-items: center;
-		padding-right: 5px;
-		background-color: #fafafa;
-		white-space: nowrap;
-		
-		&:hover {
-			background-color: #eeeeee;
-		}
+.chat-item {
+  height: 65px;
+  display: flex;
+  margin-bottom: 1px;
+  position: relative;
+  padding-left: 10px;
+  align-items: center;
+  padding-right: 5px;
+  background-color: #fafafa;
+  white-space: nowrap;
+  color: black;
+  cursor: pointer;
 
-		&.active {
-			background-color: #dddddd;
-		}
+  &:hover {
+    background-color: #eeeeee;
+  }
 
+  &.active {
+    background-color: #e8e8f0;
+  }
 
-		&:hover {
-			.close {
-				display: block !important;
-			}
-		}
-		
-		.left {
-			position: relative;
-			display: flex;
-			width: 45px;
-			height: 45px;
-			
-			.unread-text {
-				position: absolute;
-				background-color: #f56c6c;
-				right: -8px;
-				top: -8px;
-				color: white;
-				border-radius: 30px;
-				padding: 0 5px;
-				font-size: 10px;
-				text-align: center;
-				white-space: nowrap;
-				border: 1px solid #f1e5e5;
-			}
-		}
+  .chat-left {
+    position: relative;
+    display: flex;
+    width: 50px;
+    height: 50px;
+
+    .unread-text {
+      position: absolute;
+      background-color: #f56c6c;
+      right: -5px;
+      top: -5px;
+      color: white;
+      border-radius: 30px;
+      padding: 1px 5px;
+      font-size: 10px;
+      text-align: center;
+      white-space: nowrap;
+      border: 1px solid #f1e5e5;
+    }
+  }
 
 
-		.mid {
-			margin-left: 15px;
-			flex: 2;
-			display: flex;
-			flex-direction: column;
-			height: 100%;
-			flex-shrink: 0;
-			overflow: hidden;
+  .chat-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding-left: 10px;
+    text-align: left;
 
-			&>div {
-				display: flex;
-				justify-content: flex-start;
-				align-items: center;
-				flex: 1;
-			}
+    .chat-name {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 30px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
 
-      .msg-text {
-        font-size: 16px;
-        color: #888888;
+    .chat-content {
+      display: flex;
+
+      .chat-content-text {
+        flex: 2;
+        font-size: 14px;
         white-space: nowrap;
+        overflow: hidden;
 
-        img{
+        img {
           width: 30px !important;
           height: 30px !important;
         }
       }
-		}
 
-		.right {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-			align-items: flex-end;
-			height: 100%;
-			flex-shrink: 0;
-			overflow: hidden;
-
-			&>div {
-				display: flex;
-				justify-content: flex-start;
-				align-items: center;
-				flex: 1;
-			}
-
-			.close {
-				width: 1.5rem;
-				height: 1.5rem;
-				right: 0;
-				top: 1rem;
-				cursor: pointer;
-				display: none;
-			}
-
-			.msg-time {
-				font-size: 14px;
-				color: #888888;
-				white-space: nowrap;
-			}
-		}
-	}
-
+      .chat-time {
+        flex: 1;
+        font-size: 13px;
+        text-align: right;
+        color: #888888;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
+  }
+}
 </style>

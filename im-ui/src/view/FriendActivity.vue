@@ -129,6 +129,9 @@
                     </span>
                     <a class="sendBtn point" @click="sayComment(item)">发送</a>
                   </div>
+                  <div class="emoji-wrapper" v-if="showEmoji">
+                    <Emoji @chooseEmoji="handleChooseEmoji" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -183,6 +186,7 @@ import BatchFileUpload from "@/components/common/BatchFileUpload";
 import Avatar from "@/components/common/Avatar";
 import Pagination from "@/components/pagination/Pagination";
 import TemplateCharacterChoose from "@/components/template/TemplateCharacterChoose";
+import Emoji from '@/components/emoji'
 /*import ImagePreview from "@/components/imagePreview/ImagePreview";*/
 
 export default {
@@ -194,6 +198,7 @@ export default {
     Avatar,
     Pagination,
     TemplateCharacterChoose,
+    Emoji,
     /*ImagePreview*/
   },
   data() {
@@ -538,7 +543,47 @@ export default {
       }).finally(() => {
 
       })
-    }
+    },
+    //添加表情
+    handleChooseEmoji(value) {
+      // 创建一个img标签（表情）
+      let img = document.createElement('img');
+      img.src = value.url;
+      img.style.verticalAlign = 'middle';
+      img.style.marginLeft = "2px"
+      img.style.marginRight = "2px"
+      img.style.maxHeight = value.maxHeight;
+      img.style.height = value.height
+      img.style.width = value.width
+
+      let edit = this.$refs.textareaRef[this.commentLastIndex];
+      edit.focus()
+      let selection = window.getSelection()
+      // 如果存在最后的光标对象
+      if (this.lastEditRange) {
+        // 选区对象清除所有光标
+        selection.removeAllRanges();
+        // 并添加最后记录的光标，以还原之前的状态
+        selection.addRange(this.lastEditRange);
+        // 获取到最后选择的位置
+        let range = selection.getRangeAt(0);
+        // 在此位置插入表情图
+        range.insertNode(img)
+        // false，表示将Range对象所代表的区域的起点移动到终点处
+        range.collapse(false)
+
+        // 记录最后的位置
+        this.lastEditRange = selection.getRangeAt(0);
+      } else {
+        // 将表情添加到可编辑的div中，作为可编辑div的子节点
+        edit.appendChild(img)
+        // 使用选取对象，选取可编辑div中的所有子节点
+        selection.selectAllChildren(edit)
+        // 合并到最后面，即实现了添加一个表情后，把光标移到最后面
+        selection.collapseToEnd()
+      }
+      this.showEmoji = false
+    },
   }
 }
 </script>
