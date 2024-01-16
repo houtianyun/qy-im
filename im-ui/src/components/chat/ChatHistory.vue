@@ -6,6 +6,7 @@
 				<ul>
 					<li v-for="(msgInfo,idx) in messages" :key="idx">
 						<chat-message-item
+                :mode="2"
                 :mine="msgInfo.sendId == mine.id"
                 :headImage="headImage(msgInfo)"
                 :showName="showName(msgInfo)"

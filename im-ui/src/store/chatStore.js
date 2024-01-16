@@ -127,6 +127,14 @@ export default {
 					return;
 				}
 			}
+			// 间隔大于10分钟插入时间显示
+			let lastTimeMsg = chat.messages.findLast(m=>m.type==MESSAGE_TYPE.TIP_TIME);
+			if(!lastTimeMsg || (lastTimeMsg.sendTime < msgInfo.sendTime - 600*1000)){
+				chat.messages.push({
+					sendTime: msgInfo.sendTime,
+					type: MESSAGE_TYPE.TIP_TIME,
+				});
+			}
 			// 新的消息
 			chat.messages.push(msgInfo);
 			
