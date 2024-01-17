@@ -1,7 +1,9 @@
 <template>
 	<div class="head-image" @click="showUserInfo($event)">
-		<img :src="url" :style="{width: size+'px',height: size+'px',cursor: 'pointer'}" />
-		<slot></slot>
+    <img class="avatar-image" v-show="url" :src="url" :style="avatarImageStyle" />
+    <div class="avatar-text" v-show="!url" :style="avatarTextStyle">
+      {{name.substring(0,1).toUpperCase()}}</div>
+    <div v-show="online" class="online" title="用户当前在线"></div>
 	</div>
 </template>
 
@@ -10,7 +12,11 @@
 	export default {
 		name: "headImage",
 		data() {
-			return {}
+      return {
+        colors:["#7dd24b","#c7515a","#db68ef","#15d29b","#85029b",
+          "#c9b455","#fb2609","#bda818","#af0831","#326eb6"]
+
+      }
 		},
 		props: {
 			id:{
@@ -22,7 +28,15 @@
 			},
 			url: {
 				type: String
-			}
+			},
+      name:{
+        type: String,
+        default: "X"
+      },
+      online:{
+        type: Boolean,
+        default:false
+      }
 		},
 		methods:{
 			showUserInfo(e){
@@ -36,26 +50,54 @@
 					})
 				}
 			}
-		}
+		},
+    computed:{
+      avatarImageStyle(){
+        return `width:${this.size}px; height:${this.size}px;`
+      },
+      avatarTextStyle(){
+        return `width: ${this.size}px;height:${this.size}px;
+				color:${this.textColor};font-size:${this.size*0.6}px;`
+      },
+      textColor(){
+        let hash = 0;
+        for (var i = 0; i< this.name.length; i++) {
+          hash += this.name.charCodeAt(i);
+        }
+        return this.colors[hash%this.colors.length];
+      }
+    }
 	}
 </script>
 
 <style scoped lang="scss">
 	.head-image {
-		position: relative;
-		img {
-			position: relative;
-			overflow: hidden;
-			border-radius: 10%;
-		}
+    position: relative;
+    cursor: pointer;
+    .avatar-image {
+      position: relative;
+      overflow: hidden;
+      border-radius: 10%;
+    }
 
-		img:before {
-			content: '';
-			display: block;
-			width: 100%;
-			height: 100%;
-			background: url('../../assets/default_head.png') no-repeat 0 0;
-			background-size: 100%;
-		}
+    .avatar-text{
+      background-color: #f2f2f2; /* 默认背景色 */
+      border-radius: 50%; /* 圆角效果 */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #ccc;
+    }
+
+    .online{
+      position: absolute;
+      right: -5px;
+      bottom: 0;
+      width: 12px;
+      height: 12px;
+      background: limegreen;
+      border-radius: 50%;
+      border: 3px solid white;
+    }
 	}
 </style>

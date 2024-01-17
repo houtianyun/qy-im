@@ -2,8 +2,10 @@
 	<el-container>
 		<el-aside width="80px" class="navi-bar">
 			<div class="user-head-image">
-				<head-image :url="$store.state.userStore.userInfo.headImageThumb" :size="60" @click.native="showSettingDialog=true">
-				</head-image>
+        <head-image :name="$store.state.userStore.userInfo.nickName"
+                    :url="$store.state.userStore.userInfo.headImageThumb"
+                    :size="60" @click.native="showSettingDialog=true">
+        </head-image>
 			</div>
 
 			<el-menu class="menu-bar" text-color="#ddd" style="margin-top: 30px;">
@@ -284,12 +286,6 @@
   background: #6CC6CB;
   padding: 10px;
   padding-top: 50px;
-
-  .user-head-image {
-    position: relative;
-    width: 50px;
-    height: 50px;
-  }
 
   .el-menu {
     border: none;

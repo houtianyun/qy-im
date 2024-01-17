@@ -3,7 +3,8 @@
 		<div class="user-info" :style="{left: pos.x+'px',top: pos.y+'px'}" @click.stop>
 			<div class="user-info-box">
 				<div class="avatar">
-					<head-image :url="user.headImageThumb" :size="60" @click.native="showFullImage()"> </head-image>
+					<head-image :name="user.nickName" :url="user.headImageThumb" :size="60" :online="user.online"
+                @click.native="showFullImage()"> </head-image>
 				</div>
 				<div>
 					<el-descriptions :column="1" :title="user.userName" class="user-info-items">
@@ -83,7 +84,7 @@
 			},
 			showFullImage(){
 				if(this.user.headImage){
-					this.$store.commit("showFullImageBox",this.user.headImage);
+					this.$store.commit("showFullImageBox", this.user.headImage);
 				}
 			}
 		},
@@ -120,6 +121,7 @@
 				margin-left: 10px;
 				white-space: nowrap;
 				overflow: hidden;
+
 				.el-descriptions__header { 
 					margin-bottom: 5px;
 				}

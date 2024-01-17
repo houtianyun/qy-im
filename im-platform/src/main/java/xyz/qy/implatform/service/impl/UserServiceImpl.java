@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import xyz.qy.imclient.IMClient;
 import xyz.qy.imcommon.contant.IMRedisKey;
+import xyz.qy.imcommon.enums.IMTerminalType;
 import xyz.qy.implatform.config.JwtProperties;
 import xyz.qy.implatform.contant.Constant;
 import xyz.qy.implatform.dto.GroupMessageDTO;
@@ -57,6 +58,7 @@ import xyz.qy.implatform.util.SysStringUtils;
 import xyz.qy.implatform.vo.GroupMessageVO;
 import xyz.qy.implatform.vo.IpGeoInfoVO;
 import xyz.qy.implatform.vo.LoginVO;
+import xyz.qy.implatform.vo.OnlineTerminalVO;
 import xyz.qy.implatform.vo.PageResultVO;
 import xyz.qy.implatform.vo.PasswordVO;
 import xyz.qy.implatform.vo.PrivateMessageVO;
@@ -71,6 +73,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -315,6 +318,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     }
 
     /**
+     * 根据用户昵id查询用户以及在线状态
+     *
+     * @param id 用户id
+     * @return 用户信息
+     */
+    @Override
+    public UserVO findUserById(Long id) {
+        User user = this.getById(id);
+        UserVO vo = BeanUtils.copyProperties(user,UserVO.class);
+        vo.setOnline(imClient.isOnline(id));
+        return vo;
+    }
+
+    /**
      * 根据用户昵称查询用户，最多返回20条数据
      *
      * @param nickname 用户昵称
@@ -338,7 +355,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             return PageResultVO.builder().data(Collections.EMPTY_LIST).build();
         }
         List<Long> userIds = users.stream().map(User::getId).collect(Collectors.toList());
-        List<Long> onlineUserIds = imClient.isOnline(userIds);
+        List<Long> onlineUserIds = imClient.getOnlineUser(userIds);
         List<UserVO> vos = users.stream().map(u -> {
             UserVO vo = BeanUtils.copyProperties(u, UserVO.class);
             vo.setOnline(onlineUserIds.contains(u.getId()));
@@ -357,7 +374,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public List<Long> checkOnline(String userIds) {
         List<Long> userIdList = Arrays.stream(userIds.split(","))
                 .map(Long::parseLong).collect(Collectors.toList());
-        return imClient.isOnline(userIdList);
+        return imClient.getOnlineUser(userIdList);
     }
 
     @Override
@@ -421,11 +438,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
                 .last("limit 20");
         List<User> users = this.list(queryWrapper);
         List<Long> userIds = users.stream().map(User::getId).collect(Collectors.toList());
-        List<Long> onlineUserIds = imClient.isOnline(userIds);
+        List<Long> onlineUserIds = imClient.getOnlineUser(userIds);
         return users.stream().map(u-> {
             UserVO vo = BeanUtils.copyProperties(u,UserVO.class);
             vo.setOnline(onlineUserIds.contains(u.getId()));
             return vo;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取用户在线的终端类型
+     *
+     * @param userIds 用户id，多个用‘,’分割
+     * @return 在线用户终端
+     */
+    @Override
+    public List<OnlineTerminalVO> getOnlineTerminals(String userIds) {
+        List<Long> userIdList = Arrays.stream(userIds.split(","))
+                .map(Long::parseLong).collect(Collectors.toList());
+        // 查询在线的终端
+        Map<Long,List<IMTerminalType>> terminalMap = imClient.getOnlineTerminal(userIdList);
+        // 组装vo
+        List<OnlineTerminalVO> vos = new LinkedList<>();
+        terminalMap.forEach((userId,types)->{
+            List<Integer> terminals = types.stream().map(IMTerminalType::code).collect(Collectors.toList());
+            vos.add(new OnlineTerminalVO(userId,terminals));
+        });
+        return vos;
     }
 }

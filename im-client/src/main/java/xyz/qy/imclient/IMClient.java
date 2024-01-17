@@ -3,10 +3,12 @@ package xyz.qy.imclient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import xyz.qy.imclient.sender.IMSender;
+import xyz.qy.imcommon.enums.IMTerminalType;
 import xyz.qy.imcommon.model.IMGroupMessage;
 import xyz.qy.imcommon.model.IMPrivateMessage;
 
 import java.util.List;
+import java.util.Map;
 
 @Configuration
 public class IMClient {
@@ -29,8 +31,19 @@ public class IMClient {
      * @param userIds 用户id列表
      * @return 在线的用户列表
      */
-    public List<Long> isOnline(List<Long> userIds){
-        return imSender.isOnline(userIds);
+    public List<Long> getOnlineUser(List<Long> userIds){
+        return imSender.getOnlineUser(userIds);
+    }
+
+
+    /**
+     * 判断多个用户是否在线
+     *
+     * @param userIds 用户id列表
+     * @return 在线的用户终端
+     */
+    public Map<Long,List<IMTerminalType>> getOnlineTerminal(List<Long> userIds){
+        return imSender.getOnlineTerminal(userIds);
     }
 
     /**

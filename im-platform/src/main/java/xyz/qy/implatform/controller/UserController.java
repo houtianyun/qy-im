@@ -19,6 +19,7 @@ import xyz.qy.implatform.service.IUserService;
 import xyz.qy.implatform.session.SessionContext;
 import xyz.qy.implatform.session.UserSession;
 import xyz.qy.implatform.util.BeanUtils;
+import xyz.qy.implatform.vo.OnlineTerminalVO;
 import xyz.qy.implatform.vo.PasswordVO;
 import xyz.qy.implatform.vo.UserVO;
 
@@ -41,6 +42,12 @@ public class UserController {
         return ResultUtils.success(onlineIds);
     }
 
+    @GetMapping("/terminal/online")
+    @ApiOperation(value = "判断用户哪个终端在线",notes="返回在线的用户id的终端集合")
+    public Result<List<OnlineTerminalVO>> getOnlineTerminal(@NotEmpty @RequestParam("userIds") String userIds){
+        return ResultUtils.success(userService.getOnlineTerminals(userIds));
+    }
+
     @GetMapping("/self")
     @ApiOperation(value = "获取当前用户信息", notes = "获取当前用户信息")
     public Result<UserVO> findSelfInfo() {
@@ -52,10 +59,8 @@ public class UserController {
 
     @GetMapping("/find/{id}")
     @ApiOperation(value = "查找用户", notes = "根据id查找用户")
-    public Result findByIde(@NotEmpty @PathVariable("id") long id) {
-        User user = userService.getById(id);
-        UserVO userVO = BeanUtils.copyProperties(user, UserVO.class);
-        return ResultUtils.success(userVO);
+    public Result findById(@NotEmpty @PathVariable("id") Long id){
+        return ResultUtils.success(userService.findUserById(id));
     }
 
     @PutMapping("/update")

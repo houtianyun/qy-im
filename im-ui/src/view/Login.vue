@@ -141,7 +141,7 @@ import WaveSurfer from "wavesurfer.js";
 			return {
         codeUrl: '',
 				loginForm: {
-          terminal: 0,
+          terminal: this.$enums.TERMINAL_TYPE.WEB,
           userName: '',
 					password: '',
           code: '',

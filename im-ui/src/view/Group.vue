@@ -26,12 +26,16 @@
 				<div v-show="activeGroup.id">
 					<div class="r-group-info">
 						<div>
-							<file-upload class="avatar-uploader" :action="imageAction" :disabled="!isOwner || activeGroup.isTemplate===1"
+							<file-upload v-show="isOwner" class="avatar-uploader" :action="imageAction" :disabled="!isOwner || activeGroup.isTemplate===1"
                  :showLoading="true" :maxSize="maxSize" @success="handleUploadSuccess"
                  :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp']">
 								<img v-if="activeGroup.headImage" :src="activeGroup.headImage" class="avatar">
 								<i v-else class="el-icon-plus avatar-uploader-icon"></i>
 							</file-upload>
+              <head-image  v-show="!isOwner" class="avatar" :size="200"
+                           :url="activeGroup.headImage"
+                           :name="activeGroup.remark">
+              </head-image>
 							<el-button class="send-btn" @click="handleSendMessage()">发送消息</el-button>
 						</div>
 						<el-form class="r-group-form" label-width="130px" :model="activeGroup" :rules="rules" ref="groupForm">
@@ -219,6 +223,7 @@
   import CharacterAvatarItem from "@/components/group/CharacterAvatarItem";
   import TemplateGroupMember from "@/components/group/TemplateGroupMember";
   import JoinGroup from "@/components/group/JoinGroup";
+  import HeadImage from '../components/common/HeadImage.vue';
 
 	export default {
 		name: "group",
@@ -232,7 +237,8 @@
       SwitchTemplateGroup,
       CharacterAvatarItem,
       TemplateGroupMember,
-      JoinGroup
+      JoinGroup,
+      HeadImage
 		},
 		data() {
 			return {

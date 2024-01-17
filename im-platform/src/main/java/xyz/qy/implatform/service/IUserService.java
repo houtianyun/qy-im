@@ -6,6 +6,7 @@ import xyz.qy.implatform.dto.ModifyPwdDTO;
 import xyz.qy.implatform.dto.RegisterDTO;
 import xyz.qy.implatform.entity.User;
 import xyz.qy.implatform.vo.LoginVO;
+import xyz.qy.implatform.vo.OnlineTerminalVO;
 import xyz.qy.implatform.vo.PageResultVO;
 import xyz.qy.implatform.vo.PasswordVO;
 import xyz.qy.implatform.vo.UserVO;
@@ -24,6 +25,8 @@ public interface IUserService extends IService<User> {
     User findUserByUserName(String username);
 
     void update(UserVO vo);
+
+    UserVO findUserById(Long id);
 
     PageResultVO findUserByNickName(String nickname);
 
@@ -46,4 +49,6 @@ public interface IUserService extends IService<User> {
     void modifyPassword(ModifyPwdDTO dto);
 
     List<UserVO> findUserByName(String name);
+
+    List<OnlineTerminalVO> getOnlineTerminals(String userIds);
 }

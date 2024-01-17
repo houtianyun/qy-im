@@ -1,8 +1,10 @@
 <template>
 	<div class="group-member">
-		<head-image :url="member.headImage" :size="50" :id="member.userId">
-			<div  v-if="showDel" @click.stop="handleDelete()" class="btn-kick el-icon-error"></div>
-		</head-image>
+    <head-image :id="member.userId" :name="member.aliasName"
+                :url="member.headImage" :size="50"
+                :online="member.online" >
+      <div  v-if="showDel" @click.stop="handleDelete()" class="btn-kick el-icon-error"></div>
+    </head-image>
 		<div class="member-name">{{member.aliasName}}</div>
 
 	</div>

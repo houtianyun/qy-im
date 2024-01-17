@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import xyz.qy.imclient.IMClient;
 import xyz.qy.imclient.annotation.Lock;
 import xyz.qy.implatform.contant.Constant;
 import xyz.qy.implatform.contant.RedisKey;
@@ -74,6 +75,9 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
 
     @Autowired
     private ITemplateCharacterService templateCharacterService;
+
+    @Autowired
+    private IMClient imClient;
 
     /**
      * 创建新群聊
@@ -390,6 +394,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         List<GroupMember> members = groupMemberService.findByGroupId(groupId);
         List<Long> userIds = members.stream().map(GroupMember::getUserId).collect(Collectors.toList());
         List<User> userList = userService.listByIds(userIds);
+        List<Long> onlineUserIds = imClient.getOnlineUser(userIds);
         Map<Long, User> userMap = userList.stream().collect(Collectors.toMap(User::getId, Function.identity()));
         return members.stream().map(m->{
             GroupMemberVO vo = BeanUtils.copyProperties(m, GroupMemberVO.class);
@@ -400,7 +405,10 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
             vo.setGroupId(String.valueOf(group.getId()));
             vo.setNickName(user.getNickName());
             vo.setUserAvatar(user.getHeadImage());
+            vo.setOnline(onlineUserIds.contains(m.getUserId()));
             return  vo;
+        }).sorted((m1,m2)->{
+            return m2.getOnline().compareTo(m1.getOnline());
         }).collect(Collectors.toList());
     }
 

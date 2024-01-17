@@ -1,11 +1,18 @@
 <template>
 	<div class="friend-item" :class="active ? 'active' : ''" @contextmenu.prevent="showRightMenu($event)">
 		<div class="avatar">
-			<head-image :url="friend.headImage"> </head-image>
+			<head-image :name="friend.nickName"
+          :url="friend.headImage"
+          :online="friend.online">
+      </head-image>
 		</div>
 		<div class="friend-info">
 			<div class="friend-name">{{ friend.nickName}}</div>
-      <div class="friend-online" :class="friend.online ? 'online':''">{{ friend.online?"[在线]":"[离线]"}}</div>
+<!--      <div class="friend-online" :class="friend.online ? 'online':''">{{ friend.online?"[在线]":"[离线]"}}</div>-->
+      <div class="friend-online online">
+        <span v-show="friend.onlineWeb" class="el-icon-s-platform" title="电脑端在线"></span>
+        <span v-show="friend.onlineApp" class="el-icon-mobile-phone" title="移动端在线"></span>
+      </div>
 		</div>
     <div class="avatar" v-if="isTemplate === 1" @click="selectCharacter()">
       <head-image :url="friend.templateCharacterAvatar"></head-image>
@@ -135,11 +142,10 @@
       }
 
       .friend-online {
-        font-size: 12px;
-
-        &.online {
-          color: #5fb878;
-        }
+        padding-right: 15px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #2f6dce;
       }
     }
 	}

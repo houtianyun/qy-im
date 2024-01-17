@@ -57,4 +57,7 @@ public class GroupMemberVO {
 
     @ApiModelProperty("是否群管理员")
     private Boolean isAdmin = false;
+
+    @ApiModelProperty(value = "是否在线")
+    private Boolean online;
 }
