@@ -31,7 +31,7 @@
 			},
       name:{
         type: String,
-        default: "X"
+        default: "?"
       },
       online:{
         type: Boolean,
