@@ -185,6 +185,9 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "用户未建立连接");
         }
         List<Friend> friends = friendService.findFriendByUserId(session.getUserId());
+        if(friends.isEmpty()){
+            return;
+        }
         List<Long> friendIds = friends.stream().map(Friend::getFriendId).collect(Collectors.toList());
 
         // 获取当前用户所有未读消息
