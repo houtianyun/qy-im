@@ -28,7 +28,7 @@ public interface IUserService extends IService<User> {
 
     UserVO findUserById(Long id);
 
-    PageResultVO findUserByNickName(String nickname);
+    PageResultVO pageFindUserByNickName(String nickname);
 
     List<Long> checkOnline(String userIds);
 

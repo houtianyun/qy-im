@@ -338,7 +338,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * @return
      */
     @Override
-    public PageResultVO findUserByNickName(String nickname) {
+    public PageResultVO pageFindUserByNickName(String nickname) {
         UserSession session = SessionContext.getSession();
         Long userId = session.getUserId();
         LambdaQueryWrapper<User> queryWrapper = Wrappers.lambdaQuery();

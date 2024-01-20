@@ -70,10 +70,10 @@ public class UserController {
         return ResultUtils.success();
     }
 
-    @GetMapping("/findByNickName")
+    @GetMapping("/pageFindByNickName")
     @ApiOperation(value = "查找用户", notes = "根据昵称查找用户")
     public Result findByNickName(@NotEmpty(message = "用户昵称不可为空") @RequestParam("nickName") String nickName) {
-        return ResultUtils.success(userService.findUserByNickName(nickName));
+        return ResultUtils.success(userService.pageFindUserByNickName(nickName));
     }
 
     @GetMapping("/findByName")

@@ -72,7 +72,7 @@
       },
 			handleSearch() {
 				this.$http({
-					url: `/user/findByNickName?pageNo=${this.currentPage}&pageSize=${this.pageSize}`,
+					url: `/user/pageFindByNickName?pageNo=${this.currentPage}&pageSize=${this.pageSize}`,
 					method: "get",
 					params: {
 						nickName: this.searchText
