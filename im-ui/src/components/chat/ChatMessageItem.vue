@@ -8,8 +8,9 @@
 				<head-image :name="showName" :size="40" :url="headImage" :id="msgInfo.sendId"></head-image>
 			</div>
 			<div class="chat-msg-content">
-        <div v-show="mode==1 && msgInfo.groupId && !msgInfo.selfSend" class="chat-msg-top">
+        <div v-show="mode==1 && msgInfo.groupId" class="chat-msg-top">
           <span>{{showName}}</span>
+          <span v-show="myGroupMemberInfo.showNickName">{{nickName}}</span>
         </div>
 				<div v-show="mode==2" class="chat-msg-top">
 					<span>{{showName}}</span>
