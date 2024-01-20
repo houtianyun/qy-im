@@ -17,7 +17,7 @@
       </div>
 		</div>
     <div class="avatar" v-if="isTemplate === 1" @click="selectCharacter()">
-      <head-image :url="friend.templateCharacterAvatar"></head-image>
+      <avatar-image :url="friend.templateCharacterAvatar"></avatar-image>
     </div>
     <right-menu v-show="menu && rightMenu.show" :pos="rightMenu.pos" :items="rightMenu.items"
                 @close="rightMenu.show=false" @select="handleSelectMenu"></right-menu>
@@ -28,12 +28,14 @@
 <script>
 	import HeadImage from '../common/HeadImage.vue';
   import RightMenu from "../common/RightMenu.vue";
+  import AvatarImage from "@/components/common/AvatarImage";
 
 	export default {
 		name: "friendItem",
 		components: {
 			HeadImage,
-      RightMenu
+      RightMenu,
+      AvatarImage
 		},
 		data() {
       return {
@@ -70,12 +72,15 @@
         this.$emit('select',this.friend,this.index)
       }
 		},
-    computed:{
-      friend(){
-        return this.$store.state.friendStore.friends[this.index];
-      }
-    },
+    // computed:{
+    //   friend(){
+    //     return this.$store.state.friendStore.friends[this.index];
+    //   }
+    // },
 		props: {
+			friend: {
+				type: Object
+			},
 			active: {
 				type: Boolean
 			},
