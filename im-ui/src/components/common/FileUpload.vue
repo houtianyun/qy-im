@@ -3,8 +3,8 @@
 	 :accept="fileTypes==null?'':fileTypes.join(',')"
    :headers="uploadHeaders"
 	 :show-file-list="false" 
-	 :on-success="handleSuccess"
-	 :on-error="handleError"
+	 :on-success="onSuccess"
+	 :on-error="onError"
 	 :disabled="disabled"
 	 :before-upload="beforeUpload">
 		<slot></slot>
@@ -43,7 +43,7 @@
 			}
 		},
 		methods: {
-			handleSuccess(res, file) {
+      onSuccess(res, file) {
 				this.loading && this.loading.close();
 				if (res.code == 200) {
 					this.$emit("success", res, file);
@@ -52,7 +52,7 @@
 					this.$emit("fail", res, file);
 				}
 			},
-			handleError(err,file){
+      onError(err,file){
 				this.$emit("fail", err, file);
 			},
 			beforeUpload(file) {

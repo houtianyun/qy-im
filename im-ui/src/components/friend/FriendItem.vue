@@ -1,7 +1,7 @@
 <template>
 	<div class="friend-item" :class="active ? 'active' : ''" @contextmenu.prevent="showRightMenu($event)">
 		<div class="avatar">
-			<head-image :name="friend.nickName"
+			<head-image :size="45" :name="friend.nickName"
           :url="friend.headImage"
           :online="friend.online">
       </head-image>
@@ -20,7 +20,7 @@
       <avatar-image :url="friend.templateCharacterAvatar"></avatar-image>
     </div>
     <right-menu v-show="menu && rightMenu.show" :pos="rightMenu.pos" :items="rightMenu.items"
-                @close="rightMenu.show=false" @select="handleSelectMenu"></right-menu>
+                @close="rightMenu.show=false" @select="onSelectMenu"></right-menu>
 		<slot></slot>
 	</div>
 </template>
@@ -65,7 +65,7 @@
         };
         this.rightMenu.show = "true";
       },
-      handleSelectMenu(item) {
+      onSelectMenu(item) {
         this.$emit(item.key.toLowerCase(), this.msgInfo);
       },
       selectCharacter() {
@@ -103,13 +103,12 @@
 
 <style scope lang="scss">
 	.friend-item {
-		height: 65px;
+		height: 50px;
 		display: flex;
 		margin-bottom: 1px;
 		position: relative;
-		padding-left: 10px;
+    padding: 5px;
 		align-items: center;
-		padding-right: 5px;
 		background-color: #fafafa;
 		white-space: nowrap;
     cursor: pointer;
@@ -127,8 +126,8 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 50px;
-      height: 50px;
+      width: 45px;
+      height: 45px;
     }
 
     .friend-info {

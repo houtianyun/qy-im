@@ -83,7 +83,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         // 是否在群聊里面
         GroupMember member = groupMemberService.findByGroupAndUserId(dto.getGroupId(), session.getUserId());
         if (Objects.isNull(member) || member.getQuit()) {
-            throw new GlobalException(ResultCode.PROGRAM_ERROR, "您已不在群聊里面，无法撤回消息");
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "您已不在群聊里面，无法发送消息");
         }
         // 判断是否在群里
         List<Long> userIds = groupMemberService.findUserIdsByGroupId(group.getId());
@@ -163,7 +163,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         }
         // 判断是否在群里
         GroupMember member = groupMemberService.findByGroupAndUserId(msg.getGroupId(), session.getUserId());
-        if (member == null) {
+        if (Objects.isNull(member) || member.getQuit()) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "您已不在群聊里面，无法撤回消息");
         }
         // 修改数据库

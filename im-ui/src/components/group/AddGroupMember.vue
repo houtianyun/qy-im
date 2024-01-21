@@ -1,5 +1,5 @@
 <template>
-  <el-dialog title="邀请好友" :visible.sync="visible"  width="50%" :before-close="handleClose">
+  <el-dialog title="邀请好友" :visible.sync="visible"  width="50%" :before-close="onClose">
     <div class="agm-container">
       <div class="agm-l-box">
         <el-input width="200px" placeholder="搜索好友" class="input-with-select" v-model="searchText">
@@ -7,7 +7,7 @@
         </el-input>
         <el-scrollbar style="height:400px;">
           <div v-for="(friend,index) in friends" :key="friend.id" v-show="friend.nickName.startsWith(searchText)">
-            <friend-item :showDelete="false" @click.native="handleSwitchCheck(friend)"
+            <friend-item :showDelete="false" @click.native="onSwitchCheck(friend)"
                          :menu="false" :friend="friend" :index="index" :active="index === activeIndex">
               <el-checkbox :disabled="friend.disabled" @click.native.stop="" class="agm-friend-checkbox" v-model="friend.isCheck"
                size="medium"></el-checkbox>
@@ -20,7 +20,7 @@
         <el-scrollbar style="height:400px;">
           <div v-for="(friend,index) in friends" :key="friend.id">
             <friend-item v-if="friend.isCheck && !friend.disabled" :friend="friend" :index="index" :active="false"
-                         :menu="false" :isTemplate="isTemplate" @del="handleRemoveFriend(friend)"
+                         :menu="false" :isTemplate="isTemplate" @del="onRemoveFriend(friend)"
                          @select="selectCharacter(friend, index)">
             </friend-item>
           </div>
@@ -28,8 +28,8 @@
       </div>
     </div>
     <span slot="footer" class="dialog-footer">
-      <el-button @click="handleClose()">取 消</el-button>
-      <el-button type="primary" @click="handleOk()">确 定</el-button>
+      <el-button @click="onClose()">取 消</el-button>
+      <el-button type="primary" @click="onOk()">确 定</el-button>
     </span>
     <el-dialog
         width="30%"
@@ -110,7 +110,7 @@
       }
     },
 		methods: {
-			handleClose() {
+      onClose() {
         for (let i= 0; i < this.selectableCharacters.length; i++) {
           if (this.selectableCharacters[i].selectable) {
             this.selectableCharacters[i].choosed = false;
@@ -118,7 +118,7 @@
         }
 				this.$emit("close");
 			},
-			handleOk() {
+      onOk() {
 			  let returnFlag = false;
         if (this.isTemplate === 1) {
           this.friends.forEach((f) => {
@@ -154,7 +154,6 @@
             }
 					}
 				})
-        console.log("inviteVO", inviteVO);
 				if (inviteVO.friendIds.length > 0) {
 					this.$http({
 						url: "/group/invite",
@@ -168,7 +167,7 @@
           })
 				}
 			},
-			handleRemoveFriend(friend) {
+      onRemoveFriend(friend) {
 				friend.isCheck = false;
 				// 将已选择的模板人物的不可选标识去掉
 				if (friend.choosedCharacterIndex !== undefined &&  friend.choosedCharacterIndex !== null) {
@@ -179,7 +178,7 @@
         friend.templateCharacterAvatar = null;
         friend.templateCharacterName = null;
 			},
-			handleSwitchCheck(friend) {
+      onSwitchCheck(friend) {
         // 取消好友选择，需要将好友已选的模板人物变成可选状态
         if (!friend.disabled) {
           if (friend.isCheck) {
