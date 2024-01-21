@@ -26,7 +26,7 @@
 							<img class="send-image" :src="JSON.parse(msgInfo.content).thumbUrl"
                    @click="showFullImageBox()" />
 						</div>
-						<span title="发送失败" v-show="loadFail" @click="handleSendFail"
+						<span title="发送失败" v-show="loadFail" @click="onSendFail"
                   class="send-fail el-icon-warning"></span>
 					</div>
 					<div class="chat-msg-file" v-if="msgInfo.type==$enums.MESSAGE_TYPE.FILE">

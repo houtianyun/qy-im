@@ -1,7 +1,7 @@
 <template>
 	<div class="group-item" :class="active ? 'active' : ''">
 		<div class="avatar">
-			<head-image :size="45":name="group.remark" :url="group.headImage"> </head-image>
+			<head-image :size="45" :name="group.remark" :url="group.headImage"> </head-image>
 		</div>
 		<div class="group-name">
 			<div>{{group.remark}}</div>
