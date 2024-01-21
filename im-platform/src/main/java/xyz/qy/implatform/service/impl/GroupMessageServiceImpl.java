@@ -261,6 +261,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
                 .gt(GroupMessage::getSendTime, minDate)
                 .in(GroupMessage::getGroupId, ids)
                 .ne(GroupMessage::getStatus, MessageStatus.RECALL.code())
+                .orderByAsc(GroupMessage::getId)
                 .last("limit 100");
 
         List<GroupMessage> messages = this.list(wrapper);

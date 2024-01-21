@@ -240,6 +240,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
                                 .in(PrivateMessage::getRecvId, friendIds))
                         .or(wp -> wp.eq(PrivateMessage::getRecvId, session.getUserId())
                                 .in(PrivateMessage::getSendId, friendIds)))
+                .orderByAsc(PrivateMessage::getId)
                 .last("limit 100");
 
         List<PrivateMessage> messages = this.list(queryWrapper);
