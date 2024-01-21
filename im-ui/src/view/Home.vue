@@ -86,12 +86,13 @@
 			return {
 				showSettingDialog: false,
 				showOperationDialog: false,
+        lastPlayAudioTime: new Date()-1000
 			}
 		},
 		methods: {
       init() {
         this.$store.dispatch("load").then(() => {
-          // 加载未拉取的消息
+          // 加载离线消息
           this.loadPrivateMessage(this.$store.state.chatStore.privateMsgMaxId);
           this.loadGroupMessage(this.$store.state.chatStore.groupMsgMaxId);
           // ws初始化
@@ -212,8 +213,7 @@
 				this.$store.commit("openChat", chatInfo);
 				// 插入消息
 				this.$store.commit("insertMessage", msg);
-        if (msg.playAudio && !msg.selfSend) {
-          // 播放提示音
+        if(!msg.selfSend && msg.status != this.$enums.MESSAGE_STATUS.READED){
           this.playAudioTip();
         }
 			},
@@ -247,8 +247,7 @@
 				this.$store.commit("openChat", chatInfo);
 				// 插入消息
 				this.$store.commit("insertMessage", msg);
-        if (msg.playAudio && !msg.selfSend) {
-          // 播放提示音
+        if(!msg.selfSend && msg.status != this.$enums.MESSAGE_STATUS.READED){
           this.playAudioTip();
         }
 			},
@@ -258,11 +257,14 @@
         location.href = "/";
 			},
 			playAudioTip(){
-				let audio = new Audio();
-				let url = require(`@/assets/audio/tip.wav`);
-				audio.src = url;
-				audio.play();
-			},
+        if(new Date() - this.lastPlayAudioTime > 1000){
+          this.lastPlayAudioTime = new Date();
+          let audio = new Audio();
+          let url = require(`@/assets/audio/tip.wav`);
+          audio.src = url;
+          audio.play();
+        }
+      },
 			showSetting() {
 				this.showSettingDialog = true;
 			},

@@ -41,7 +41,7 @@ public class IMSender {
             Integer serverId = (Integer)redisTemplate.opsForValue().get(key);
             // 如果对方在线，将数据存储至redis，等待拉取推送
             if (serverId != null) {
-                String sendKey = String.join(":", IMRedisKey.IM_UNREAD_PRIVATE_QUEUE, serverId.toString());
+                String sendKey = String.join(":", IMRedisKey.IM_MESSAGE_PRIVATE_QUEUE, serverId.toString());
                 IMRecvInfo recvInfo = new IMRecvInfo();
                 recvInfo.setCmd(IMCmdType.PRIVATE_MESSAGE.code());
                 recvInfo.setSendResult(message.getSendResult());
@@ -71,7 +71,7 @@ public class IMSender {
                 Integer serverId = (Integer)redisTemplate.opsForValue().get(key);
                 // 如果终端在线，将数据存储至redis，等待拉取推送
                 if (serverId != null) {
-                    String sendKey = String.join(":", IMRedisKey.IM_UNREAD_PRIVATE_QUEUE, serverId.toString());
+                    String sendKey = String.join(":", IMRedisKey.IM_MESSAGE_PRIVATE_QUEUE, serverId.toString());
                     IMRecvInfo recvInfo = new IMRecvInfo();
                     // 自己的消息不需要回推消息结果
                     recvInfo.setSendResult(false);
@@ -120,7 +120,7 @@ public class IMSender {
             recvInfo.setSendResult(message.getSendResult());
             recvInfo.setData(message.getData());
             // 推送至队列
-            String key = String.join(":", IMRedisKey.IM_UNREAD_GROUP_QUEUE, entry.getKey().toString());
+            String key = String.join(":", IMRedisKey.IM_MESSAGE_GROUP_QUEUE, entry.getKey().toString());
             redisTemplate.opsForList().rightPush(key, recvInfo);
             redisTemplate.convertAndSend(IMConstant.GROUP_MSG_TOPIC, key);
         }
@@ -153,7 +153,7 @@ public class IMSender {
                     // 自己的消息不需要回推消息结果
                     recvInfo.setSendResult(false);
                     recvInfo.setData(message.getData());
-                    String sendKey = String.join(":", IMRedisKey.IM_UNREAD_GROUP_QUEUE, serverId.toString());
+                    String sendKey = String.join(":", IMRedisKey.IM_MESSAGE_GROUP_QUEUE, serverId.toString());
                     redisTemplate.opsForList().rightPush(sendKey, recvInfo);
                     redisTemplate.convertAndSend(IMConstant.GROUP_MSG_TOPIC, key);
                 }

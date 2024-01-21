@@ -15,21 +15,15 @@ export default {
 	},
 
 	mutations: {
-		initChats(state, chats) {
-			state.chats = chats||[];
+		initChats(state, chatsData) {
+			state.chats = chatsData.chats || [];
+			state.privateMsgMaxId = chatsData.privateMsgMaxId || 0;
+			state.groupMsgMaxId = chatsData.groupMsgMaxId || 0;
+			// 防止图片一直处在加载中状态
 			state.chats.forEach((chat) => {
 				chat.messages.forEach((msg) => {
-					// 防止图片一直处在加载中状态
 					if (msg.loadStatus == "loading") {
 						msg.loadStatus = "fail"
-					}
-					// 记录最大私聊消息id
-					if(chat.type == "PRIVATE" && msg.id && msg.id>state.privateMsgMaxId){
-						state.privateMsgMaxId = msg.id;
-					}
-					// 记录最大群聊消息id
-					if(chat.type == "GROUP" && msg.id && msg.id>state.groupMsgMaxId){
-						state.groupMsgMaxId = msg.id;
 					}
 				})
 			})
@@ -252,7 +246,12 @@ export default {
 		saveToStorage(state) {
 			let userId = userStore.state.userInfo.id;
 			let key = "chats-" + userId;
-			localStorage.setItem(key, JSON.stringify(state.chats));
+			let chatsData = {
+				privateMsgMaxId: state.privateMsgMaxId,
+				groupMsgMaxId: state.groupMsgMaxId,
+				chats: state.chats
+			}
+			localStorage.setItem(key, JSON.stringify(chatsData));
 		},
 		clear(state) {
 			state.activeIndex = -1;
@@ -265,8 +264,10 @@ export default {
 				let userId = userStore.state.userInfo.id;
 				let key = "chats-" + userId;
 				let item = localStorage.getItem(key)
-				let chats = JSON.parse(localStorage.getItem(key));
-				context.commit("initChats", chats);
+				if (item) {
+					let chatsData = JSON.parse(item);
+					context.commit("initChats", chatsData);
+				}
 				resolve();
 			})
 		}

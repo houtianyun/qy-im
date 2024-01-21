@@ -365,7 +365,7 @@
 
           .chat-readed {
             font-size: 10px;
-            color: #aaa;
+            color: #888;
             font-weight: 600;
           }
 				}

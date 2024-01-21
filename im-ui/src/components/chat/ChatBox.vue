@@ -7,11 +7,12 @@
 		<el-main style="padding: 0;">
 			<el-container>
 				<el-container class="content-box">
-					<el-main class="im-chat-main" id="chatScrollBox">
+					<el-main class="im-chat-main" id="chatScrollBox" @scroll="handleScroll">
 						<div class="im-chat-box">
 							<ul>
 								<li v-for="(msgInfo,idx) in chat.messages" :key="idx">
 									<chat-message-item
+                      v-show="idx>=showMinIdx"
                       :mine="msgInfo.sendId == mine.id"
                       :headImage="headImage(msgInfo)"
                       :showName="showName(msgInfo)"
@@ -119,7 +120,8 @@
 					y: 0
 				},
 				showHistory: false, // 是否显示历史聊天记录
-				lockMessage: false // 是否锁定发送
+				lockMessage: false, // 是否锁定发送
+        showMinIdx: 0 // 下标低于showMinIdx的消息不显示，否则页面会很卡
 			}
 		},
 		methods: {
@@ -239,6 +241,19 @@
 			handleCloseSide() {
 				this.showSide = false;
 			},
+      handleScrollToTop() {
+        // 多展示10条信息
+        this.showMinIdx = this.showMinIdx > 10 ? this.showMinIdx - 10 : 0;
+      },
+      handleScroll(e) {
+        let scrollElement = e.target
+        let scrollTop = scrollElement.scrollTop
+        if (scrollTop <30 ) { // 在顶部,不滚动的情况
+          console.log("next")
+          // 多展示20条信息
+          this.showMinIdx = this.showMinIdx > 20 ? this.showMinIdx - 20 : 0;
+        }
+      },
 			switchEmotionBox() {
 				this.showEmotion = !this.showEmotion;
 				let width = this.$refs.emotion.offsetWidth;
@@ -483,7 +498,7 @@
 			},
 			scrollToBottom() {
 				this.$nextTick(() => {
-					const div = document.getElementById("chatScrollBox");
+					let div = document.getElementById("chatScrollBox");
 					div.scrollTop = div.scrollHeight;
 				});
 			},
@@ -518,21 +533,26 @@
 		},
 		watch: {
 			chat: {
-				handler(newChat, oldChat) {
-					if (newChat.targetId > 0 && (!oldChat || newChat.type != oldChat.type || newChat.targetId != oldChat.targetId)) {
-						if (this.chat.type == "GROUP") {
-							this.loadGroup(this.chat.targetId);
-						} else {
-							this.loadFriend(this.chat.targetId);
-						}
-						this.scrollToBottom();
-						this.sendText = "";
-						// 保持输入框焦点
-						this.$nextTick(() => {
-							this.$refs.sendBox.focus();
-						})
-					}
-				},
+        handler(newChat, oldChat) {
+          if (newChat.targetId > 0 && (!oldChat || newChat.type != oldChat.type ||
+              newChat.targetId != oldChat.targetId)) {
+
+            if (this.chat.type == "GROUP") {
+              this.loadGroup(this.chat.targetId);
+            } else {
+              this.loadFriend(this.chat.targetId);
+            }
+            this.scrollToBottom();
+            this.sendText = "";
+            // 初始状态只显示30条消息
+            let size = this.chat.messages.length;
+            this.showMinIdx = size > 30 ? size - 30 : 0;
+            // 保持输入框焦点
+            this.$nextTick(() => {
+              this.$refs.sendBox.focus();
+            })
+          }
+        },
 				immediate: true
 			},
       unreadCount: {
@@ -543,7 +563,11 @@
           }
         }
       }
-		}
+		},
+    mounted() {
+      let div = document.getElementById("chatScrollBox");
+      div.addEventListener('scroll', this.handleScroll)
+    }
 	}
 </script>
 
