@@ -38,6 +38,7 @@ import xyz.qy.implatform.util.DateTimeUtils;
 import xyz.qy.implatform.vo.GroupMessageVO;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -73,26 +74,35 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
     public Long sendMessage(GroupMessageDTO dto) {
         UserSession session = SessionContext.getSession();
         Group group = groupService.getById(dto.getGroupId());
-        if (group == null) {
+        if (Objects.isNull(group)) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "群聊不存在");
         }
         if (group.getDeleted()) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "群聊已解散");
         }
+        // 是否在群聊里面
+        GroupMember member = groupMemberService.findByGroupAndUserId(dto.getGroupId(), session.getUserId());
+        if (Objects.isNull(member) || member.getQuit()) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "您已不在群聊里面，无法撤回消息");
+        }
         // 判断是否在群里
         List<Long> userIds = groupMemberService.findUserIdsByGroupId(group.getId());
-        if (!userIds.contains(session.getUserId())) {
-            throw new GlobalException(ResultCode.PROGRAM_ERROR, "您已不在群聊里面，无法发送消息");
-        }
+        // 不用发给自己
+        userIds = userIds.stream().filter(id -> !session.getUserId().equals(id)).collect(Collectors.toList());
         // 保存消息
         GroupMessage msg = BeanUtils.copyProperties(dto, GroupMessage.class);
         msg.setSendId(session.getUserId());
         msg.setSendTime(new Date());
+        msg.setSendNickName(member.getAliasName());
+        if(CollectionUtil.isNotEmpty(dto.getAtUserIds())){
+            msg.setAtUserIds(StrUtil.join(",",dto.getAtUserIds()));
+        }
         this.save(msg);
         // 不用发给自己
         userIds = userIds.stream().filter(id -> !session.getUserId().equals(id)).collect(Collectors.toList());
         // 群发
         GroupMessageVO msgInfo = BeanUtils.copyProperties(msg, GroupMessageVO.class);
+        msgInfo.setAtUserIds(dto.getAtUserIds());
         IMGroupMessage<GroupMessageVO> sendMessage = new IMGroupMessage<>();
         sendMessage.setSender(new IMUserInfo(session.getUserId(), session.getTerminal()));
         sendMessage.setRecvIds(userIds);
@@ -270,7 +280,13 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
 
         List<GroupMessage> messages = this.list(wrapper);
         // 转成vo
-        List<GroupMessageVO> vos = messages.stream().map(m -> BeanUtils.copyProperties(m, GroupMessageVO.class)).collect(Collectors.toList());
+        List<GroupMessageVO> vos = messages.stream().map(m -> {
+            GroupMessageVO vo = BeanUtils.copyProperties(m, GroupMessageVO.class);
+            // 被@用户列表
+            List<String> atIds = Arrays.asList(StrUtil.split(m.getAtUserIds(),","));
+            vo.setAtUserIds(atIds.stream().map(id->Long.parseLong(id)).collect(Collectors.toList()));
+            return vo;
+        }).collect(Collectors.toList());
         // 消息状态,数据库没有存群聊的消息状态，需要从redis取
         List<String> keys = ids.stream()
                 .map(id -> String.join(":", RedisKey.IM_GROUP_READED_POSITION, id.toString(), session.getUserId().toString()))

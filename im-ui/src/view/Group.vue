@@ -1,8 +1,8 @@
 <template>
-	<el-container class="im-group-box">
-		<el-aside width="250px" class="l-group-box">
-			<div class="l-group-header">
-				<div class="l-group-search">
+	<el-container class="group-page">
+		<el-aside width="260px" class="group-list-box">
+			<div class="group-list-header">
+				<div class="group-list-search">
 					<el-input width="200px" placeholder="搜索群聊" v-model="searchText">
 						<el-button slot="append" icon="el-icon-search"></el-button>
 					</el-input>
@@ -10,24 +10,24 @@
 				<el-button plain icon="el-icon-plus" style="border: none; color: #d42e07; padding: 12px; font-size: 20px;" title="创建群聊"
                    @click="dialogVisible = true"></el-button>
 			</div>
-			<el-scrollbar class="l-group-list">
+			<el-scrollbar class="group-list-items">
 				<div v-for="(group,index) in groupStore.groups" :key="index">
 					<group-item v-show="group.remark.startsWith(searchText)" :group="group" :active="index === groupStore.activeIndex"
-					 @click.native="handleActiveItem(group,index)">
+					 @click.native="onActiveItem(group,index)">
 					</group-item>
 				</div>
 			</el-scrollbar>
 		</el-aside>
-		<el-container class="r-group-box">
-			<div class="r-group-header" v-show="activeGroup.id">
+		<el-container class="group-box">
+			<div class="group-header" v-show="activeGroup.id">
 				{{activeGroup.remark}}({{groupMembers.length}})
 			</div>
-			<el-scrollbar class="r-group-container">
+			<el-scrollbar class="group-container">
 				<div v-show="activeGroup.id">
-					<div class="r-group-info">
+					<div class="group-info">
 						<div>
 							<file-upload v-show="isOwner" class="avatar-uploader" :action="imageAction" :disabled="!isOwner || activeGroup.isTemplate===1"
-                 :showLoading="true" :maxSize="maxSize" @success="handleUploadSuccess"
+                 :showLoading="true" :maxSize="maxSize" @success="onUploadSuccess"
                  :fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp']">
 								<img v-if="activeGroup.headImage" :src="activeGroup.headImage" class="avatar">
 								<i v-else class="el-icon-plus avatar-uploader-icon"></i>
@@ -36,9 +36,9 @@
                            :url="activeGroup.headImage"
                            :name="activeGroup.remark">
               </head-image>
-							<el-button class="send-btn" @click="handleSendMessage()">发送消息</el-button>
+							<el-button class="send-btn" @click="onSendMessage()">发送消息</el-button>
 						</div>
-						<el-form class="r-group-form" label-width="130px" :model="activeGroup" :rules="rules" ref="groupForm">
+						<el-form class="group-form" label-width="130px" :model="activeGroup" :rules="rules" ref="groupForm">
 							<el-form-item label="群聊名称" prop="name">
 								<el-input v-model="activeGroup.name" :disabled="!isOwner || activeGroup.isTemplate === 1" maxlength="20"></el-input>
 							</el-form-item>
@@ -54,10 +54,10 @@
 							<el-form-item label="群公告">
 								<el-input v-model="activeGroup.notice" :disabled="!isOwner" type="textarea" maxlength="1024" placeholder="群主未设置"></el-input>
 							</el-form-item>
-							<div class="btn-group">
-								<el-button type="success" @click="handleSaveGroup()">提交</el-button>
-								<el-button type="danger" v-show="!isOwner" @click="handleQuit()">退出群聊</el-button>
-								<el-button type="danger" v-show="isOwner" @click="handleDissolve()">解散群聊</el-button>
+							<div>
+								<el-button type="success" @click="onSaveGroup()">提交</el-button>
+								<el-button type="danger" v-show="!isOwner" @click="onQuit()">退出群聊</el-button>
+								<el-button type="danger" v-show="isOwner" @click="onDissolve()">解散群聊</el-button>
                 <el-button type="primary" v-show="isOwner" @click="popupSwitchTemplateGroup()">切换模板群聊</el-button>
                 <el-button v-show="isOwner && activeGroup.isTemplate===1" @click="popupSwitchCommonGroup()">切换普通群聊</el-button>
 							</div>
@@ -65,13 +65,13 @@
 					</div>
 					<el-divider content-position="center"></el-divider>
 					<el-scrollbar style="height:400px;">
-						<div class="r-group-member-list">
+						<div class="group-member-list">
 							<div v-for="(member) in groupMembers" :key="member.id">
-								<group-member v-show="!member.quit" class="r-group-member" :member="member" :showDel="isOwner&&member.userId!=activeGroup.ownerId"
-								 @del="handleKick"></group-member>
+								<group-member v-show="!member.quit" class="group-member" :member="member" :showDel="isOwner&&member.userId!=activeGroup.ownerId"
+								 @del="onKick"></group-member>
 							</div>
-							<div class="r-group-invite">
-								<div class="invite-member-btn" title="邀请好友进群聊" @click="handleInviteMember()">
+							<div class="group-invite">
+								<div class="invite-member-btn" title="邀请好友进群聊" @click="onInviteMember()">
 									<i class="el-icon-plus"></i>
 								</div>
 								<div class="invite-member-text">邀请</div>
@@ -80,7 +80,7 @@
                                   :templateGroupId="activeGroup.templateGroupId"
                                   :selectableCharacters = "selectableCharacters"
                                   @reload="loadGroupMembers"
-								 @close="handleCloseAddGroupMember"></add-group-member>
+								 @close="onCloseAddGroupMember"></add-group-member>
 							</div>
               <div class="switch-character" v-show="activeGroup.isTemplate===1">
                 <div class="switch-character-btn" title="切换模板人物" @click="switchCharacter()">
@@ -282,7 +282,7 @@
 		  openCreateGroupDialog() {
 		    this.dialogVisible = false;
 		    if (this.radio === '1') {
-          this.handleCreateGroup();
+          this.onCreateGroup();
         } else if (this.radio === '2') {
           this.showCreateTemplateGroup = true;
         } else {
@@ -292,7 +292,7 @@
       handleCloseTemplateGroup() {
 		    this.showCreateTemplateGroup = false;
       },
-			handleCreateGroup() {
+      onCreateGroup() {
 				this.$prompt('请输入群聊名称', '创建群聊', {
 					confirmButtonText: '确定',
 					cancelButtonText: '取消',
@@ -317,7 +317,7 @@
 					})
 				})
 			},
-			handleActiveItem(group, index) {
+      onActiveItem(group, index) {
 				this.$store.commit("activeGroup", index);
 				// store数据不能直接修改，所以深拷贝一份内存
 				this.activeGroup = JSON.parse(JSON.stringify(group));
@@ -330,21 +330,21 @@
           this.isTemplateGroup = false;
         }
 			},
-			handleInviteMember() {
+      onInviteMember() {
         if (this.activeGroup.isTemplate === 1) {
           this.querySelectableTemplateCharacter();
         }
 				this.showAddGroupMember = true;
 			},
-			handleCloseAddGroupMember() {
+      onCloseAddGroupMember() {
 				this.showAddGroupMember = false;
 				this.loadGroup(this.activeGroup.id);
 			},
-			handleUploadSuccess(res) {
+      onUploadSuccess(res) {
 				this.activeGroup.headImage = res.data.originUrl;
 				this.activeGroup.headImageThumb = res.data.thumbUrl;
 			},
-			handleSaveGroup() {
+      onSaveGroup() {
 				this.$refs['groupForm'].validate((valid) => {
 					if (valid) {
 						let vo = this.activeGroup;
@@ -359,7 +359,7 @@
 					}
 				});
 			},
-			handleDissolve() {
+      onDissolve() {
 				this.$confirm('确认要解散群聊吗?', '确认解散?', {
 					confirmButtonText: '确定',
 					cancelButtonText: '取消',
@@ -378,7 +378,7 @@
 				})
 
 			},
-			handleKick(member) {
+      onKick(member) {
 				this.$confirm(`确定将成员'${member.aliasName}'移出群聊吗？`, '确认移出?', {
 					confirmButtonText: '确定',
 					cancelButtonText: '取消',
@@ -397,7 +397,7 @@
 				})
 
 			},
-			handleQuit() {
+      onQuit() {
 				this.$confirm('退出群聊后将不再接受群里的消息，确认退出吗？', '确认退出?', {
 					confirmButtonText: '确定',
 					cancelButtonText: '取消',
@@ -414,7 +414,7 @@
 				})
 
 			},
-			handleSendMessage() {
+      onSendMessage() {
 				let chat = {
 					type: 'GROUP',
 					targetId: this.activeGroup.id,
@@ -607,36 +607,36 @@
 </script>
 
 <style lang="scss">
-	.im-group-box {
-		.l-group-box {
+	.group-page {
+		.group-list-box {
 			display: flex;
 			flex-direction: column;
 			border: #dddddd solid 1px;
 			background: white;
 
-			.l-group-header {
+			.group-list-header {
 				height: 50px;
 				display: flex;
 				align-items: center;
 				padding: 5px;
 				background-color: white;
 
-				.l-group-search {
+				.group-list-search {
 					flex: 1;
 				}
 			}
 			
-			.l-group-ist{
+			.group-list-items {
 				flex: 1;
 			}
 		}
 
-		.r-group-box {
+		.group-box {
 			display: flex;
 			flex-direction: column;
 			border: #dddddd solid 1px;
 
-			.r-group-header {
+			.group-header {
 				width: 100%;
 				height: 50px;
 				padding: 5px;
@@ -649,14 +649,14 @@
 				border: #dddddd solid 1px;
 			}
 
-			.r-group-container {
+			.group-container {
 				padding: 50px;
 
-				.r-group-info {
+				.group-info {
 					display: flex;
 					padding: 5px 20px;
 
-					.r-group-form {
+					.group-form {
 						flex: 1;
 						padding-left: 40px;
 						max-width: 800px;
@@ -698,7 +698,7 @@
 					}
 				}
 
-				.r-group-member-list {
+				.group-member-list {
 					padding: 5px 20px;
 					display: flex;
 					align-items: center;
@@ -706,11 +706,11 @@
 					font-size: 16px;
 					text-align: center;
 
-					.r-group-member {
+					.group-member {
 						margin-right: 15px;
 					}
 
-					.r-group-invite {
+					.group-invite {
 						display: flex;
 						flex-direction: column;
 						align-items: center;

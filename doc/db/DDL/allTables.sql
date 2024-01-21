@@ -86,7 +86,9 @@ create table im_group_message
         primary key,
     group_id  bigint                                 not null comment '群id',
     send_id   bigint                                 not null comment '发送用户id',
+    send_nick_name varchar(200) default ''           null comment '发送用户昵称',
     content   text                                   null comment '发送内容',
+    at_user_ids    varchar(1000)                     null comment '@的用户id列表',
     type      tinyint(1)                             not null comment '消息类型 0:文字 1:图片 2:文件 3:语音 10:系统提示',
     status    tinyint(1) default 0                   null comment '状态 0:正常  2:撤回',
     send_time datetime   default current_timestamp() null comment '发送时间'

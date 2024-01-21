@@ -1,5 +1,5 @@
 <template>
-	<el-container>
+	<el-container class="home-page">
 		<el-aside width="80px" class="navi-bar">
 			<div class="user-head-image">
         <head-image :name="$store.state.userStore.userInfo.nickName"
@@ -38,7 +38,7 @@
           <span style="color: #FF00FF" class="el-icon-s-operation"></span>
         </el-menu-item>
 			</el-menu>
-			<div class="exit-box" @click="handleExit()" title="退出">
+			<div class="exit-box" @click="onExit()" title="退出">
 				<span style="color: #EE7942" class="el-icon-circle-close"></span>
 			</div>
 		</el-aside>
@@ -262,11 +262,11 @@
           this.playAudioTip();
         }
 			},
-			handleExit() {
-        this.$wsApi.close();
+      onExit() {
+        this.$wsApi.close(3000);
         sessionStorage.removeItem("accessToken");
         location.href = "/";
-			},
+      },
 			playAudioTip(){
         if(new Date() - this.lastPlayAudioTime > 1000){
           this.lastPlayAudioTime = new Date();

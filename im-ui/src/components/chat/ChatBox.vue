@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-box" @click="closeRefBox()">
+  <div class="chat-box" @click="closeRefBox()" @mousemove="readedMessage()">
     <el-container class="chat-box">
       <el-header height="60px">
         <span>{{title}}</span>
@@ -157,7 +157,7 @@
       },
       onEditBoxBlur() {
         let selection = window.getSelection()
-        // 记录光标位置
+        // 记录光标位置(点击emoji时)
         this.focusNode = selection.focusNode;
         this.focusOffset = selection.focusOffset;
       },
@@ -202,7 +202,7 @@
       onAtSelect(member) {
         let range = window.getSelection().getRangeAt(0)
         // 选中输入的 @xx 符
-        range.setStart(this.focusNode, this.focusOffset - 1 -this.atSearchText.length)
+        range.setStart(this.focusNode, this.focusOffset - 1 - this.atSearchText.length)
         range.setEnd(this.focusNode, this.focusOffset)
         range.deleteContents()
         // 创建元素节点
@@ -456,8 +456,6 @@
 			},
 			sendTextMessage() {
         let sendText = this.createSendText();
-        // 清空输入框
-        this.$refs.editBox.innerHTML = "";
         if (!sendText.trim()) {
           return
         }
@@ -468,6 +466,10 @@
         }
 				// 填充对方id
 				this.fillTargetId(msgInfo, this.chat.targetId);
+        // 被@人员列表
+        if (this.chat.type == "GROUP") {
+          msgInfo.atUserIds = this.createAtUserIds();
+        }
 				this.lockMessage = true;
 				this.$http({
 					url: this.messageAction,
@@ -494,6 +496,8 @@
         } else {
           this.sendTextMessage();
         }
+        // 消息已读
+        this.readedMessage()
       },
       sendImageMessage() {
         let file = this.sendImageFile;
@@ -545,6 +549,9 @@
 				});
 			},
       readedMessage() {
+        if(this.chat.unreadCount==0){
+          return;
+        }
         if(this.chat.type == "GROUP"){
           var url = `/message/group/readed?groupId=${this.chat.targetId}`
         }else{
@@ -555,7 +562,6 @@
           method: 'put'
         }).then(() => {
           this.$store.commit("resetUnreadCount",this.chat)
-          this.scrollToBottom();
         })
       },
 			loadGroup(groupId) {
@@ -612,12 +618,13 @@
 					return msgInfo.sendId == this.mine.id ? this.mine.headImageThumb : this.chat.headImage
 				}
 			},
-      resetEditor(){
+      resetEditor() {
         this.sendImageUrl = "";
         this.sendImageFile = null;
-        this.$refs.editBox.innerHTML = "";
-        this.$refs.editBox.foucs();
-
+        this.$nextTick(() => {
+          this.$refs.editBox.innerHTML = "";
+          this.$refs.editBox.focus();
+        });
       },
 			scrollToBottom() {
 				this.$nextTick(() => {
@@ -681,8 +688,8 @@
       unreadCount: {
         handler(newCount, oldCount) {
           if(newCount > 0){
-            // 消息已读
-            this.readedMessage()
+            // 拉至底部
+            this.scrollToBottom();
           }
         }
       }
