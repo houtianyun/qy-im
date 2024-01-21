@@ -8,6 +8,7 @@
 			</div>
       <div class="l-chat-loadding"  v-if="loading" v-loading="true" element-loading-text="消息接收中..."
            element-loading-spinner="el-icon-loading" element-loading-background="#eee">
+        <div class="chat-loading-box"></div>
       </div>
 			<el-scrollbar class="l-chat-list" >
 				<div v-for="(chat,index) in chatStore.chats" :key="index" v-show="chat.showName.startsWith(searchText)">
@@ -100,6 +101,10 @@
       .l-chat-loadding{
         height: 50px;
         background-color: #eee;
+
+        .chat-loading-box{
+          height: 100%;
+        }
       }
 
 			.l-friend-ist{

@@ -543,6 +543,7 @@
             // 滚到底部
             this.scrollToBottom();
             this.sendText = "";
+            this.showSide = false;
             // 消息已读
             this.readedMessage()
             // 初始状态只显示30条消息
@@ -604,7 +605,7 @@
 
 			.im-chat-box {
 				>ul {
-					padding: 20px;
+					padding: 0 20px;
 
 					li {
 						list-style-type: none;
