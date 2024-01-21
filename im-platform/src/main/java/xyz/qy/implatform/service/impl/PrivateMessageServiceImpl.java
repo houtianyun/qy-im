@@ -2,12 +2,14 @@ package xyz.qy.implatform.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import xyz.qy.imclient.IMClient;
 import xyz.qy.imcommon.contant.IMConstant;
 import xyz.qy.imcommon.enums.IMTerminalType;
@@ -26,6 +28,7 @@ import xyz.qy.implatform.service.IPrivateMessageService;
 import xyz.qy.implatform.session.SessionContext;
 import xyz.qy.implatform.session.UserSession;
 import xyz.qy.implatform.util.BeanUtils;
+import xyz.qy.implatform.util.DateTimeUtils;
 import xyz.qy.implatform.vo.PrivateMessageVO;
 
 import java.util.Collections;
@@ -61,7 +64,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         // 保存消息
         PrivateMessage msg = BeanUtils.copyProperties(dto, PrivateMessage.class);
         msg.setSendId(session.getUserId());
-        msg.setStatus(MessageStatus.UNREAD.code());
+        msg.setStatus(MessageStatus.UNSEND.code());
         msg.setSendTime(new Date());
         this.save(msg);
         // 推送消息
@@ -85,7 +88,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         // 保存消息
         PrivateMessage msg = BeanUtils.copyProperties(dto, PrivateMessage.class);
         msg.setSendId(sendUserId);
-        msg.setStatus(MessageStatus.UNREAD.code());
+        msg.setStatus(MessageStatus.UNSEND.code());
         msg.setSendTime(new Date());
         this.save(msg);
         // 推送消息
@@ -185,7 +188,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "用户未建立连接");
         }
         List<Friend> friends = friendService.findFriendByUserId(session.getUserId());
-        if(friends.isEmpty()){
+        if (friends.isEmpty()) {
             return;
         }
         List<Long> friendIds = friends.stream().map(Friend::getFriendId).collect(Collectors.toList());
@@ -193,7 +196,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         // 获取当前用户所有未读消息
         LambdaQueryWrapper<PrivateMessage> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(PrivateMessage::getRecvId, session.getUserId())
-                .eq(PrivateMessage::getStatus, MessageStatus.UNREAD)
+                .eq(PrivateMessage::getStatus, MessageStatus.UNSEND)
                 .in(PrivateMessage::getSendId, friendIds);
         List<PrivateMessage> messages = this.list(queryWrapper);
         // 上传至redis，等待推送
@@ -209,5 +212,82 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
             imClient.sendPrivateMessage(sendMessage);
         }
         log.info("拉取未读私聊消息，用户id:{},数量:{}", session.getUserId(), messages.size());
+    }
+
+    /**
+     * 拉取消息，只能拉取最近3个月的消息，一次拉取100条
+     *
+     * @param minId 消息起始id
+     * @return 聊天消息列表
+     */
+    @Override
+    public List<PrivateMessageVO> loadMessage(Long minId) {
+        UserSession session = SessionContext.getSession();
+        List<Friend> friends = friendService.findFriendByUserId(session.getUserId());
+        if (friends.isEmpty()) {
+            return Collections.EMPTY_LIST;
+        }
+        List<Long> friendIds = friends.stream().map(Friend::getFriendId).collect(Collectors.toList());
+        // 获取当前用户的消息
+        LambdaQueryWrapper<PrivateMessage> queryWrapper = Wrappers.lambdaQuery();
+        // 只能拉取最近6个月的
+        Date minDate = DateTimeUtils.addMonths(new Date(), -1);
+        queryWrapper.gt(PrivateMessage::getId, minId)
+                .ge(PrivateMessage::getSendTime, minDate)
+                .ne(PrivateMessage::getStatus, MessageStatus.RECALL.code())
+                .and(wrap -> wrap.and(
+                        wp -> wp.eq(PrivateMessage::getSendId, session.getUserId())
+                                .in(PrivateMessage::getRecvId, friendIds))
+                        .or(wp -> wp.eq(PrivateMessage::getRecvId, session.getUserId())
+                                .in(PrivateMessage::getSendId, friendIds)))
+                .last("limit 100");
+
+        List<PrivateMessage> messages = this.list(queryWrapper);
+        // 更新发送状态
+        List<Long> ids = messages.stream()
+                .filter(m -> !m.getSendId().equals(session.getUserId()) && m.getStatus().equals(MessageStatus.UNSEND.code()))
+                .map(PrivateMessage::getId)
+                .collect(Collectors.toList());
+        if (!ids.isEmpty()) {
+            LambdaUpdateWrapper<PrivateMessage> updateWrapper = Wrappers.lambdaUpdate();
+            updateWrapper.in(PrivateMessage::getId, ids)
+                    .set(PrivateMessage::getStatus, MessageStatus.SENDED.code());
+            this.update(updateWrapper);
+        }
+        log.info("拉取消息，用户id:{},数量:{}", session.getUserId(), messages.size());
+        return messages.stream().map(m -> BeanUtils.copyProperties(m, PrivateMessageVO.class)).collect(Collectors.toList());
+    }
+
+
+    /**
+     * 消息已读,将整个会话的消息都置为已读状态
+     *
+     * @param friendId 好友id
+     */
+    @Transactional
+    @Override
+    public void readedMessage(Long friendId) {
+        UserSession session = SessionContext.getSession();
+        // 推送消息
+        PrivateMessageVO msgInfo = new PrivateMessageVO();
+        msgInfo.setType(MessageType.READED.code());
+        msgInfo.setSendTime(new Date());
+        msgInfo.setSendId(session.getUserId());
+        msgInfo.setRecvId(friendId);
+        IMPrivateMessage<PrivateMessageVO> sendMessage = new IMPrivateMessage<>();
+        sendMessage.setSender(new IMUserInfo(session.getUserId(), session.getTerminal()));
+        sendMessage.setRecvId(friendId);
+        sendMessage.setSendToSelf(true);
+        sendMessage.setData(msgInfo);
+        sendMessage.setSendResult(false);
+        imClient.sendPrivateMessage(sendMessage);
+        // 修改消息状态为已读
+        LambdaUpdateWrapper<PrivateMessage> updateWrapper = Wrappers.lambdaUpdate();
+        updateWrapper.eq(PrivateMessage::getSendId, friendId)
+                .eq(PrivateMessage::getRecvId, session.getUserId())
+                .eq(PrivateMessage::getStatus, MessageStatus.SENDED.code())
+                .set(PrivateMessage::getStatus, MessageStatus.READED.code());
+        this.update(updateWrapper);
+        log.info("消息已读，接收方id:{},发送方id:{}", session.getUserId(), friendId);
     }
 }

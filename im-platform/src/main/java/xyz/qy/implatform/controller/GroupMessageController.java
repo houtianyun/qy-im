@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,6 +47,20 @@ public class GroupMessageController {
     @ApiOperation(value = "拉取未读消息", notes = "拉取未读消息")
     public Result pullUnreadMessage() {
         groupMessageService.pullUnreadMessage();
+        return ResultUtils.success();
+    }
+
+    @GetMapping("/loadMessage")
+    @ApiOperation(value = "拉取消息",notes="拉取消息,一次最多拉取100条")
+    public Result<List<GroupMessageVO>> loadMessage(@RequestParam Long minId){
+        return ResultUtils.success(groupMessageService.loadMessage(minId));
+    }
+
+
+    @PutMapping("/readed")
+    @ApiOperation(value = "消息已读",notes="将群聊中的消息状态置为已读")
+    public Result readedMessage(@RequestParam Long groupId){
+        groupMessageService.readedMessage(groupId);
         return ResultUtils.success();
     }
 

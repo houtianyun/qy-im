@@ -1,5 +1,8 @@
 package xyz.qy.imcommon.enums;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public enum IMCmdType {
     LOGIN(0,"登陆"),
     HEART_BEAT(1,"心跳"),
@@ -11,11 +14,6 @@ public enum IMCmdType {
 
     private String desc;
 
-    IMCmdType(Integer index, String desc) {
-        this.code =index;
-        this.desc=desc;
-    }
-
     public static IMCmdType fromCode(Integer code){
         for (IMCmdType typeEnum:values()) {
             if (typeEnum.code.equals(code)) {
@@ -23,10 +21,6 @@ public enum IMCmdType {
             }
         }
         return null;
-    }
-
-    public String description() {
-        return desc;
     }
 
     public Integer code(){

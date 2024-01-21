@@ -175,7 +175,8 @@
 					sendTime: new Date().getTime(),
 					selfSend: true,
 					type: 1,
-					loadStatus: "loading"
+					loadStatus: "loading",
+          status: this.$enums.MESSAGE_STATUS.UNSEND
 				}
 				// 填充对方id
 				this.fillTargetId(msgInfo, this.chat.targetId);
@@ -223,7 +224,8 @@
 					sendTime: new Date().getTime(),
 					selfSend: true,
 					type: 2,
-					loadStatus: "loading"
+					loadStatus: "loading",
+          status: this.$enums.MESSAGE_STATUS.UNSEND
 				}
 				// 填充对方id
 				this.fillTargetId(msgInfo, this.chat.targetId);
@@ -282,11 +284,11 @@
 					method: 'post',
 					data: msgInfo
 				}).then((id) => {
-					this.$message.success("发送成功");
 					msgInfo.id = id;
 					msgInfo.sendTime = new Date().getTime();
 					msgInfo.sendId = this.$store.state.userStore.userInfo.id;
 					msgInfo.selfSend = true;
+          msgInfo.status = this.$enums.MESSAGE_STATUS.UNSEND;
 					this.$store.commit("insertMessage", msgInfo);
 					// 保持输入框焦点
 					this.$refs.sendBox.focus();
@@ -320,12 +322,12 @@
 					method: 'post',
 					data: msgInfo
 				}).then((id) => {
-					this.$message.success("发送成功");
 					this.sendText = "";
 					msgInfo.id = id;
 					msgInfo.sendTime = new Date().getTime();
 					msgInfo.sendId = this.$store.state.userStore.userInfo.id;
 					msgInfo.selfSend = true;
+          msgInfo.status = this.$enums.MESSAGE_STATUS.UNSEND;
 					this.$store.commit("insertMessage", msgInfo);
 				}).finally(() => {
 					// 解除锁定
@@ -406,10 +408,25 @@
 						msgInfo = JSON.parse(JSON.stringify(msgInfo));
 						msgInfo.type = 10;
 						msgInfo.content = '你撤回了一条消息';
+            msgInfo.status = this.$enums.MESSAGE_STATUS.RECALL;
 						this.$store.commit("insertMessage", msgInfo);
 					})
 				});
 			},
+      readedMessage() {
+        if(this.chat.type == "GROUP"){
+          var url = `/message/group/readed?groupId=${this.chat.targetId}`
+        }else{
+          url = `/message/private/readed?friendId=${this.chat.targetId}`
+        }
+        this.$http({
+          url: url,
+          method: 'put'
+        }).then(() => {
+          this.$store.commit("resetUnreadCount",this.chat)
+          this.scrollToBottom();
+        })
+      },
 			loadGroup(groupId) {
 				this.$http({
 					url: `/group/find/${groupId}`,
@@ -436,7 +453,6 @@
 					method: 'get'
 				}).then((friend) => {
 					this.friend = friend;
-					console.log(this.friend)
 					this.$store.commit("updateChatFromFriend", friend);
 					this.$store.commit("updateFriend", friend);
 				})
@@ -495,7 +511,10 @@
 			},
 			messageAction() {
 				return `/message/${this.chat.type.toLowerCase()}/send`;
-			}
+			},
+      unreadCount() {
+        return this.chat.unreadCount;
+      }
 		},
 		watch: {
 			chat: {
@@ -515,7 +534,15 @@
 					}
 				},
 				immediate: true
-			}
+			},
+      unreadCount: {
+        handler(newCount, oldCount) {
+          if(newCount > 0){
+            // 消息已读
+            this.readedMessage()
+          }
+        }
+      }
 		}
 	}
 </script>

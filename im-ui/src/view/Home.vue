@@ -47,19 +47,19 @@
 		</el-main>
 		<setting :visible="showSettingDialog" @close="closeSetting()"></setting>
     <operation :visible="showOperationDialog" @close="closeOperation()"></operation>
-		<user-info v-show="uiStore.userInfo.show" :pos="uiStore.userInfo.pos" :user="uiStore.userInfo.user" @close="$store.commit('closeUserInfoBox')"></user-info>
-		<full-image :visible="uiStore.fullImage.show" :url="uiStore.fullImage.url" @close="$store.commit('closeFullImageBox')"></full-image>
-		<chat-private-video ref="privateVideo" :visible="uiStore.chatPrivateVideo.show" 
-		:friend="uiStore.chatPrivateVideo.friend" 
-		:master="uiStore.chatPrivateVideo.master"
-		:offer="uiStore.chatPrivateVideo.offer"
-		@close="$store.commit('closeChatPrivateVideoBox')" >
-		</chat-private-video>
-		<chat-video-acceptor ref="videoAcceptor"
-		v-show="uiStore.videoAcceptor.show"
-		:friend="uiStore.videoAcceptor.friend" 
-		@close="$store.commit('closeVideoAcceptorBox')" >
-		</chat-video-acceptor>
+    <user-info v-show="uiStore.userInfo.show" :pos="uiStore.userInfo.pos" :user="uiStore.userInfo.user"
+               @close="$store.commit('closeUserInfoBox')"></user-info>
+    <full-image :visible="uiStore.fullImage.show" :url="uiStore.fullImage.url"
+                @close="$store.commit('closeFullImageBox')"></full-image>
+    <chat-private-video ref="privateVideo" :visible="uiStore.chatPrivateVideo.show"
+      :friend="uiStore.chatPrivateVideo.friend" :master="uiStore.chatPrivateVideo.master"
+      :offer="uiStore.chatPrivateVideo.offer" @close="$store.commit('closeChatPrivateVideoBox')">
+    </chat-private-video>
+    <chat-video-acceptor ref="videoAcceptor"
+       v-show="uiStore.videoAcceptor.show"
+       :friend="uiStore.videoAcceptor.friend"
+       @close="$store.commit('closeVideoAcceptorBox')">
+    </chat-video-acceptor>
 	</el-container>
 </template>
 
@@ -89,80 +89,108 @@
 			}
 		},
 		methods: {
-			init(userInfo) {
-				this.$store.commit("setUserInfo", userInfo);
-				this.$store.commit("setUserState", this.$enums.USER_STATE.FREE);
-				this.$store.commit("initStore");
-        this.$wsApi.init(process.env.VUE_APP_WS_URL, sessionStorage.getItem("accessToken"));
-        this.$wsApi.connect();
-        this.$wsApi.onOpen(() => {
-          this.pullUnreadMessage();
-        });
-				this.$wsApi.onMessage((cmd,msgInfo) => {
-					if (cmd == 2) {
-						// 异地登录，强制下线
-						this.$message.error("您已在其他地方登陆，将被强制下线");
-						setTimeout(() => {
-							location.href = "/";
-						}, 1000)
-					} else if (cmd == 3) {
-            // 标记这条消息是不是自己发的
-            msgInfo.selfSend = msgInfo.sendId==this.$store.state.userStore.userInfo.id;
-						// 插入私聊消息
-						this.handlePrivateMessage(msgInfo);
-					} else if (cmd == 4) {
-            // 标记这条消息是不是自己发的
-            msgInfo.selfSend = msgInfo.sendId==this.$store.state.userStore.userInfo.id;
-						// 插入群聊消息
-						this.handleGroupMessage(msgInfo);
-					} 
-				})
-        this.$wsApi.onClose((e) => {
-          console.log(e);
-          if(e.code == 1006){
-            // 服务器主动断开
-            this.$message.error("连接已断开，请重新登录");
-            location.href = "/";
+      init() {
+        this.$store.dispatch("load").then(() => {
+          // 加载未拉取的消息
+          this.loadPrivateMessage(this.$store.state.chatStore.privateMsgMaxId);
+          this.loadGroupMessage(this.$store.state.chatStore.groupMsgMaxId);
+          // ws初始化
+          this.$wsApi.init(process.env.VUE_APP_WS_URL, sessionStorage.getItem("accessToken"));
+          this.$wsApi.connect();
+          this.$wsApi.onOpen();
+          this.$wsApi.onMessage((cmd, msgInfo) => {
+            if (cmd == 2) {
+              // 异地登录，强制下线
+              this.$message.error("您已在其他地方登陆，将被强制下线");
+              setTimeout(() => {
+                location.href = "/";
+              }, 1000)
+            } else if (cmd == 3) {
+              // 插入私聊消息
+              this.handlePrivateMessage(msgInfo);
+            } else if (cmd == 4) {
+              // 插入群聊消息
+              this.handleGroupMessage(msgInfo);
+            }
+          })
+          this.$wsApi.onClose((e) => {
+            console.log(e);
+            if (e.code == 1006) {
+              // 服务器主动断开
+              this.$message.error("连接已断开，请重新登录");
+              location.href = "/";
+            } else {
+              this.$wsApi.connect();
+            }
+          });
+        }).catch((e) => {
+          console.log("初始化失败",e);
+        })
+      },
+      loadPrivateMessage(minId) {
+        this.$store.commit("loadingPrivateMsg",true)
+        this.$http({
+          url: "/message/private/loadMessage?minId=" + minId,
+          method: 'get'
+        }).then((msgInfos) => {
+          msgInfos.forEach((msgInfo) => {
+            this.handlePrivateMessage(msgInfo);
+          })
+          if (msgInfos.length == 100) {
+            // 继续拉取
+            this.loadPrivateMessage(msgInfos[99].id);
           }else{
-            this.$wsApi.connect();
+            this.$store.commit("loadingPrivateMsg",false)
           }
-        });
-			},
-			pullUnreadMessage() {
-				// 拉取未读私聊消息
-				this.$http({
-					url: "/message/private/pullUnreadMessage",
-					method: 'post'
-				});
-				// 拉取未读群聊消息
-				this.$http({
-					url: "/message/group/pullUnreadMessage",
-					method: 'post'
-				});
-			},
-			handlePrivateMessage(msg) {
-        // 好友列表存在好友信息，直接插入私聊消息
-        let friendId = msg.selfSend?msg.recvId:msg.sendId;
-        let friend = this.$store.state.friendStore.friends.find((f) => f.id == friendId);
-				if (friend) {
-					this.insertPrivateMessage(friend, msg);
-					return;
-				}
-				// 好友列表不存在好友信息，则发请求获取好友信息
-				this.$http({
-					url: `/friend/find/${msg.sendId}`,
-					method: 'get'
-				}).then((friend) => {
-					this.insertPrivateMessage(friend, msg);
-					this.$store.commit("addFriend", friend);
-				})
-			},
+        })
+      },
+      loadGroupMessage(minId) {
+        this.$store.commit("loadingGroupMsg",true)
+        this.$http({
+          url: "/message/group/loadMessage?minId=" + minId,
+          method: 'get'
+        }).then((msgInfos) => {
+          msgInfos.forEach((msgInfo) => {
+            this.handleGroupMessage(msgInfo);
+          })
+          if (msgInfos.length == 100) {
+            // 继续拉取
+            this.loadGroupMessage(msgInfos[99].id);
+          }else{
+            this.$store.commit("loadingGroupMsg",false)
+          }
+        })
+      },
+      handlePrivateMessage(msg) {
+        // 标记这条消息是不是自己发的
+        msg.selfSend = msg.sendId == this.$store.state.userStore.userInfo.id;
+        // 好友id
+        let friendId = msg.selfSend ? msg.recvId : msg.sendId;
+        // 消息已读处理
+        if (msg.type == this.$enums.MESSAGE_TYPE.READED) {
+          if (msg.selfSend) {
+            // 我已读对方的消息，清空已读数量
+            let chatInfo = {
+              type: 'PRIVATE',
+              targetId: friendId
+            }
+            this.$store.commit("resetUnreadCount", chatInfo)
+          } else {
+            // 对方已读我的消息，修改消息状态为已读
+            this.$store.commit("readedMessage", friendId)
+          }
+          return;
+        }
+
+        this.loadFriendInfo(friendId).then((friend) => {
+          this.insertPrivateMessage(friend, msg);
+        })
+      },
 			insertPrivateMessage(friend, msg) {
 				// webrtc 信令
 				if(msg.type >= this.$enums.MESSAGE_TYPE.RTC_CALL 
 				&& msg.type <= this.$enums.MESSAGE_TYPE.RTC_CANDIDATE){
 					// 呼叫
-					console.log(msg)
 					if(msg.type == this.$enums.MESSAGE_TYPE.RTC_CALL
 					|| msg.type == this.$enums.MESSAGE_TYPE.RTC_CANCEL){
 						this.$store.commit("showVideoAcceptorBox",friend);
@@ -190,20 +218,23 @@
         }
 			},
 			handleGroupMessage(msg) {
-				// 群聊缓存存在，直接插入群聊消息
-				let group = this.$store.state.groupStore.groups.find((g) => g.id == msg.groupId);
-				if (group) {
-					this.insertGroupMessage(group, msg);
-					return;
-				}
-				// 群聊缓存不存在，查询群聊插入群聊消息
-				this.$http({
-					url: `/group/find/${msg.groupId}`,
-					method: 'get'
-				}).then((group) => {
-					this.insertGroupMessage(group, msg);
-					this.$store.commit("addGroup", group);
-				})
+        // 标记这条消息是不是自己发的
+        msg.selfSend = msg.sendId == this.$store.state.userStore.userInfo.id;
+        let groupId = msg.groupId;
+        // 消息已读处理
+        if (msg.type == this.$enums.MESSAGE_TYPE.READED) {
+          // 我已读对方的消息，清空已读数量
+          let chatInfo = {
+            type: 'GROUP',
+            targetId: groupId
+          }
+          this.$store.commit("resetUnreadCount", chatInfo)
+          return;
+        }
+        this.loadGroupInfo(groupId).then((group) => {
+          // 插入群聊消息
+          this.insertGroupMessage(group, msg);
+        })
 			},
 			insertGroupMessage(group, msg) {
 				let chatInfo = {
@@ -244,6 +275,38 @@
       closeOperation() {
 			  this.showOperationDialog = false;
       },
+      loadFriendInfo(id) {
+        return new Promise((resolve, reject) => {
+          let friend = this.$store.state.friendStore.friends.find((f) => f.id == id);
+          if (friend) {
+            resolve(friend);
+          } else {
+            this.$http({
+              url: `/friend/find/${id}`,
+              method: 'get'
+            }).then((friend) => {
+              this.$store.commit("addFriend", friend);
+              resolve(friend)
+            })
+          }
+        });
+      },
+      loadGroupInfo(id) {
+        return new Promise((resolve, reject) => {
+          let group = this.$store.state.groupStore.groups.find((g) => g.id == id);
+          if (group) {
+            resolve(group);
+          } else {
+            this.$http({
+              url: `/group/find/${id}`,
+              method: 'get'
+            }).then((group) => {
+              resolve(group)
+              this.$store.commit("addGroup", group);
+            })
+          }
+        });
+      }
 		},
 		computed: {
 			uiStore() {
@@ -268,12 +331,7 @@
 			}
 		},
 		mounted() {
-			this.$http({
-				url: "/user/self",
-				methods: 'get'
-			}).then((userInfo) => {
-				this.init(userInfo);
-			})
+      this.init();
 		},
 		unmounted() {
       this.$wsApi.close();

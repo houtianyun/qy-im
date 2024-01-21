@@ -1,5 +1,8 @@
 package xyz.qy.implatform.enums;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public enum MessageType {
     TEXT(0,"文字"),
     IMAGE(1,"图片"),
@@ -7,6 +10,7 @@ public enum MessageType {
     AUDIO(3,"音频"),
     VIDEO(4,"视频"),
     RECALL(10,"撤回"),
+    READED(11, "已读"),
 
     RTC_CALL(101,"呼叫"),
     RTC_ACCEPT(102,"接受"),
@@ -19,15 +23,6 @@ public enum MessageType {
     private final Integer code;
 
     private final String desc;
-
-    MessageType(Integer index, String desc) {
-        this.code =index;
-        this.desc=desc;
-    }
-
-    public String description() {
-        return desc;
-    }
 
     public Integer code(){
         return this.code;

@@ -1,5 +1,8 @@
 package xyz.qy.imcommon.enums;
 
+import lombok.AllArgsConstructor;
+
+@AllArgsConstructor
 public enum IMSendCode {
     SUCCESS(0,"发送成功"),
     NOT_ONLINE(1,"对方当前不在线"),
@@ -9,12 +12,6 @@ public enum IMSendCode {
     private Integer code;
     private String desc;
 
-    // 构造方法
-    IMSendCode(int code, String desc) {
-        this.code = code;
-        this.desc = desc;
-    }
-
     public static IMSendCode fromCode(Integer code){
         for (IMSendCode typeEnum:values()) {
             if (typeEnum.code.equals(code)) {
@@ -22,10 +19,6 @@ public enum IMSendCode {
             }
         }
         return null;
-    }
-
-    public String description() {
-        return desc;
     }
 
     public Integer code(){

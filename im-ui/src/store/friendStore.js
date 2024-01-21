@@ -1,4 +1,4 @@
-import httpRequest from '../api/httpRequest.js'
+import http from '../api/httpRequest.js'
 import {TERMINAL_TYPE} from "../api/enums.js"
 
 export default {
@@ -9,15 +9,15 @@ export default {
 		timer: null
 	},
 	mutations: {
-		initFriendStore(state) {
-			httpRequest({
-				url: '/friend/list',
-				method: 'get'
-			}).then((friends) => {
-				this.commit("setFriends",friends);
-				this.commit("refreshOnlineStatus");
-			})
-		},
+		// initFriendStore(state) {
+		// 	http({
+		// 		url: '/friend/list',
+		// 		method: 'get'
+		// 	}).then((friends) => {
+		// 		this.commit("setFriends",friends);
+		// 		this.commit("refreshOnlineStatus");
+		// 	})
+		// },
 
 		setFriends(state, friends) {
 			state.friends = friends;
@@ -51,7 +51,7 @@ export default {
 				return; 
 			}
 			state.friends.forEach((f)=>{userIds.push(f.id)});
-			httpRequest({
+			http({
 				url: '/user/terminal/online',
 				method: 'get',
 				params: {userIds: userIds.join(',')}
@@ -101,7 +101,29 @@ export default {
 					}
 				})
 			}
+		},
+		clear(state) {
+			clearTimeout(state.timer);
+			state.friends = [];
+			state.timer = null;
+			state.activeIndex = -1;
 		}
-		
+	},
+	actions: {
+		loadFriend(context) {
+			return new Promise((resolve, reject) => {
+				http({
+					url: '/friend/list',
+					method: 'GET'
+				}).then((friends) => {
+					context.commit("setFriends", friends);
+					context.commit("refreshOnlineStatus");
+					console.log("loadFriend")
+					resolve()
+				}).catch((res) => {
+					reject();
+				})
+			});
+		}
 	}
 }

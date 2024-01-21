@@ -1,4 +1,4 @@
-import httpRequest from '../api/httpRequest.js'
+import http from '../api/httpRequest.js'
 
 export default {
 
@@ -7,29 +7,29 @@ export default {
 		activeIndex: -1,
 	},
 	mutations: {
-		initGroupStore(state) {
-			httpRequest({
-				url: '/group/list',
-				method: 'get'
-			}).then((groups) => {
-				this.commit("setGroups",groups);
-			})
-		},
-		setGroups(state,groups){
+		// initGroupStore(state) {
+		// 	httpRequest({
+		// 		url: '/group/list',
+		// 		method: 'get'
+		// 	}).then((groups) => {
+		// 		this.commit("setGroups",groups);
+		// 	})
+		// },
+		setGroups(state, groups){
 			state.groups = groups;
 		},
-		activeGroup(state,index){
+		activeGroup(state, index){
 			state.activeIndex = index;
 		},
-		addGroup(state,group){
+		addGroup(state, group){
 			state.groups.unshift(group);
 		},
-		removeGroup(state,groupId){
+		removeGroup(state, groupId){
 			state.groups.forEach((g,index)=>{
 				if(g.id==groupId){
 					state.groups.splice(index, 1);
-					if(state.activeIndex  >= state.groups.length){
-						state.activeIndex = state.groups.length-1;
+					if(state.activeIndex >= state.groups.length){
+						state.activeIndex = state.groups.length - 1;
 					}
 				}
 			})
@@ -42,6 +42,26 @@ export default {
 					Object.assign(state.groups[idx], group);
 				}
 			})
+		},
+		clear(state){
+			state.groups = [];
+			state.activeGroup = -1;
 		}
-	}	
+	},
+	actions: {
+		loadGroup(context) {
+			return new Promise((resolve, reject) => {
+				http({
+					url: '/group/list',
+					method: 'GET'
+				}).then((groups) => {
+					context.commit("setGroups", groups);
+					console.log("loadGroup")
+					resolve();
+				}).catch((res) => {
+					reject(res);
+				})
+			});
+		}
+	}
 }

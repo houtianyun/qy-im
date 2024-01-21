@@ -14,34 +14,25 @@ import java.util.Date;
 @Data
 @ApiModel("群聊消息VO")
 public class GroupMessageVO {
-    /**
-     * 消息id
-     */
+    @ApiModelProperty(value = "消息id")
     private Long id;
 
-    /**
-     * 群聊id
-     */
+    @ApiModelProperty(value = "群聊id")
     private Long groupId;
 
-    /**
-     * 发送者id
-     */
+    @ApiModelProperty(value = " 发送者id")
     private Long sendId;
 
-    /**
-     * 消息内容
-     */
+    @ApiModelProperty(value = "消息内容")
     private String content;
 
-    /**
-     * 消息内容类型 具体枚举值由应用层定义
-     */
+    @ApiModelProperty(value = "消息内容类型 具体枚举值由应用层定义")
     private Integer type;
 
-    /**
-     * 发送时间
-     */
+    @ApiModelProperty(value = " 状态")
+    private Integer status;
+
+    @ApiModelProperty(value = "发送时间")
     @JsonSerialize(using = DateToLongSerializer.class)
     private Date sendTime;
 }

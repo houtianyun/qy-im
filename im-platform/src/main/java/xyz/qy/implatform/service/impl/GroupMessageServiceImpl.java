@@ -32,6 +32,7 @@ import xyz.qy.implatform.service.IGroupService;
 import xyz.qy.implatform.session.SessionContext;
 import xyz.qy.implatform.session.UserSession;
 import xyz.qy.implatform.util.BeanUtils;
+import xyz.qy.implatform.util.DateTimeUtils;
 import xyz.qy.implatform.vo.GroupMessageVO;
 
 import javax.annotation.Resource;
@@ -39,6 +40,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -238,6 +240,74 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
             }
         }
         return maxReadedId;
+    }
+
+    /**
+     * 拉取消息，只能拉取最近3个月的消息，一次拉取100条
+     *
+     * @param minId 消息起始id
+     * @return 聊天消息列表
+     */
+    @Override
+    public List<GroupMessageVO> loadMessage(Long minId) {
+        UserSession session = SessionContext.getSession();
+        List<GroupMember> members = groupMemberService.findByUserId(session.getUserId());
+        List<Long> ids = members.stream().map(GroupMember::getGroupId).collect(Collectors.toList());
+        // 只能拉取最近3个月的
+        Date minDate = DateTimeUtils.addMonths(new Date(), -1);
+        LambdaQueryWrapper<GroupMessage> wrapper = Wrappers.lambdaQuery();
+        wrapper.gt(GroupMessage::getId, minId)
+                .gt(GroupMessage::getSendTime, minDate)
+                .in(GroupMessage::getGroupId, ids)
+                .ne(GroupMessage::getStatus, MessageStatus.RECALL.code())
+                .last("limit 100");
+
+        List<GroupMessage> messages = this.list(wrapper);
+        // 转成vo
+        List<GroupMessageVO> vos = messages.stream().map(m -> BeanUtils.copyProperties(m, GroupMessageVO.class)).collect(Collectors.toList());
+        // 消息状态,数据库没有存群聊的消息状态，需要从redis取
+        List<String> keys = ids.stream()
+                .map(id -> String.join(":", RedisKey.IM_GROUP_READED_POSITION, id.toString(), session.getUserId().toString()))
+                .collect(Collectors.toList());
+        List<Object> sendPos = redisTemplate.opsForValue().multiGet(keys);
+        int idx = 0;
+        for (Long id : ids) {
+            Object o = sendPos.get(idx);
+            Integer sendMaxId = Objects.isNull(o) ? -1 : (Integer) o;
+            vos.stream().filter(vo -> vo.getGroupId().equals(id)).forEach(vo -> {
+                if (vo.getId() <= sendMaxId) {
+                    // 已推送过
+                    vo.setStatus(MessageStatus.SENDED.code());
+                } else {
+                    // 未推送
+                    vo.setStatus(MessageStatus.UNSEND.code());
+                }
+            });
+            idx++;
+        }
+        return vos;
+    }
+
+    /**
+     * 消息已读,同步其他终端，清空未读数量
+     *
+     * @param groupId 群聊
+     */
+    @Override
+    public void readedMessage(Long groupId) {
+        UserSession session = SessionContext.getSession();
+        // 推送消息给自己的其他终端
+        GroupMessageVO msgInfo = new GroupMessageVO();
+        msgInfo.setType(MessageType.READED.code());
+        msgInfo.setSendTime(new Date());
+        msgInfo.setSendId(session.getUserId());
+        msgInfo.setGroupId(groupId);
+        IMGroupMessage<GroupMessageVO> sendMessage = new IMGroupMessage<>();
+        sendMessage.setSender(new IMUserInfo(session.getUserId(), session.getTerminal()));
+        sendMessage.setSendToSelf(true);
+        sendMessage.setData(msgInfo);
+        sendMessage.setSendResult(false);
+        imClient.sendGroupMessage(sendMessage);
     }
 
     /**

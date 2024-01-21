@@ -3,6 +3,7 @@ package xyz.qy.imcommon.model;
 import lombok.Data;
 import xyz.qy.imcommon.enums.IMTerminalType;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,9 +20,9 @@ public class IMGroupMessage<T> {
     private IMUserInfo sender;
 
     /**
-     * 接收者id列表(群成员列表)
+     * 接收者id列表(群成员列表,为空则不会推送)
      */
-    private List<Long> recvIds;
+    private List<Long> recvIds  = Collections.EMPTY_LIST;
 
 
     /**

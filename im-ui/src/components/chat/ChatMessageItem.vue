@@ -47,6 +47,10 @@
                @click="handlePlayVoice()">
 						<audio controls :src="JSON.parse(msgInfo.content).url"></audio>
 					</div>
+          <span class="chat-readed" v-show="msgInfo.selfSend && !msgInfo.groupId
+						&& msgInfo.status==$enums.MESSAGE_STATUS.READED">已读</span>
+          <span class="chat-unread" v-show="msgInfo.selfSend && !msgInfo.groupId
+						&& msgInfo.status!=$enums.MESSAGE_STATUS.READED">未读</span>
 				</div>
 			</div>
 
@@ -67,9 +71,9 @@
 			RightMenu
 		},
 		props: {
-      mode:{
+      mode: {
         type: Number,
-        default :1
+        default: 1
       },
 			mine: {
 				type: Boolean,
@@ -183,7 +187,7 @@
 			}
 		},
 		mounted() {
-      console.log(this.msgInfo);
+      //console.log(this.msgInfo);
 		}
 	}
 </script>
@@ -252,6 +256,7 @@
             white-space: pre-wrap;
             word-break: break-all;
             box-shadow: 2px 2px 2px #c0c0f0;
+
             &:after {
 							content: "";
 							position: absolute;
@@ -351,6 +356,18 @@
 							padding: 5px 0;
 						}
 					}
+
+          .chat-unread {
+            font-size: 10px;
+            color: #f23c0f;
+            font-weight: 600;
+          }
+
+          .chat-readed {
+            font-size: 10px;
+            color: #aaa;
+            font-weight: 600;
+          }
 				}
 			}
 
@@ -387,6 +404,7 @@
 							color: #fff;
 							vertical-align: top;
               box-shadow: 2px 2px 1px #ccc;
+
 							&:after {
 								left: auto;
 								right: -10px;

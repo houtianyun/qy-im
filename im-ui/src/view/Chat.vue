@@ -6,6 +6,9 @@
 					<el-button slot="append" icon="el-icon-search"></el-button>
 				</el-input>
 			</div>
+      <div class="l-chat-loadding"  v-if="loading" v-loading="true" element-loading-text="消息接收中..."
+           element-loading-spinner="el-icon-loading" element-loading-background="#eee">
+      </div>
 			<el-scrollbar class="l-chat-list" >
 				<div v-for="(chat,index) in chatStore.chats" :key="index" v-show="chat.showName.startsWith(searchText)">
 					<chat-item
@@ -71,7 +74,10 @@
 					messages: []
 				}
 				return emptyChat;
-			}
+			},
+      loading(){
+        return this.chatStore.loadingGroupMsg || this.chatStore.loadingPrivateMsg
+      }
 		}
 	}
 </script>
@@ -90,7 +96,12 @@
 				background-color: white;
 				line-height: 50px;
 			}
-			
+
+      .l-chat-loadding{
+        height: 50px;
+        background-color: #eee;
+      }
+
 			.l-friend-ist{
 				flex: 1;
 			}
