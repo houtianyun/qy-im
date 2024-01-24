@@ -57,8 +57,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
-@CacheConfig(cacheNames = RedisKey.IM_CACHE_GROUP)
 @Service
+@CacheConfig(cacheNames = RedisKey.IM_CACHE_GROUP)
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements IGroupService {
     @Autowired
     private IUserService userService;
@@ -84,7 +84,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
      * @return
      * @Param groupName 群聊名称
      **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public GroupVO createGroup(GroupVO vo) {
         UserSession session = SessionContext.getSession();
@@ -116,7 +116,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
      * @Param GroupVO 群聊信息
      **/
     @CacheEvict(key = "#vo.getId()")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public GroupVO modifyGroup(GroupVO vo) {
         UserSession session = SessionContext.getSession();
@@ -144,10 +144,9 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     /**
      * 删除群聊
      *
-     * @return
      * @Param groupId 群聊id
      **/
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @CacheEvict(key = "#groupId")
     @Override
     public void deleteGroup(Long groupId) {
@@ -168,7 +167,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
      * 退出群聊
      *
      * @param groupId 群聊id
-     * @return
      */
     @Override
     public void quitGroup(Long groupId) {
@@ -187,7 +185,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
      *
      * @param groupId 群聊id
      * @param userId  用户id
-     * @return
      */
     @Override
     public void kickGroup(Long groupId, Long userId) {
@@ -225,7 +222,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
      * 根据id查找群聊，并进行缓存
      *
      * @param groupId 群聊id
-     * @return
      */
     @Cacheable(key = "#groupId")
     @Override
@@ -243,7 +239,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     /**
      * 查询当前用户的所有群聊
      *
-     * @return
+     * @return 群聊列表
      **/
     @Override
     public List<GroupVO> findGroups() {
@@ -275,7 +271,6 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     /**
      * 邀请好友进群
      *
-     * @return
      * @Param GroupInviteVO  群id、好友id列表
      **/
     @Override
@@ -384,9 +379,9 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     /**
      * 查询群成员
      *
-     * @return List<GroupMemberVO>
      * @Param groupId 群聊id
-     **/
+     * @return List<GroupMemberVO>
+     */
     @Override
     public List<GroupMemberVO> findGroupMembers(Long groupId) {
         Group group = this.GetById(groupId);
@@ -406,9 +401,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
             vo.setUserAvatar(user.getHeadImage());
             vo.setOnline(onlineUserIds.contains(m.getUserId()));
             return vo;
-        }).sorted((m1, m2) -> {
-            return m2.getOnline().compareTo(m1.getOnline());
-        }).collect(Collectors.toList());
+        }).sorted((m1,m2)-> m2.getOnline().compareTo(m1.getOnline())).collect(Collectors.toList());
     }
 
     @Override
@@ -443,7 +436,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
 
     @CacheEvict(key = "#vo.getGroupId()")
     @Lock(prefix = "im:group:member:modify", key = "#vo.getGroupId()")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public GroupVO switchTemplateGroup(SwitchTemplateGroupVO vo) {
         // 判断是否群主
@@ -506,7 +499,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
 
     @CacheEvict(key = "#vo.getGroupId()")
     @Lock(prefix = "im:group:member:modify", key = "#vo.getGroupId()")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public GroupVO switchCommonGroup(CommonGroupVO vo) {
         // 判断是否群主
@@ -571,7 +564,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
 
     @CacheEvict(key = Constant.COMMON_GROUP_ID + "")
     @Lock(prefix = "im:group:member:modify", key = Constant.COMMON_GROUP_ID + "")
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public GroupMember addToCommonGroup(User user) {
         Group group = baseMapper.selectById(Constant.COMMON_GROUP_ID);

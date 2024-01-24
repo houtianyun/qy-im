@@ -72,6 +72,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -152,19 +153,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * 用refreshToken换取新 token
      *
      * @param refreshToken
-     * @return
+     * @return 用户信息
      */
     @Override
     public LoginVO refreshToken(String refreshToken) {
         //验证 token
-        if(!JwtUtil.checkSign(refreshToken, jwtProperties.getRefreshTokenSecret())){
+        if (!JwtUtil.checkSign(refreshToken, jwtProperties.getRefreshTokenSecret())) {
             throw new GlobalException("refreshToken无效或已过期");
         }
         String strJson = JwtUtil.getInfo(refreshToken);
         Long userId = JwtUtil.getUserId(refreshToken);
-        String accessToken = JwtUtil.sign(userId,strJson,jwtProperties.getAccessTokenExpireIn(),jwtProperties.getAccessTokenSecret());
-        String newRefreshToken = JwtUtil.sign(userId,strJson,jwtProperties.getRefreshTokenExpireIn(),jwtProperties.getRefreshTokenSecret());
-        LoginVO vo =new LoginVO();
+        String accessToken = JwtUtil.sign(userId, strJson, jwtProperties.getAccessTokenExpireIn(), jwtProperties.getAccessTokenSecret());
+        String newRefreshToken = JwtUtil.sign(userId, strJson, jwtProperties.getRefreshTokenExpireIn(), jwtProperties.getRefreshTokenSecret());
+        LoginVO vo = new LoginVO();
         vo.setAccessToken(accessToken);
         vo.setAccessTokenExpiresIn(jwtProperties.getAccessTokenExpireIn());
         vo.setRefreshToken(newRefreshToken);
@@ -176,7 +177,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * 用户注册
      *
      * @param vo 注册vo
-     * @return
      */
     @Override
     public void register(RegisterDTO vo) {
@@ -256,12 +256,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * 根据用户名查询用户
      *
      * @param username 用户名
-     * @return
+     * @return 用户信息
      */
     @Override
     public User findUserByUserName(String username) {
-        LambdaQueryWrapper<User> queryWrapper =  Wrappers.lambdaQuery();
-        queryWrapper.eq(User::getUserName,username);
+        LambdaQueryWrapper<User> queryWrapper = Wrappers.lambdaQuery();
+        queryWrapper.eq(User::getUserName, username);
         return this.getOne(queryWrapper);
     }
 
@@ -269,9 +269,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * 更新用户信息，好友昵称和群聊昵称等冗余信息也会更新
      *
      * @param vo 用户信息vo
-     * @return
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void update(UserVO vo) {
         UserSession session = SessionContext.getSession();
@@ -279,7 +278,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "不允许修改其他用户的信息!");
         }
         User user = this.getById(vo.getId());
-        if (null == user) {
+        if (Objects.isNull(user)) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "用户不存在");
         }
         // 更新好友昵称和头像
@@ -324,7 +323,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Override
     public UserVO findUserById(Long id) {
         User user = this.getById(id);
-        UserVO vo = BeanUtils.copyProperties(user,UserVO.class);
+        UserVO vo = BeanUtils.copyProperties(user, UserVO.class);
         vo.setOnline(imClient.isOnline(id));
         return vo;
     }
@@ -333,7 +332,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
      * 根据用户昵称查询用户，最多返回20条数据
      *
      * @param nickname 用户昵称
-     * @return
+     * @return PageResultVO
      */
     @Override
     public PageResultVO pageFindUserByNickName(String nickname) {
@@ -413,32 +412,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     public void modifyPassword(ModifyPwdDTO dto) {
         UserSession session = SessionContext.getSession();
         User user = this.getById(session.getUserId());
-        if(!passwordEncoder.matches(dto.getOldPassword(),user.getPassword())){
-            throw  new GlobalException("旧密码不正确");
+        if (!passwordEncoder.matches(dto.getOldPassword(), user.getPassword())) {
+            throw new GlobalException("旧密码不正确");
         }
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         this.updateById(user);
-        log.info("用户修改密码，用户id:{},用户名:{},昵称:{}",user.getId(),user.getUserName(),user.getNickName());
+        log.info("用户修改密码，用户id:{},用户名:{},昵称:{}", user.getId(), user.getUserName(), user.getNickName());
     }
 
     /**
      * 根据用户昵称查询用户，最多返回20条数据
      *
      * @param name 用户名或昵称
-     * @return
+     * @return 用户列表
      */
     @Override
     public List<UserVO> findUserByName(String name) {
         LambdaQueryWrapper<User> queryWrapper = Wrappers.lambdaQuery();
-        queryWrapper.like(User::getUserName,name)
+        queryWrapper.like(User::getUserName, name)
                 .or()
-                .like(User::getNickName,name)
+                .like(User::getNickName, name)
                 .last("limit 20");
         List<User> users = this.list(queryWrapper);
         List<Long> userIds = users.stream().map(User::getId).collect(Collectors.toList());
         List<Long> onlineUserIds = imClient.getOnlineUser(userIds);
-        return users.stream().map(u-> {
-            UserVO vo = BeanUtils.copyProperties(u,UserVO.class);
+        return users.stream().map(u -> {
+            UserVO vo = BeanUtils.copyProperties(u, UserVO.class);
             vo.setOnline(onlineUserIds.contains(u.getId()));
             return vo;
         }).collect(Collectors.toList());
@@ -455,12 +454,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         List<Long> userIdList = Arrays.stream(userIds.split(","))
                 .map(Long::parseLong).collect(Collectors.toList());
         // 查询在线的终端
-        Map<Long,List<IMTerminalType>> terminalMap = imClient.getOnlineTerminal(userIdList);
+        Map<Long, List<IMTerminalType>> terminalMap = imClient.getOnlineTerminal(userIdList);
         // 组装vo
         List<OnlineTerminalVO> vos = new LinkedList<>();
-        terminalMap.forEach((userId,types)->{
+        terminalMap.forEach((userId, types) -> {
             List<Integer> terminals = types.stream().map(IMTerminalType::code).collect(Collectors.toList());
-            vos.add(new OnlineTerminalVO(userId,terminals));
+            vos.add(new OnlineTerminalVO(userId, terminals));
         });
         return vos;
     }

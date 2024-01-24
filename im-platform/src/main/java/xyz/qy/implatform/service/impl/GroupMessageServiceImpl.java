@@ -38,6 +38,7 @@ import xyz.qy.implatform.util.DateTimeUtils;
 import xyz.qy.implatform.vo.GroupMessageVO;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -67,7 +68,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
     /**
      * 发送群聊消息(高并发接口，查询mysql接口都要进行缓存)
      *
-     * @param dto
+     * @param dto 群聊消息
      * @return 群聊id
      */
     @Override
@@ -152,7 +153,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
     public void recallMessage(Long id) {
         UserSession session = SessionContext.getSession();
         GroupMessage msg = this.getById(id);
-        if (msg == null) {
+        if (Objects.isNull(msg)) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "消息不存在");
         }
         if (!msg.getSendId().equals(session.getUserId())) {
@@ -266,7 +267,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         List<GroupMember> members = groupMemberService.findByUserId(session.getUserId());
         List<Long> ids = members.stream().map(GroupMember::getGroupId).collect(Collectors.toList());
         if (CollectionUtil.isEmpty(ids)) {
-            return Collections.EMPTY_LIST;
+            return new ArrayList<>();
         }
         // 只能拉取最近3个月的
         Date minDate = DateTimeUtils.addMonths(new Date(), -1);
@@ -284,7 +285,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
             GroupMessageVO vo = BeanUtils.copyProperties(m, GroupMessageVO.class);
             // 被@用户列表
             List<String> atIds = Arrays.asList(StrUtil.split(m.getAtUserIds(),","));
-            vo.setAtUserIds(atIds.stream().map(id->Long.parseLong(id)).collect(Collectors.toList()));
+            vo.setAtUserIds(atIds.stream().map(Long::parseLong).collect(Collectors.toList()));
             return vo;
         }).collect(Collectors.toList());
         // 消息状态,数据库没有存群聊的消息状态，需要从redis取
