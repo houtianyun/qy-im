@@ -7,7 +7,6 @@
 				:showLoading="true"
 				:maxSize="maxSize"  
 				@success="onUploadSuccess"
-				
 				:fileTypes="['image/jpeg', 'image/png', 'image/jpg','image/webp']">
 					<img v-if="userInfo.headImage" :src="userInfo.headImage" class="avatar">
 					<i v-else class="el-icon-plus avatar-uploader-icon"></i>
@@ -38,13 +37,11 @@
 </template>
 
 <script>
-	import HeadImage from "../common/HeadImage.vue";
 	import FileUpload from "../common/FileUpload.vue";
 	
 	export default {
 		name: "setting",
 		components: {
-			HeadImage,
 			FileUpload
 		},
 		data() {

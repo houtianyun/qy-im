@@ -2,10 +2,18 @@ package xyz.qy.implatform.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import xyz.qy.imclient.IMClient;
 import xyz.qy.imclient.annotation.Lock;
 import xyz.qy.implatform.contant.Constant;
@@ -38,15 +46,6 @@ import xyz.qy.implatform.vo.PageResultVO;
 import xyz.qy.implatform.vo.SwitchTemplateGroupVO;
 import xyz.qy.implatform.vo.TemplateCharacterInviteVO;
 import xyz.qy.implatform.vo.TemplateGroupCreateVO;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.Date;
@@ -82,8 +81,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     /**
      * 创建新群聊
      *
-     * @Param groupName 群聊名称
      * @return
+     * @Param groupName 群聊名称
      **/
     @Transactional
     @Override
@@ -98,22 +97,23 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         GroupMember groupMember = new GroupMember();
         groupMember.setGroupId(group.getId());
         groupMember.setUserId(user.getId());
-        groupMember.setAliasName(StringUtils.isEmpty(vo.getAliasName())?session.getNickName():vo.getAliasName());
-        groupMember.setRemark(StringUtils.isEmpty(vo.getRemark())?group.getName():vo.getRemark());
+        groupMember.setHeadImage(user.getHeadImageThumb());
+        groupMember.setAliasName(StringUtils.isEmpty(vo.getAliasName()) ? session.getNickName() : vo.getAliasName());
+        groupMember.setRemark(StringUtils.isEmpty(vo.getRemark()) ? group.getName() : vo.getRemark());
         groupMemberService.save(groupMember);
 
         vo.setId(group.getId());
         vo.setAliasName(groupMember.getAliasName());
         vo.setRemark(groupMember.getRemark());
-        log.info("创建群聊，群聊id:{},群聊名称:{}",group.getId(),group.getName());
+        log.info("创建群聊，群聊id:{},群聊名称:{}", group.getId(), group.getName());
         return vo;
     }
 
     /**
      * 修改群聊信息
-     * 
-     * @Param  GroupVO 群聊信息
+     *
      * @return
+     * @Param GroupVO 群聊信息
      **/
     @CacheEvict(key = "#vo.getId()")
     @Transactional
@@ -123,29 +123,29 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         // 校验是不是群主，只有群主能改信息
         Group group = this.getById(vo.getId());
         // 群主有权修改群基本信息
-        if(group.getOwnerId().equals(session.getUserId())){
-            group = BeanUtils.copyProperties(vo,Group.class);
+        if (group.getOwnerId().equals(session.getUserId())) {
+            group = BeanUtils.copyProperties(vo, Group.class);
             this.updateById(group);
         }
         // 更新成员信息
-        GroupMember member = groupMemberService.findByGroupAndUserId(vo.getId(),session.getUserId());
-        if(member == null){
-            throw  new GlobalException(ResultCode.PROGRAM_ERROR,"您不是群聊的成员");
+        GroupMember member = groupMemberService.findByGroupAndUserId(vo.getId(), session.getUserId());
+        if (member == null) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "您不是群聊的成员");
         }
-        member.setAliasName(StringUtils.isEmpty(vo.getAliasName())?session.getNickName():vo.getAliasName());
-        member.setRemark(StringUtils.isEmpty(vo.getRemark())? Objects.requireNonNull(group).getName():vo.getRemark());
+        member.setAliasName(StringUtils.isEmpty(vo.getAliasName()) ? session.getNickName() : vo.getAliasName());
+        member.setRemark(StringUtils.isEmpty(vo.getRemark()) ? Objects.requireNonNull(group).getName() : vo.getRemark());
         member.setShowNickName(vo.getShowNickName());
         groupMemberService.updateById(member);
         assert group != null;
-        log.info("修改群聊，群聊id:{},群聊名称:{}",group.getId(),group.getName());
+        log.info("修改群聊，群聊id:{},群聊名称:{}", group.getId(), group.getName());
         return vo;
     }
 
     /**
      * 删除群聊
-     * 
-     * @Param groupId 群聊id
+     *
      * @return
+     * @Param groupId 群聊id
      **/
     @Transactional
     @CacheEvict(key = "#groupId")
@@ -153,15 +153,15 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     public void deleteGroup(Long groupId) {
         UserSession session = SessionContext.getSession();
         Group group = this.getById(groupId);
-        if(!group.getOwnerId().equals(session.getUserId())){
-            throw  new GlobalException(ResultCode.PROGRAM_ERROR,"只有群主才有权限解除群聊");
+        if (!group.getOwnerId().equals(session.getUserId())) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "只有群主才有权限解除群聊");
         }
         // 逻辑删除群数据
         group.setDeleted(true);
         this.updateById(group);
         // 删除成员数据
         groupMemberService.removeByGroupId(groupId);
-        log.info("删除群聊，群聊id:{},群聊名称:{}",group.getId(),group.getName());
+        log.info("删除群聊，群聊id:{},群聊名称:{}", group.getId(), group.getName());
     }
 
     /**
@@ -174,51 +174,51 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     public void quitGroup(Long groupId) {
         Long userId = SessionContext.getSession().getUserId();
         Group group = this.getById(groupId);
-        if(group.getOwnerId().equals(userId)){
-            throw  new GlobalException(ResultCode.PROGRAM_ERROR,"您是群主，不可退出群聊");
+        if (group.getOwnerId().equals(userId)) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "您是群主，不可退出群聊");
         }
         // 删除群聊成员
-        groupMemberService.removeByGroupAndUserId(groupId,userId);
-        log.info("退出群聊，群聊id:{},群聊名称:{},用户id:{}",group.getId(),group.getName(),userId);
+        groupMemberService.removeByGroupAndUserId(groupId, userId);
+        log.info("退出群聊，群聊id:{},群聊名称:{},用户id:{}", group.getId(), group.getName(), userId);
     }
 
     /**
      * 将用户踢出群聊
      *
      * @param groupId 群聊id
-     * @param userId 用户id
+     * @param userId  用户id
      * @return
      */
     @Override
     public void kickGroup(Long groupId, Long userId) {
         UserSession session = SessionContext.getSession();
         Group group = this.getById(groupId);
-        if(!group.getOwnerId().equals(session.getUserId())){
-            throw  new GlobalException(ResultCode.PROGRAM_ERROR,"您不是群主，没有权限踢人");
+        if (!group.getOwnerId().equals(session.getUserId())) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "您不是群主，没有权限踢人");
         }
-        if(userId.equals(session.getUserId())){
-            throw  new GlobalException(ResultCode.PROGRAM_ERROR,"亲，不能自己踢自己哟");
+        if (userId.equals(session.getUserId())) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "亲，不能自己踢自己哟");
         }
         // 删除群聊成员
-        groupMemberService.removeByGroupAndUserId(groupId,userId);
-        log.info("踢出群聊，群聊id:{},群聊名称:{},用户id:{}",group.getId(),group.getName(),userId);
+        groupMemberService.removeByGroupAndUserId(groupId, userId);
+        log.info("踢出群聊，群聊id:{},群聊名称:{},用户id:{}", group.getId(), group.getName(), userId);
     }
 
     @Override
     public GroupVO findById(Long groupId) {
         UserSession session = SessionContext.getSession();
         Group group = this.getById(groupId);
-        GroupMember member = groupMemberService.findByGroupAndUserId(groupId,session.getUserId());
-        if(member == null){
-            throw  new GlobalException(ResultCode.PROGRAM_ERROR,"您未加入群聊");
+        GroupMember member = groupMemberService.findByGroupAndUserId(groupId, session.getUserId());
+        if (member == null) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "您未加入群聊");
         }
-        GroupVO vo = BeanUtils.copyProperties(group,GroupVO.class);
+        GroupVO vo = BeanUtils.copyProperties(group, GroupVO.class);
         assert vo != null;
         vo.setAliasName(member.getAliasName());
         vo.setRemark(member.getRemark());
         vo.setIsTemplateCharacter(member.getIsTemplate());
         vo.setTemplateCharacterId(member.getTemplateCharacterId());
-        return  vo;
+        return vo;
     }
 
     /**
@@ -229,13 +229,13 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
      */
     @Cacheable(key = "#groupId")
     @Override
-    public  Group GetById(Long groupId){
+    public Group GetById(Long groupId) {
         Group group = super.getById(groupId);
-        if(group == null){
-            throw  new GlobalException(ResultCode.PROGRAM_ERROR,"群组不存在");
+        if (group == null) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "群组不存在");
         }
-        if(group.getDeleted()){
-            throw  new GlobalException(ResultCode.PROGRAM_ERROR,"群组" + group.getName() + "已解散");
+        if (group.getDeleted()) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "群组" + group.getName() + "已解散");
         }
         return group;
     }
@@ -250,7 +250,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         UserSession session = SessionContext.getSession();
         // 查询当前用户的群id列表
         List<GroupMember> groupMembers = groupMemberService.findByUserId(session.getUserId());
-        if(groupMembers.isEmpty()){
+        if (groupMembers.isEmpty()) {
             return Collections.emptyList();
         }
         // 群id
@@ -275,15 +275,15 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
     /**
      * 邀请好友进群
      *
-     * @Param GroupInviteVO  群id、好友id列表
      * @return
+     * @Param GroupInviteVO  群id、好友id列表
      **/
     @Override
     @Lock(prefix = "im:group:member:modify", key = "#vo.getGroupId()")
     public void invite(GroupInviteVO vo) {
         UserSession session = SessionContext.getSession();
         Group group = this.getById(vo.getGroupId());
-        if(group == null || group.getDeleted()){
+        if (group == null || group.getDeleted()) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "群聊不存在");
         }
         if (!group.getIsTemplate().equals(vo.getIsTemplate())) {
@@ -291,12 +291,12 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         }
         // 群聊人数校验
         List<GroupMember> members = groupMemberService.findByGroupId(vo.getGroupId());
-        long size = members.stream().filter(m->!m.getQuit()).count();
-        if(vo.getFriendIds().size() + size > Constant.MAX_GROUP_MEMBER){
-            throw new GlobalException(ResultCode.PROGRAM_ERROR, "群聊人数不能大于"+Constant.MAX_GROUP_MEMBER+"人");
+        long size = members.stream().filter(m -> !m.getQuit()).count();
+        if (vo.getFriendIds().size() + size > Constant.MAX_GROUP_MEMBER) {
+            throw new GlobalException(ResultCode.PROGRAM_ERROR, "群聊人数不能大于" + Constant.MAX_GROUP_MEMBER + "人");
         }
         // 模板群聊人数不能超过模板群所有角色人物数量
-        if(Constant.YES == group.getIsTemplate()) {
+        if (Constant.YES == group.getIsTemplate()) {
             // 查询模板群所有角色人物数量
             int characterCount = templateCharacterService.count(new LambdaQueryWrapper<TemplateCharacter>()
                     .eq(TemplateCharacter::getTemplateGroupId, group.getTemplateGroupId()));
@@ -325,8 +325,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
                 List<TemplateCharacter> templateCharacters = templateCharacterService.listByIds(groupMemberList.stream()
                         .map(GroupMember::getTemplateCharacterId)
                         .collect(Collectors.toList()));
-                throw new GlobalException(ResultCode.PROGRAM_ERROR, "当前群聊已存在角色人物是"+templateCharacters.stream()
-                        .map(TemplateCharacter::getName).collect(Collectors.joining(","))+"的用户");
+                throw new GlobalException(ResultCode.PROGRAM_ERROR, "当前群聊已存在角色人物是" + templateCharacters.stream()
+                        .map(TemplateCharacter::getName).collect(Collectors.joining(",")) + "的用户");
             }
         }
 
@@ -343,7 +343,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
             // 批量保存成员数据
             groupMembers = friendsList.stream()
                     .map(f -> {
-                        Optional<GroupMember> optional =  members.stream().filter(m-> m.getUserId().equals(f.getFriendId())).findFirst();
+                        Optional<GroupMember> optional = members.stream().filter(m -> m.getUserId().equals(f.getFriendId())).findFirst();
                         GroupMember groupMember = optional.orElseGet(GroupMember::new);
                         groupMember.setGroupId(vo.getGroupId());
                         groupMember.setUserId(f.getFriendId());
@@ -356,9 +356,9 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
                         groupMember.setAvatarAlias(null);
                         return groupMember;
                     }).collect(Collectors.toList());
-        } else if (Constant.YES == vo.getIsTemplate()){
+        } else if (Constant.YES == vo.getIsTemplate()) {
             groupMembers = vo.getCharacterInviteVOList().stream().map(f -> {
-                Optional<GroupMember> optional =  members.stream().filter(m-> m.getUserId().equals(f.getFriendId())).findFirst();
+                Optional<GroupMember> optional = members.stream().filter(m -> m.getUserId().equals(f.getFriendId())).findFirst();
                 GroupMember groupMember = optional.orElseGet(GroupMember::new);
                 groupMember.setGroupId(vo.getGroupId());
                 groupMember.setUserId(f.getFriendId());
@@ -375,17 +375,17 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
             }).collect(Collectors.toList());
         }
 
-        if(CollectionUtils.isNotEmpty(groupMembers)) {
-            groupMemberService.saveOrUpdateBatch(group.getId(),groupMembers);
+        if (CollectionUtils.isNotEmpty(groupMembers)) {
+            groupMemberService.saveOrUpdateBatch(group.getId(), groupMembers);
         }
-        log.info("邀请进入群聊，群聊id:{},群聊名称:{},被邀请用户id:{}",group.getId(),group.getName(),vo.getFriendIds());
+        log.info("邀请进入群聊，群聊id:{},群聊名称:{},被邀请用户id:{}", group.getId(), group.getName(), vo.getFriendIds());
     }
 
     /**
      * 查询群成员
      *
-     * @Param groupId 群聊id
      * @return List<GroupMemberVO>
+     * @Param groupId 群聊id
      **/
     @Override
     public List<GroupMemberVO> findGroupMembers(Long groupId) {
@@ -395,7 +395,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         List<User> userList = userService.listByIds(userIds);
         List<Long> onlineUserIds = imClient.getOnlineUser(userIds);
         Map<Long, User> userMap = userList.stream().collect(Collectors.toMap(User::getId, Function.identity()));
-        return members.stream().map(m->{
+        return members.stream().map(m -> {
             GroupMemberVO vo = BeanUtils.copyProperties(m, GroupMemberVO.class);
             User user = userMap.get(vo.getUserId());
             if (user.getId().equals(group.getOwnerId())) {
@@ -405,8 +405,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
             vo.setNickName(user.getNickName());
             vo.setUserAvatar(user.getHeadImage());
             vo.setOnline(onlineUserIds.contains(m.getUserId()));
-            return  vo;
-        }).sorted((m1,m2)->{
+            return vo;
+        }).sorted((m1, m2) -> {
             return m2.getOnline().compareTo(m1.getOnline());
         }).collect(Collectors.toList());
     }
@@ -437,7 +437,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         GroupVO vo = BeanUtils.copyProperties(group, GroupVO.class);
         vo.setAliasName(groupMember.getAliasName());
         vo.setRemark(group.getName());
-        log.info("创建群聊，群聊id:{},群聊名称:{}",group.getId(),group.getName());
+        log.info("创建群聊，群聊id:{},群聊名称:{}", group.getId(), group.getName());
         return vo;
     }
 
@@ -656,7 +656,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         User user = userService.getById(userId);
         // 判断群聊是否存在
         Group group = this.getById(vo.getGroupId());
-        if(group == null || group.getDeleted()){
+        if (group == null || group.getDeleted()) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "群聊不存在");
         }
         if (!group.getIsTemplate().equals(vo.getIsTemplate())) {
@@ -664,11 +664,11 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, Group> implements
         }
         // 群聊人数校验
         List<GroupMember> members = groupMemberService.findByGroupId(vo.getGroupId());
-        long size = members.stream().filter(m->!m.getQuit()).count();
-        if(size >= Constant.MAX_GROUP_MEMBER){
+        long size = members.stream().filter(m -> !m.getQuit()).count();
+        if (size >= Constant.MAX_GROUP_MEMBER) {
             throw new GlobalException(ResultCode.PROGRAM_ERROR, "当前群聊人数已达上限");
         }
-        Optional<GroupMember> optional =  members.stream().filter(m-> m.getUserId().equals(userId)).findFirst();
+        Optional<GroupMember> optional = members.stream().filter(m -> m.getUserId().equals(userId)).findFirst();
         if (optional.isPresent() && !optional.get().getQuit()) {
             throw new GlobalException("您已加入当前群聊");
         }

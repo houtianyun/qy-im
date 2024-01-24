@@ -55,13 +55,11 @@ import xyz.qy.implatform.util.JwtUtil;
 import xyz.qy.implatform.util.PageUtils;
 import xyz.qy.implatform.util.RedisCache;
 import xyz.qy.implatform.util.SysStringUtils;
-import xyz.qy.implatform.vo.GroupMessageVO;
 import xyz.qy.implatform.vo.IpGeoInfoVO;
 import xyz.qy.implatform.vo.LoginVO;
 import xyz.qy.implatform.vo.OnlineTerminalVO;
 import xyz.qy.implatform.vo.PageResultVO;
 import xyz.qy.implatform.vo.PasswordVO;
-import xyz.qy.implatform.vo.PrivateMessageVO;
 import xyz.qy.implatform.vo.UploadImageVO;
 import xyz.qy.implatform.vo.UserVO;
 
