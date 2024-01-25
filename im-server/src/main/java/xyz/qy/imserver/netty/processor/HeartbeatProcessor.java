@@ -22,9 +22,6 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class HeartbeatProcessor extends AbstractMessageProcessor<IMHeartbeatInfo> {
     @Autowired
-    private WebSocketServer wsServer;
-
-    @Autowired
     RedisTemplate<String, Object> redisTemplate;
 
     @Override

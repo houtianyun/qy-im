@@ -3,7 +3,7 @@ package xyz.qy.imserver.listener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import xyz.qy.imserver.task.PullUnreadGroupMessageTask;
+import xyz.qy.imserver.task.PullGroupMessageTask;
 
 /**
  * @description: 群聊消息redis通道监听
@@ -12,10 +12,10 @@ import xyz.qy.imserver.task.PullUnreadGroupMessageTask;
  **/
 public class GroupMessageChannelListener implements MessageListener {
     @Autowired
-    private PullUnreadGroupMessageTask pullUnreadGroupMessageTask;
+    private PullGroupMessageTask pullGroupMessageTask;
 
     @Override
     public void onMessage(Message message, byte[] bytes) {
-        pullUnreadGroupMessageTask.pullMessage();
+        pullGroupMessageTask.pullMessage();
     }
 }

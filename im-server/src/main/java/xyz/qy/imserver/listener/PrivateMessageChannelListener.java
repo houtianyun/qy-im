@@ -3,7 +3,7 @@ package xyz.qy.imserver.listener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import xyz.qy.imserver.task.PullUnreadPrivateMessageTask;
+import xyz.qy.imserver.task.PullPrivateMessageTask;
 
 /**
  * @description: 私聊消息redis通道监听
@@ -12,10 +12,10 @@ import xyz.qy.imserver.task.PullUnreadPrivateMessageTask;
  **/
 public class PrivateMessageChannelListener implements MessageListener {
     @Autowired
-    private PullUnreadPrivateMessageTask pullUnreadPrivateMessageTask;
+    private PullPrivateMessageTask pullPrivateMessageTask;
 
     @Override
     public void onMessage(Message message, byte[] bytes) {
-        pullUnreadPrivateMessageTask.pullMessage();
+        pullPrivateMessageTask.pullMessage();
     }
 }

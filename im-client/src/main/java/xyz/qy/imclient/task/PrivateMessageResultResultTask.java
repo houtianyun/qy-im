@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-public class PullSendResultPrivateMessageTask extends AbstractPullMessageTask {
+public class PrivateMessageResultResultTask extends AbstractMessageResultTask {
     @Qualifier("IMRedisTemplate")
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;

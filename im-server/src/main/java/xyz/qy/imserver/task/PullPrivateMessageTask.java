@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
-public class PullUnreadPrivateMessageTask extends  AbstractPullMessageTask {
+public class PullPrivateMessageTask extends  AbstractPullMessageTask {
 
     @Autowired
     private WebSocketServer WSServer;

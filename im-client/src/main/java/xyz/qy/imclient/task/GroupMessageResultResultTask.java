@@ -13,7 +13,7 @@ import xyz.qy.imcommon.model.IMSendResult;
 import java.util.concurrent.TimeUnit;
 
 @Component
-public class PullSendResultGroupMessageTask extends AbstractPullMessageTask {
+public class GroupMessageResultResultTask extends AbstractMessageResultTask {
     @Qualifier("IMRedisTemplate")
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;

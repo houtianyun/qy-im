@@ -266,7 +266,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
      *
      * @param friendId 好友id
      */
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void readedMessage(Long friendId) {
         UserSession session = SessionContext.getSession();
