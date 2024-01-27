@@ -16,7 +16,8 @@
         <div v-for="(friend,index) in $store.state.friendStore.friends" :key="index">
           <friend-item v-show="friend.nickName.startsWith(searchText)"  :index="index"
                        :active="index === $store.state.friendStore.activeIndex" @chat="onSendMessage(friend)"
-                       @delete="onDelItem(friend,index)" @click.native="onActiveItem(friend,index)">
+                       @delete="onDelItem(friend,index)" @click.native="onActiveItem(friend,index)"
+                       :friend="friend">
           </friend-item>
         </div>
       </el-scrollbar>

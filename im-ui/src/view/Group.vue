@@ -338,9 +338,9 @@
 				this.showAddGroupMember = false;
 				this.loadGroup(this.activeGroup.id);
 			},
-      onUploadSuccess(res) {
-				this.activeGroup.headImage = res.data.originUrl;
-				this.activeGroup.headImageThumb = res.data.thumbUrl;
+      onUploadSuccess(data) {
+				this.activeGroup.headImage = data.originUrl;
+				this.activeGroup.headImageThumb = data.thumbUrl;
 			},
       onSaveGroup() {
 				this.$refs['groupForm'].validate((valid) => {
@@ -565,9 +565,9 @@
       closeSwitchCommonGroup() {
         this.switchCommonGroupVisible = false;
       },
-      doneUploadSuccess(res) {
-        this.commonGroup.headImage = res.data.originUrl;
-        this.commonGroup.headImageThumb = res.data.thumbUrl;
+      doneUploadSuccess(data) {
+        this.commonGroup.headImage = data.originUrl;
+        this.commonGroup.headImageThumb = data.thumbUrl;
       },
       closeGroupMemberInfoDialog() {
 		    this.groupMemberVisible = false;
@@ -591,7 +591,7 @@
 				return this.activeGroup.ownerId == this.$store.state.userStore.userInfo.id;
 			},
 			imageAction(){
-				return `${process.env.VUE_APP_BASE_API}/image/upload`;
+				return `/image/upload`;
 			}
 		},
 		mounted() {

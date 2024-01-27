@@ -1,11 +1,10 @@
 <template>
 	<el-upload
-   :action="action"
+   :action="'#'"
+   :http-request="onFileUpload"
 	 :accept="fileTypes==null?'':fileTypes.join(',')"
    :show-file-list="false"
    :headers="uploadHeaders"
-	 :on-success="handleSuccess"
-	 :on-error="handleError"
 	 :disabled="disabled"
 	 :before-upload="beforeUpload"
    multiple>
@@ -25,7 +24,7 @@
 		props: {
 			action: {
 				type: String,
-				required: true
+				required: false
 			},
 			fileTypes: {
 				type: Array,
@@ -45,6 +44,34 @@
 			},
 		},
 		methods: {
+      onFileUpload(file) {
+        // 展示加载条
+        if (this.showLoading) {
+          this.loading = this.$loading({
+            lock: true,
+            text: '正在上传...',
+            spinner: 'el-icon-loading',
+            background: 'rgba(0, 0, 0, 0.7)'
+          });
+        }
+
+        let formData = new FormData()
+        formData.append('file', file.file)
+        this.$http({
+          url: this.action,
+          data: formData,
+          method: 'post',
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }).then((data) => {
+          this.$emit("success", data, file.file);
+        }).catch((e) => {
+          this.$emit("fail", e, file.file);
+        }).finally(() => {
+          this.loading && this.loading.close();
+        })
+      },
 			handleSuccess(res, file) {
 				this.loading && this.loading.close();
 				if (res.code == 200) {
@@ -73,14 +100,14 @@
 					return false;
 				}
 				// 展示加载条
-				if (this.showLoading) {
-					this.loading = this.$loading({
-						lock: true,
-						text: '正在上传...',
-						spinner: 'el-icon-loading',
-						background: 'rgba(0, 0, 0, 0.7)'
-					});
-				}
+				// if (this.showLoading) {
+				// 	this.loading = this.$loading({
+				// 		lock: true,
+				// 		text: '正在上传...',
+				// 		spinner: 'el-icon-loading',
+				// 		background: 'rgba(0, 0, 0, 0.7)'
+				// 	});
+				// }
 				this.$emit("before", file);
 				return true;
 			}

@@ -285,8 +285,8 @@ export default {
         }
       })
     },
-    handleUploadSuccess(res) {
-      this.curTemplateGroup.avatar = res.data.originUrl;
+    handleUploadSuccess(data) {
+      this.curTemplateGroup.avatar = data.originUrl;
       this.$forceUpdate();
     },
     editTemplateGroup(templateGroup) {
@@ -400,13 +400,13 @@ export default {
         this.handleEditTemplateCharacterClose();
       })
     },
-    handleUploadNewCharacterSuccess(res) {
-      this.templateCharacters.push({avatar: res.data.originUrl, name: res.data.name, status: '0'});
+    handleUploadNewCharacterSuccess(data) {
+      this.templateCharacters.push({avatar: data.originUrl, name: data.name, status: '0'});
     },
-    handleUploadNewAvatarSuccess(res) {
+    handleUploadNewAvatarSuccess(data) {
       this.characterAvatars.push({
-        avatar: res.data.originUrl, templateCharacterName: this.curTemplateCharacter.name,
-        name: res.data.name, status: '0', level: 0
+        avatar: data.originUrl, templateCharacterName: this.curTemplateCharacter.name,
+        name: data.name, status: '0', level: 0
       });
     },
     handleSubmitForApproval() {
@@ -569,7 +569,7 @@ export default {
   },
   computed: {
     imageAction() {
-      return `${process.env.VUE_APP_BASE_API}/image/upload`;
+      return `/image/upload`;
     },
     isAdmin() {
       return this.$store.state.userStore.userInfo.id === 1;
