@@ -549,7 +549,7 @@
 				});
 			},
       readedMessage() {
-        if(this.chat.unreadCount==0){
+        if(this.chat.unreadCount == 0){
           return;
         }
         this.$store.commit("resetUnreadCount", this.chat)
@@ -562,6 +562,17 @@
           url: url,
           method: 'put'
         }).then(() => {})
+      },
+      loadReaded(fId) {
+        this.$http({
+          url: `/message/private/maxReadedId?friendId=${fId}`,
+          method: 'get'
+        }).then((id) => {
+          this.$store.commit("readedMessage", {
+            friendId: fId,
+            maxId: id
+          });
+        });
       },
 			loadGroup(groupId) {
 				this.$http({
@@ -663,6 +674,8 @@
               this.loadGroup(this.chat.targetId);
             } else {
               this.loadFriend(this.chat.targetId);
+              // 加载已读状态
+              this.loadReaded(this.chat.targetId)
             }
             // 滚到底部
             this.scrollToBottom();

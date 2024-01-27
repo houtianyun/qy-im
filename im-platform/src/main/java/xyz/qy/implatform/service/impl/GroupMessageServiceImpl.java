@@ -339,7 +339,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         sendMessage.setSender(new IMUserInfo(session.getUserId(), session.getTerminal()));
         sendMessage.setSendToSelf(true);
         sendMessage.setData(msgInfo);
-        sendMessage.setSendResult(false);
+        sendMessage.setSendResult(true);
         imClient.sendGroupMessage(sendMessage);
 
         // 记录已读位置

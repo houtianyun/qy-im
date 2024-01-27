@@ -63,6 +63,12 @@ public class PrivateMessageController {
         return ResultUtils.success();
     }
 
+    @GetMapping("/maxReadedId")
+    @ApiOperation(value = "获取最大已读消息的id",notes="获取某个会话中已读消息的最大id")
+    public Result<Long> getMaxReadedId(@RequestParam Long friendId){
+        return ResultUtils.success(privateMessageService.getMaxReadedId(friendId));
+    }
+
     @GetMapping("/history")
     @ApiOperation(value = "查询聊天记录", notes = "查询聊天记录")
     public Result<List<PrivateMessageVO>> recallMessage(@NotNull(message = "好友id不能为空") @RequestParam Long friendId,

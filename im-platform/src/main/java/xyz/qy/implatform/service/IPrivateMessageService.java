@@ -23,4 +23,11 @@ public interface IPrivateMessageService extends IService<PrivateMessage> {
     List<PrivateMessageVO> loadMessage(Long minId);
 
     void readedMessage(Long friendId);
+
+    /**
+     *  获取某个会话中已读消息的最大id
+     *
+     * @param friendId 好友id
+     */
+    Long getMaxReadedId(Long friendId);
 }

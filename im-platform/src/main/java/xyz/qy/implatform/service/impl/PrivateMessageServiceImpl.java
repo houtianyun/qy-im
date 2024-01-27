@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -291,5 +292,21 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
                 .set(PrivateMessage::getStatus, MessageStatus.READED.code());
         this.update(updateWrapper);
         log.info("消息已读，接收方id:{},发送方id:{}", session.getUserId(), friendId);
+    }
+
+    @Override
+    public Long getMaxReadedId(Long friendId) {
+        UserSession session = SessionContext.getSession();
+        LambdaQueryWrapper<PrivateMessage> wrapper = Wrappers.lambdaQuery();
+        wrapper.eq(PrivateMessage::getSendId, session.getUserId())
+                .eq(PrivateMessage::getRecvId, friendId)
+                .orderByDesc(PrivateMessage::getId)
+                .select(PrivateMessage::getId)
+                .last("limit 1");
+        PrivateMessage message = this.getOne(wrapper);
+        if(Objects.isNull(message)){
+            return -1L;
+        }
+        return message.getId();
     }
 }
