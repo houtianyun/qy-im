@@ -6,7 +6,7 @@ import userStore from './userStore';
 export default {
 
 	state: {
-		activeIndex: -1,
+		activeChat: null,
 		privateMsgMaxId: 0,
 		groupMsgMaxId: 0,
 		loadingPrivateMsg: false,
@@ -30,14 +30,12 @@ export default {
 		},
 		openChat(state, chatInfo) {
 			let chat = null;
-			let activeChat = state.activeIndex >= 0 ? state.chats[state.activeIndex] : null;
-			for (let i in state.chats) {
-				if (state.chats[i].type == chatInfo.type &&
-					state.chats[i].targetId === chatInfo.targetId) {
-					chat = state.chats[i];
+			for (let idx in state.chats) {
+				if (state.chats[idx].type == chatInfo.type &&
+					state.chats[idx].targetId === chatInfo.targetId) {
+					chat = state.chats[idx];
 					// 放置头部
-					state.chats.splice(i, 1);
-					state.chats.unshift(chat);
+					this.commit("moveTop", idx)
 					break;
 				}
 			}
@@ -52,30 +50,18 @@ export default {
 					lastSendTime: new Date().getTime(),
 					unreadCount: 0,
 					messages: [],
-					atMe: false,
-					atAll: false
 				};
 				state.chats.unshift(chat);
 			}
-			// 选中会话保持不变
-			if (activeChat) {
-				state.chats.forEach((chat, idx) => {
-					if (activeChat.type == chat.type &&
-						activeChat.targetId == chat.targetId) {
-						state.activeIndex = idx;
-					}
-				})
-			}
 		},
 		activeChat(state, idx) {
-			state.activeIndex = idx;
-			state.chats[idx].unreadCount = 0;
+			state.activeChat = state.chats[idx];
 		},
 		resetUnreadCount(state, chatInfo) {
 			for (let idx in state.chats) {
-				if (state.chats[idx].type == chatInfo.type
-					&& state.chats[idx].targetId == chatInfo.targetId) {
-					state.chats[idx].unreadCount=0;
+				if (state.chats[idx].type == chatInfo.type &&
+					state.chats[idx].targetId == chatInfo.targetId) {
+					state.chats[idx].unreadCount = 0;
 					state.chats[idx].atMe = false;
 					state.chats[idx].atAll = false;
 				}
@@ -84,8 +70,8 @@ export default {
 		},
 		readedMessage(state, friendId) {
 			for (let idx in state.chats) {
-				if (state.chats[idx].type == 'PRIVATE'
-					&& state.chats[idx].targetId == friendId) {
+				if (state.chats[idx].type == 'PRIVATE' &&
+					state.chats[idx].targetId == friendId) {
 					state.chats[idx].messages.forEach((m) => {
 						if (m.selfSend && m.status != MESSAGE_STATUS.RECALL) {
 							m.status = MESSAGE_STATUS.READED
@@ -96,18 +82,23 @@ export default {
 			this.commit("saveToStorage");
 		},
 		removeChat(state, idx) {
-			state.chats.splice(idx, 1);
-			if (state.activeIndex >= state.chats.length) {
-				state.activeIndex = state.chats.length - 1;
+			if (state.chats[idx] == state.activeChat) {
+				state.activeChat = null;
 			}
+			state.chats.splice(idx, 1);
 			this.commit("saveToStorage");
 		},
-		moveTop(state, idx){
-			let chat = state.chats[idx];
-			// 放置头部
-			state.chats.splice(idx, 1);
-			state.chats.unshift(chat);
-			this.commit("saveToStorage");
+		moveTop(state, idx) {
+			// 加载中不移动，很耗性能
+			if(state.loadingPrivateMsg || state.loadingGroupMsg){
+				return ;
+			}
+			if (idx > 0) {
+				let chat = state.chats[idx];
+				state.chats.splice(idx, 1);
+				state.chats.unshift(chat);
+				this.commit("saveToStorage");
+			}
 		},
 		removeGroupChat(state, groupId) {
 			for (let idx in state.chats) {
@@ -134,6 +125,7 @@ export default {
 				if (state.chats[idx].type == type &&
 					state.chats[idx].targetId === targetId) {
 					chat = state.chats[idx];
+					this.commit("moveTop", idx)
 					break;
 				}
 			}
@@ -154,22 +146,21 @@ export default {
 				chat.unreadCount++;
 			}
 			// 是否有人@我
-			if(!msgInfo.selfSend && chat.type=="GROUP" && msgInfo.atUserIds
-				&& msgInfo.status != MESSAGE_STATUS.READED){
+			if (!msgInfo.selfSend && chat.type == "GROUP" && msgInfo.atUserIds &&
+				msgInfo.status != MESSAGE_STATUS.READED) {
 				let userId = userStore.state.userInfo.id;
-				if(msgInfo.atUserIds.indexOf(userId)>=0){
+				if (msgInfo.atUserIds.indexOf(userId) >= 0) {
 					chat.atMe = true;
 				}
-				if(msgInfo.atUserIds.indexOf(-1)>=0){
+				if (msgInfo.atUserIds.indexOf(-1) >= 0) {
 					chat.atAll = true;
 				}
 			}
-
 			// 记录消息的最大id
-			if (msgInfo.id && type=="PRIVATE" && msgInfo.id > state.privateMsgMaxId) {
+			if (msgInfo.id && type == "PRIVATE" && msgInfo.id > state.privateMsgMaxId) {
 				state.privateMsgMaxId = msgInfo.id;
 			}
-			if (msgInfo.id && type=="GROUP" && msgInfo.id > state.groupMsgMaxId) {
+			if (msgInfo.id && type == "GROUP" && msgInfo.id > state.groupMsgMaxId) {
 				state.groupMsgMaxId = msgInfo.id;
 			}
 			// 如果是已存在消息，则覆盖旧的消息数据
@@ -199,7 +190,7 @@ export default {
 			chat.messages.push(msgInfo);
 			this.commit("saveToStorage");
 		},
-		deleteMessage(state, msgInfo){
+		deleteMessage(state, msgInfo) {
 			// 获取对方id或群id
 			let type = msgInfo.groupId ? 'GROUP' : 'PRIVATE';
 			let targetId = msgInfo.groupId ? msgInfo.groupId : msgInfo.selfSend ? msgInfo.recvId : msgInfo.sendId;
@@ -211,16 +202,16 @@ export default {
 					break;
 				}
 			}
-			
+
 			for (let idx in chat.messages) {
 				// 已经发送成功的，根据id删除
-				if(chat.messages[idx].id && chat.messages[idx].id == msgInfo.id){
+				if (chat.messages[idx].id && chat.messages[idx].id == msgInfo.id) {
 					chat.messages.splice(idx, 1);
 					break;
 				}
 				// 正在发送中的消息可能没有id，根据发送时间删除
-				if(msgInfo.selfSend && chat.messages[idx].selfSend 
-				&&chat.messages[idx].sendTime == msgInfo.sendTime){
+				if (msgInfo.selfSend && chat.messages[idx].selfSend &&
+					chat.messages[idx].sendTime == msgInfo.sendTime) {
 					chat.messages.splice(idx, 1);
 					break;
 				}
@@ -230,7 +221,7 @@ export default {
 		updateChatFromFriend(state, friend) {
 			for (let i in state.chats) {
 				let chat = state.chats[i];
-				if (chat.type=='PRIVATE' && chat.targetId == friend.id) {
+				if (chat.type == 'PRIVATE' && chat.targetId == friend.id) {
 					chat.headImage = friend.headImageThumb;
 					chat.showName = friend.nickName;
 					break;
@@ -241,7 +232,7 @@ export default {
 		updateChatFromGroup(state, group) {
 			for (let i in state.chats) {
 				let chat = state.chats[i];
-				if (chat.type=='GROUP' && chat.targetId == group.id) {
+				if (chat.type == 'GROUP' && chat.targetId == group.id) {
 					chat.headImage = group.headImageThumb;
 					chat.showName = group.remark;
 					break;
@@ -249,15 +240,21 @@ export default {
 			}
 			this.commit("saveToStorage");
 		},
-		resetChatStore(state) {
-			state.activeIndex = -1;
-			state.chats = [];
-		},
+
 		loadingPrivateMsg(state, loadding) {
 			state.loadingPrivateMsg = loadding;
+			if(!state.loadingPrivateMsg && !state.loadingGroupMsg){
+				this.commit("sort")
+			}
 		},
 		loadingGroupMsg(state, loadding) {
 			state.loadingGroupMsg = loadding;
+			if(!state.loadingPrivateMsg && !state.loadingGroupMsg){
+				this.commit("sort")
+			}
+		},
+		sort(state){
+			state.chats.sort((c1,c2)=>c2.lastSendTime-c1.lastSendTime);
 		},
 		saveToStorage(state) {
 			let userId = userStore.state.userInfo.id;
@@ -270,7 +267,7 @@ export default {
 			localStorage.setItem(key, JSON.stringify(chatsData));
 		},
 		clear(state) {
-			state.activeIndex = -1;
+			state.activeChat = null;
 			state.chats = [];
 		}
 	},

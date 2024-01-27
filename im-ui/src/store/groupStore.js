@@ -4,46 +4,39 @@ export default {
 
 	state: {
 		groups: [],
-		activeIndex: -1,
+		activeGroup: null,
 	},
 	mutations: {
-		// initGroupStore(state) {
-		// 	httpRequest({
-		// 		url: '/group/list',
-		// 		method: 'get'
-		// 	}).then((groups) => {
-		// 		this.commit("setGroups",groups);
-		// 	})
-		// },
-		setGroups(state, groups){
+		setGroups(state, groups) {
 			state.groups = groups;
 		},
-		activeGroup(state, index){
-			state.activeIndex = index;
+		activeGroup(state, idx) {
+			state.activeGroup = state.groups[idx];
 		},
-		addGroup(state, group){
+		addGroup(state, group) {
 			state.groups.unshift(group);
 		},
-		removeGroup(state, groupId){
-			state.groups.forEach((g,index)=>{
-				if(g.id==groupId){
-					state.groups.splice(index, 1);
-					state.activeIndex = -1;
+		removeGroup(state, groupId) {
+			state.groups.forEach((g, idx) => {
+				if (g.id == groupId) {
+					state.groups.splice(idx, 1);
 				}
 			})
-			
+			if (state.activeGroup.id == groupId) {
+				state.activeGroup = null;
+			}
 		},
-		updateGroup(state,group){
-			state.groups.forEach((g,idx)=>{
-				if(g.id==group.id){
+		updateGroup(state, group) {
+			state.groups.forEach((g, idx) => {
+				if (g.id == group.id) {
 					// 拷贝属性
 					Object.assign(state.groups[idx], group);
 				}
 			})
 		},
-		clear(state){
+		clear(state) {
 			state.groups = [];
-			state.activeGroup = -1;
+			state.activeGroup = null;
 		}
 	},
 	actions: {
@@ -54,7 +47,7 @@ export default {
 					method: 'GET'
 				}).then((groups) => {
 					context.commit("setGroups", groups);
-					//console.log("loadGroup")
+					console.log("loadGroup")
 					resolve();
 				}).catch((res) => {
 					reject(res);

@@ -8,13 +8,14 @@
         <el-scrollbar style="height:400px;">
           <div v-for="(friend,index) in friends" :key="friend.id" v-show="friend.nickName.startsWith(searchText)">
             <friend-item :showDelete="false" @click.native="onSwitchCheck(friend)"
-                         :menu="false" :friend="friend" :index="index" :active="index === activeIndex">
+                         :menu="false" :friend="friend" :index="index" :active="false">
               <el-checkbox :disabled="friend.disabled" @click.native.stop="" class="agm-friend-checkbox" v-model="friend.isCheck"
                size="medium"></el-checkbox>
             </friend-item>
           </div>
         </el-scrollbar>
       </div>
+      <div class="agm-arrow el-icon-d-arrow-right"></div>
       <div class="agm-r-box">
         <div class="agm-select-tip"> 已勾选{{checkCount}}位好友</div>
         <el-scrollbar style="height:400px;">
@@ -80,7 +81,6 @@
 			return {
 				searchText: "",
         characterSearchText: "",
-				activeIndex: -1,
 				friends: [],
         selectTemplateCharacterVisible: false,
         characterActiveIndex: -1,
@@ -282,7 +282,9 @@
 
 		.agm-l-box {
 			flex: 1;
-			border: #dddddd solid 1px;
+      border: #53a0e79c solid 1px;
+      border-radius: 5px;
+      overflow: hidden;
 
 			.el-checkbox {
 				display: flex;
@@ -316,9 +318,19 @@
 			}
 		}
 
+    .agm-arrow {
+      display: flex;
+      align-items: center;
+      font-size: 20px;
+      padding: 5px;
+      font-weight: 600;
+      color: #53a0e7cc;
+    }
+
 		.agm-r-box {
 			flex: 1;
-			border: #dddddd solid 1px;
+      border: #53a0e79c solid 1px;
+      border-radius: 5px;
 
 			.agm-select-tip {
 				text-align: left;

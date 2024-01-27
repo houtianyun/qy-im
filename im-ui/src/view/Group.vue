@@ -12,7 +12,7 @@
 			</div>
 			<el-scrollbar class="group-list-items">
 				<div v-for="(group,index) in groupStore.groups" :key="index">
-					<group-item v-show="group.remark.startsWith(searchText)" :group="group" :active="index === groupStore.activeIndex"
+					<group-item v-show="group.remark.startsWith(searchText)" :group="group" :active="group === groupStore.activeGroup"
 					 @click.native="onActiveItem(group,index)">
 					</group-item>
 				</div>
@@ -595,13 +595,7 @@
 			}
 		},
 		mounted() {
-			if (this.groupStore.activeIndex >= 0) {
-				let activeGroup = this.groupStore.groups[this.groupStore.activeIndex];
-				// store数据不能直接修改，所以深拷贝一份内存
-				this.activeGroup = JSON.parse(JSON.stringify(activeGroup));
-				// 加载群成员
-				this.loadGroupMembers();
-			}
+
 		}
 	}
 </script>

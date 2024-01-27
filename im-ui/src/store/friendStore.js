@@ -5,20 +5,10 @@ export default {
 
 	state: {
 		friends: [],
-		activeIndex: -1,
+		activeFriend: null,
 		timer: null
 	},
 	mutations: {
-		// initFriendStore(state) {
-		// 	http({
-		// 		url: '/friend/list',
-		// 		method: 'get'
-		// 	}).then((friends) => {
-		// 		this.commit("setFriends",friends);
-		// 		this.commit("refreshOnlineStatus");
-		// 	})
-		// },
-
 		setFriends(state, friends) {
 			state.friends = friends;
 		},
@@ -32,21 +22,22 @@ export default {
 				}
 			})
 		},
-		activeFriend(state, index) {
-			state.activeIndex = index;
+		activeFriend(state, idx) {
+			state.activeFriend = state.friends[idx];
 		},
-		removeFriend(state, index) {
-			state.friends.splice(index, 1);
-			state.activeIndex = -1;
+		removeFriend(state, idx) {
+			if (state.friends[idx] == state.activeFriend) {
+				state.activeFriend = null;
+			}
+			state.friends.splice(idx, 1);
 		},
 		addFriend(state, friend) {
 			state.friends.push(friend);
 		},
 		refreshOnlineStatus(state){
 			let userIds = [];
-			//console.log("refreshOnlineStatus")
 			if(state.friends.length ==0){
-				return; 
+				return;
 			}
 			state.friends.forEach((f)=>{userIds.push(f.id)});
 			http({
@@ -56,7 +47,7 @@ export default {
 			}).then((onlineTerminals) => {
 				this.commit("setOnlineStatus",onlineTerminals);
 			})
-			
+
 			// 30s后重新拉取
 			clearTimeout(state.timer);
 			state.timer = setTimeout(()=>{
@@ -67,7 +58,6 @@ export default {
 			state.friends.forEach((f)=>{
 				let userTerminal = onlineTerminals.find((o)=> f.id==o.userId);
 				if(userTerminal){
-					//console.log(userTerminal)
 					f.online = true;
 					f.onlineTerminals = userTerminal.terminals;
 					f.onlineWeb = userTerminal.terminals.indexOf(TERMINAL_TYPE.WEB)>=0
@@ -79,8 +69,7 @@ export default {
 					f.onlineApp = false;
 				}
 			});
-			
-			let activeFriend = state.friends[state.activeIndex];
+			// 在线的在前面
 			state.friends.sort((f1,f2)=>{
 				if(f1.online&&!f2.online){
 					return -1;
@@ -90,21 +79,12 @@ export default {
 				}
 				return 0;
 			});
-			
-			// 重新排序后，activeIndex指向的好友可能会变化，需要重新指定
-			if(state.activeIndex >=0){
-				state.friends.forEach((f,i)=>{
-					if(f.id == activeFriend.id){
-						state.activeIndex = i;
-					}
-				})
-			}
 		},
 		clear(state) {
 			clearTimeout(state.timer);
 			state.friends = [];
 			state.timer = null;
-			state.activeIndex = -1;
+			state.activeFriend = [];
 		}
 	},
 	actions: {
@@ -116,7 +96,7 @@ export default {
 				}).then((friends) => {
 					context.commit("setFriends", friends);
 					context.commit("refreshOnlineStatus");
-					//console.log("loadFriend")
+					console.log("loadFriend")
 					resolve()
 				}).catch((res) => {
 					reject();
