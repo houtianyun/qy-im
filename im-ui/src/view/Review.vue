@@ -148,7 +148,7 @@ export default {
       });
     },
     submitAuditConclusion(conclusion) {
-      console.log("conclusion", conclusion)
+      //console.log("conclusion", conclusion)
       let submitVo = {
         comments: conclusion,
         templateGroupId: this.curTemplateGroup.id
@@ -183,7 +183,7 @@ export default {
       this.$router.push("/home/square/templateGroup");
     },
     handleTabClick(tab, event) {
-      console.log(tab.name);
+      //console.log(tab.name);
       if (tab.name === 'templateGroup') {
         this.findReviewingTemplateGroups();
       } else if(tab.name === 'characterAvatar') {

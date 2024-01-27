@@ -92,7 +92,7 @@
 					},
 					(stream) => {
 						this.stream = stream;
-						console.log(this.stream)
+						//console.log(this.stream)
 						this.$refs.mineVideo.srcObject = stream;
 						this.$refs.mineVideo.muted = true;
 						callback(stream)
@@ -135,7 +135,7 @@
 				}
 				this.peerConnection.oniceconnectionstatechange = (event) => {
 					let state = event.target.iceConnectionState;
-					console.log("ICE connection status changed : " + state)
+					//console.log("ICE connection status changed : " + state)
 					if(state == 'connected'){
 						this.resetTime();
 					}
@@ -164,7 +164,7 @@
           }
 
         } else if (msg.type == this.$enums.MESSAGE_TYPE.RTC_REJECT) {
-          console.log(msg)
+          //console.log(msg)
           if (msg.selfSend) {
             // 我在其他终端拒绝了对方的通话
             this.$message.success("已在其他设备拒绝通话");

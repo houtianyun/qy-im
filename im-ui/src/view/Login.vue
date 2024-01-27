@@ -118,7 +118,7 @@ import WaveSurfer from "wavesurfer.js";
       let pattern = new RegExp("[`~!@#$^&*()=|{}':;',\\[\\].<>《》/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？]");
       let reg =/[\u4E00-\u9FA5]|[\uFE30-\uFFA0]/gi;
 			let checkUsername = (rule, value, callback) => {
-				console.log("checkUsername");
+				//console.log("checkUsername");
 				if (!value) {
 					return callback(new Error('请输入用户名'));
 				}
@@ -131,7 +131,7 @@ import WaveSurfer from "wavesurfer.js";
 				callback();
 			};
 			let checkPassword = (rule, value, callback) => {
-				console.log("checkPassword");
+				//console.log("checkPassword");
 				if (value === '') {
 					callback(new Error('请输入密码'));
 				}
@@ -232,7 +232,7 @@ import WaveSurfer from "wavesurfer.js";
         this.isPlayOver = false;
       },
       getPlayMediaMaterial() {
-        console.log("获取媒体素材")
+        //console.log("获取媒体素材")
         this.mediaInfo.type = this.curMediaType;
         this.$http({
           url: "/website/getPlayMediaMaterial",
@@ -277,7 +277,7 @@ import WaveSurfer from "wavesurfer.js";
         xhr.send();
       },
       getMediaByType(mediaType) {
-        console.log("mediaType", mediaType)
+        //console.log("mediaType", mediaType)
         if (mediaType==='video') {
           this.videoStyle.opacity = this.curMediaType === 'video' ? "0.5" : '1';
           this.audioStyle.opacity = "0.5";
@@ -441,7 +441,7 @@ import WaveSurfer from "wavesurfer.js";
         }
       },
       audioPlayOver() {
-        console.log("播放完成")
+        //console.log("播放完成")
         if (!this.isPlayOver) {
           this.isPlayOver = true;
           this.playing = !this.playing;

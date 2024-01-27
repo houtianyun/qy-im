@@ -177,8 +177,8 @@ export default {
     handleChange(info, fileList) {
       this.imageList = fileList;
     },
-    handleUploadImageSuccess(res) {
-      this.imageList.push({ url: res.data.originUrl});
+    handleUploadImageSuccess(data) {
+      this.imageList.push({ url: data.originUrl});
     },
     handleRemove(file) {
       this.imageList.forEach((item, index) => {
@@ -190,7 +190,7 @@ export default {
     submitForm(formName) {
       let talkParam = this.form;
       talkParam.imgUrls = this.imageList.map(obj => {return obj.url});
-      console.log("talkParam", talkParam);
+      //console.log("talkParam", talkParam);
       this.$refs[formName].validate((valid) => {
         if (valid) {
           let url = "/talk"
@@ -285,7 +285,7 @@ export default {
   },
   computed: {
     imageAction() {
-      return `${process.env.VUE_APP_BASE_API}/image/upload`;
+      return `/image/upload`;
     },
   },
 }

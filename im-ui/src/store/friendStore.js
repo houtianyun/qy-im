@@ -67,7 +67,7 @@ export default {
 			state.friends.forEach((f)=>{
 				let userTerminal = onlineTerminals.find((o)=> f.id==o.userId);
 				if(userTerminal){
-					console.log(userTerminal)
+					//console.log(userTerminal)
 					f.online = true;
 					f.onlineTerminals = userTerminal.terminals;
 					f.onlineWeb = userTerminal.terminals.indexOf(TERMINAL_TYPE.WEB)>=0
@@ -116,7 +116,7 @@ export default {
 				}).then((friends) => {
 					context.commit("setFriends", friends);
 					context.commit("refreshOnlineStatus");
-					console.log("loadFriend")
+					//console.log("loadFriend")
 					resolve()
 				}).catch((res) => {
 					reject();

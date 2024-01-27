@@ -33,7 +33,7 @@ export default {
   },
   methods: {
     handleActiveItem(community, index) {
-      console.log("community", community)
+      //console.log("community", community)
       this.activeIndex = index;
       this.$router.push(community.route);
     }

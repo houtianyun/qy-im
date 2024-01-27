@@ -409,7 +409,7 @@
 				this.showVoice = false;
 			},
 			showVideoBox() {
-				console.log(this.friend)
+				//console.log(this.friend)
 				this.$store.commit("showChatPrivateVideoBox", {
 					friend: this.friend,
 					master: true

@@ -1,15 +1,13 @@
 <template>
   <el-upload ref="uploader" class="uploader"
-      :action=action
+      :action="'#'"
+      :http-request="onFileUpload"
       :headers="uploadHeaders"
       :before-upload="beforeUpload"
-      :on-success="handleSuccess"
       :on-remove="handleRemove"
-      :on-error="handleError"
-      :on-change="handleChange"
       :file-list="imageList"
       list-type="picture-card"
-      :multiple="false"
+      :multiple="true"
   >
     <i class="el-icon-plus" />
   </el-upload>
@@ -50,6 +48,34 @@ export default {
     }
   },
   methods: {
+    onFileUpload(file) {
+      // 展示加载条
+      if (this.showLoading) {
+        this.loading = this.$loading({
+          lock: true,
+          text: '正在上传...',
+          spinner: 'el-icon-loading',
+          background: 'rgba(0, 0, 0, 0.7)'
+        });
+      }
+
+      let formData = new FormData()
+      formData.append('file', file.file)
+      this.$http({
+        url: this.action,
+        data: formData,
+        method: 'post',
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }).then((data) => {
+        this.$emit("success", data, file.file);
+      }).catch((e) => {
+        this.$emit("fail", e, file.file);
+      }).finally(() => {
+        this.loading && this.loading.close();
+      })
+    },
     handleSuccess(res, file) {
       if (res.code === 200) {
         this.$emit("success", res, file);

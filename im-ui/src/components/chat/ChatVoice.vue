@@ -60,9 +60,8 @@ export default {
         this.state = 'RUNNING';
         this.stateTip = "正在录音...";
       }).catch(error => {
-        console.log(error);
+        //console.log(error);
         this.$message.error(error);
-        console.log(error);
       });
 
 
@@ -90,7 +89,7 @@ export default {
       this.mode = 'PLAY';
     },
     onStopAudio() {
-      console.log(this.$refs.audio);
+      //console.log(this.$refs.audio);
       this.$refs.audio.pause();
       this.mode = 'RECORD';
     },

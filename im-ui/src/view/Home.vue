@@ -118,7 +118,7 @@
             }
           })
           this.$wsApi.onClose((e) => {
-            console.log(e);
+            //console.log(e);
             if (e.code != 3000) {
               // 断线重连
               this.$message.error("连接断开，正在尝试重新连接...");

@@ -101,13 +101,13 @@ export default {
         templateCharacterAvatar: this.templateCharacter.avatar,
         templateCharacterName: this.templateCharacter.name,
       }
-      console.log("templateGroup", templateGroup)
+      //console.log("templateGroup", templateGroup)
       this.$http({
         url: "/group/createTemplateGroup",
         method: 'post',
         data: templateGroup
       }).then(group => {
-        console.log(group);
+        //console.log(group);
         this.$message.success("创建成功");
         this.$store.commit("addGroup", group);
         _this.handleClose();

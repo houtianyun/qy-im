@@ -30,7 +30,7 @@ export default {
   mounted() {
     const timer = setInterval(this.updateTime, 1);
     this.$once('hook:beforeDestroy', () => {
-      console.log('clearInterval done')
+      //console.log('clearInterval done')
       clearInterval(timer);
     })
   },

@@ -96,7 +96,7 @@
       }
 		},
     mounted() {
-      console.log(this.menu)
+      //console.log(this.menu)
     }
 	}
 </script>

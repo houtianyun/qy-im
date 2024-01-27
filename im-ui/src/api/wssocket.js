@@ -22,7 +22,7 @@ let connect = (wsurl, accessToken) => {
                 heartCheck.reset();
             } else {
                 // 其他消息转发出去
-                console.log("收到消息:", sendInfo);
+                //console.log("收到消息:", sendInfo);
                 messageCallBack && messageCallBack(sendInfo.cmd, sendInfo.data)
             }
         }
@@ -80,7 +80,7 @@ let heartCheck = {
     timeoutObj: null, //延时发送消息对象（启动心跳新建这个对象，收到消息后重置对象）
     start: function () {
         if (isConnect) {
-            console.log('发送WebSocket心跳')
+            //console.log('发送WebSocket心跳')
             let heartBeat = {
                 cmd: 1,
                 data: {}

@@ -119,8 +119,8 @@ export default {
       // 判断是否有重复的模板人物
       const templateCharacterIds = groupMemberList.map(item => item["templateCharacterId"]);
       let templateCharacterIdSet = new Set(templateCharacterIds);
-      console.log("templateCharacterIds", templateCharacterIds)
-      console.log("templateCharacterIdSet", templateCharacterIdSet)
+      //console.log("templateCharacterIds", templateCharacterIds)
+      //console.log("templateCharacterIdSet", templateCharacterIdSet)
       if (templateCharacterIdSet.size !== templateCharacterIds.length) {
         this.$message.warning("当前模板群聊存在重复的模板人物，请重新选择模板人物");
         return false;
@@ -131,7 +131,7 @@ export default {
         templateGroupId: this.templateGroup.id,
         groupMembers: groupMemberList
       }
-      console.log("paramVO", paramVO)
+      //console.log("paramVO", paramVO)
       this.$http({
         url: "/group/switchTemplateGroup",
         method: 'post',
@@ -158,7 +158,7 @@ export default {
       })
     },
     queryTemplateCharacter(templateGroup, index) {
-      console.log("curGroup", this.group)
+      //console.log("curGroup", this.group)
       if (this.group.templateGroupId === templateGroup.id) {
         this.$message.warning("请选择另一个类型的模板群聊");
         return false

@@ -126,6 +126,8 @@ public class TalkServiceImpl extends ServiceImpl<TalkMapper, Talk> implements IT
         talk.setUpdateBy(userId);
         if (CollectionUtils.isNotEmpty(talkUpdateDTO.getImgUrls())) {
             talk.setImgUrl(String.join(Constant.COMMA, talkUpdateDTO.getImgUrls()));
+        } else {
+            talk.setImgUrl(StringUtils.EMPTY);
         }
         if (talk.getAnonymous()) {
             if (StringUtils.isBlank(talk.getNickName())) {
