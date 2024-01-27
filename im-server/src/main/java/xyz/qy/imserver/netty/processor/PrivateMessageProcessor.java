@@ -30,7 +30,7 @@ public class PrivateMessageProcessor extends AbstractMessageProcessor<IMRecvInfo
             ChannelHandlerContext channelCtx = UserChannelCtxMap.getChannelCtx(receiver.getId(), receiver.getTerminal());
             if (channelCtx != null) {
                 // 推送消息到用户
-                IMSendInfo sendInfo = new IMSendInfo();
+                IMSendInfo<Object> sendInfo = new IMSendInfo<>();
                 sendInfo.setCmd(IMCmdType.PRIVATE_MESSAGE.code());
                 sendInfo.setData(recvInfo.getData());
                 channelCtx.channel().writeAndFlush(sendInfo);
@@ -50,7 +50,7 @@ public class PrivateMessageProcessor extends AbstractMessageProcessor<IMRecvInfo
 
     private void sendResult(IMRecvInfo recvInfo, IMSendCode sendCode) {
         if (recvInfo.getSendResult()) {
-            IMSendResult result = new IMSendResult();
+            IMSendResult<Object> result = new IMSendResult<>();
             result.setSender(recvInfo.getSender());
             result.setReceiver(recvInfo.getReceivers().get(0));
             result.setCode(sendCode.code());

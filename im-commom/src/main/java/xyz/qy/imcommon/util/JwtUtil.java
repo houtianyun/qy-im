@@ -6,11 +6,39 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 
+import java.util.Date;
+
 public class JwtUtil {
     /**
+     * 生成jwt字符串  JWT(json web token)
+     * @param userId  用户id
+     * @param info  用户细腻系
+     * @param expireIn 过期时间
+     * @param secret  秘钥
+     * @return token
+     * */
+    public static String sign(Long userId, String info,long expireIn,String secret) {
+        try {
+            Date date = new Date(System.currentTimeMillis() + expireIn*1000);
+            Algorithm algorithm = Algorithm.HMAC256(secret);
+            return JWT.create()
+                    //将userId保存到token里面
+                    .withAudience(userId.toString())
+                    //存放自定义数据
+                    .withClaim("info", info)
+                    //过期时间
+                    .withExpiresAt(date)
+                    //token的密钥
+                    .sign(algorithm);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
      * 根据token获取userId
-     * @param token
-     * @return
+     * @param token  登录token
+     * @return 用户id
      * */
     public static Long getUserId(String token) {
         try {
@@ -22,9 +50,9 @@ public class JwtUtil {
     }
 
     /**
-     * 根据token获取自定义数据info
-     * @param token
-     * @return
+     * 根据token获取用户数据
+     * @param token 用户登录token
+     * @return 用户数据
      * */
     public static String getInfo(String token) {
         try {
@@ -36,11 +64,11 @@ public class JwtUtil {
 
     /**
      * 校验token
-     * @param token
-     * @param secret
-     * @return
+     * @param token 用户登录token
+     * @param secret 秘钥
+     * @return true/false
      * */
-    public static boolean checkSign(String token,String secret) {
+    public static Boolean checkSign(String token,String secret) {
         try{
             Algorithm algorithm  = Algorithm.HMAC256(secret);
             JWTVerifier verifier = JWT.require(algorithm).build();

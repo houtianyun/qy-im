@@ -10,9 +10,9 @@ public enum IMCmdType {
     PRIVATE_MESSAGE(3,"私聊消息"),
     GROUP_MESSAGE(4,"群发消息");
 
-    private Integer code;
+    private final Integer code;
 
-    private String desc;
+    private final String desc;
 
     public static IMCmdType fromCode(Integer code){
         for (IMCmdType typeEnum:values()) {

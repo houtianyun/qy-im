@@ -3,7 +3,6 @@ package xyz.qy.implatform.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,12 +12,14 @@ import xyz.qy.implatform.result.ResultUtils;
 import xyz.qy.implatform.strategy.context.UploadStrategyContext;
 import xyz.qy.implatform.vo.UploadImageVO;
 
+import javax.annotation.Resource;
+
 @Slf4j
 @RestController
 @Api(tags = "文件上传")
 public class FileController {
 
-    @Autowired
+    @Resource
     private UploadStrategyContext uploadStrategyContext;
 
     @ApiOperation(value = "上传图片", notes = "上传图片,上传后返回原图和缩略图的url")

@@ -53,7 +53,7 @@ public class DateTimeUtils extends DateUtils {
      */
     public static String getFormatDate(Date date, String xFormat) {
         date = date == null ? new Date() : date;
-        xFormat = StringUtils.isNotEmpty(xFormat) == true ? xFormat : FULL_DATE_FORMAT;
+        xFormat = StringUtils.isNotEmpty(xFormat) ? xFormat : FULL_DATE_FORMAT;
         SimpleDateFormat sdf = new SimpleDateFormat(xFormat);
         return sdf.format(date);
     }

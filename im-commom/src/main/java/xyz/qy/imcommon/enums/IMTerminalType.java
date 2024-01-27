@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public enum IMTerminalType {
-
     /**
      * web
      */

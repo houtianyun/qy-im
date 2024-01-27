@@ -8,8 +8,7 @@ public class FileUtil {
      * @return boolean
      */
     public static String getFileExtension(String fileName) {
-        String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
-        return extension;
+        return fileName.substring(fileName.lastIndexOf(".") + 1);
     }
 
     /**

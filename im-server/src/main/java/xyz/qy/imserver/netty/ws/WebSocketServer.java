@@ -1,11 +1,11 @@
 package xyz.qy.imserver.netty.ws;
 
-import xyz.qy.imserver.netty.IMChannelHandler;
-import xyz.qy.imserver.netty.IMServer;
-import xyz.qy.imserver.netty.ws.endecode.MessageProtocolDecoder;
-import xyz.qy.imserver.netty.ws.endecode.MessageProtocolEncoder;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
@@ -17,6 +17,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import xyz.qy.imserver.netty.IMChannelHandler;
+import xyz.qy.imserver.netty.IMServer;
+import xyz.qy.imserver.netty.ws.endecode.MessageProtocolDecoder;
+import xyz.qy.imserver.netty.ws.endecode.MessageProtocolEncoder;
 
 import java.util.concurrent.TimeUnit;
 
@@ -28,25 +32,24 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(prefix = "websocket", value = "enable", havingValue = "true",matchIfMissing = true)
-public class WebSocketServer  implements IMServer {
+@ConditionalOnProperty(prefix = "websocket", value = "enable", havingValue = "true", matchIfMissing = true)
+public class WebSocketServer implements IMServer {
     @Value("${websocket.port}")
     private int port;
 
     private volatile boolean ready = false;
 
-    private  ServerBootstrap bootstrap;
-    private  EventLoopGroup bossGroup;
-    private  EventLoopGroup workGroup;
+    private EventLoopGroup bossGroup;
+    private EventLoopGroup workGroup;
 
     @Override
-    public boolean isReady(){
+    public boolean isReady() {
         return ready;
     }
 
     @Override
     public void start() {
-        bootstrap = new ServerBootstrap();
+        ServerBootstrap bootstrap = new ServerBootstrap();
         bossGroup = new NioEventLoopGroup();
         workGroup = new NioEventLoopGroup();
         // 设置为主从线程模型
@@ -65,8 +68,8 @@ public class WebSocketServer  implements IMServer {
                         pipeline.addLast("aggregator", new HttpObjectAggregator(65535));
                         pipeline.addLast("http-chunked", new ChunkedWriteHandler());
                         pipeline.addLast(new WebSocketServerProtocolHandler("/im"));
-                        pipeline.addLast("encode",new MessageProtocolEncoder());
-                        pipeline.addLast("decode",new MessageProtocolDecoder());
+                        pipeline.addLast("encode", new MessageProtocolEncoder());
+                        pipeline.addLast("decode", new MessageProtocolDecoder());
                         pipeline.addLast("handler", new IMChannelHandler());
                     }
                 })
@@ -79,23 +82,23 @@ public class WebSocketServer  implements IMServer {
 
         try {
             // 绑定端口，启动select线程，轮询监听channel事件，监听到事件之后就会交给从线程池处理
-            Channel channel = bootstrap.bind(port).sync().channel();
+            bootstrap.bind(port).sync().channel();
             // 就绪标志
             this.ready = true;
-            log.info("websocket server 初始化完成,端口：{}",port);
+            log.info("websocket server 初始化完成,端口：{}", port);
             // 等待服务端口关闭
             //channel.closeFuture().sync();
         } catch (InterruptedException e) {
-            log.info("websocket server 初始化异常",e);
+            log.info("websocket server 初始化异常", e);
         }
     }
 
     @Override
     public void stop() {
-        if(bossGroup != null && !bossGroup.isShuttingDown() && !bossGroup.isShutdown() ) {
+        if (bossGroup != null && !bossGroup.isShuttingDown() && !bossGroup.isShutdown()) {
             bossGroup.shutdownGracefully();
         }
-        if(workGroup != null && !workGroup.isShuttingDown() && !workGroup.isShutdown() ) {
+        if (workGroup != null && !workGroup.isShuttingDown() && !workGroup.isShutdown()) {
             workGroup.shutdownGracefully();
         }
         this.ready = false;
