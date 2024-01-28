@@ -2,7 +2,6 @@ package xyz.qy.implatform.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -43,7 +42,6 @@ import xyz.qy.implatform.vo.GroupMessageVO;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -100,7 +98,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         msg.setSendTime(new Date());
         msg.setSendNickName(member.getAliasName());
         if (CollUtil.isNotEmpty(dto.getAtUserIds())) {
-            msg.setAtUserIds(CharSequenceUtil.join(",", dto.getAtUserIds()));
+            msg.setAtUserIds(StrUtil.join(",", dto.getAtUserIds()));
         }
         this.save(msg);
         // 不用发给自己
@@ -349,7 +347,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         imClient.sendGroupMessage(sendMessage);
 
         // 记录已读位置
-        String key = CharSequenceUtil.join(":", RedisKey.IM_GROUP_READED_POSITION, groupId, session.getUserId());
+        String key = StrUtil.join(":", RedisKey.IM_GROUP_READED_POSITION, groupId, session.getUserId());
         redisTemplate.opsForValue().set(key, message.getId());
     }
 
