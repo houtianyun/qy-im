@@ -1,10 +1,13 @@
 package xyz.qy.implatform.contant;
 
-public class Constant {
+public final class Constant {
+    public Constant() {
+    }
+
     // 最大图片上传大小
-    public static final long MAX_IMAGE_SIZE = 5*1024*1024;
+    public static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024;
     // 最大上传文件大小
-    public static final long MAX_FILE_SIZE = 10*1024*1024;
+    public static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
     // 群聊最大人数
     public static final long MAX_GROUP_MEMBER = 500;
     // 常量1：是
@@ -20,7 +23,7 @@ public class Constant {
     // 常量0：未删除
     public static final int NO_DELETED = 0;
     // 模板群聊切换时间间隔1800s
-    public static final int SWITCH_INTERVAL= 1800;
+    public static final int SWITCH_INTERVAL = 1800;
     // 媒体播放字典key
     public static final String MEDIA_SWITCH = "sys_media_switch";
     // 公共群聊id

@@ -1,13 +1,17 @@
 package xyz.qy.implatform.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.text.CharSequenceUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.base.Splitter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -95,8 +99,8 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         msg.setSendId(session.getUserId());
         msg.setSendTime(new Date());
         msg.setSendNickName(member.getAliasName());
-        if(CollectionUtil.isNotEmpty(dto.getAtUserIds())){
-            msg.setAtUserIds(StrUtil.join(",",dto.getAtUserIds()));
+        if (CollUtil.isNotEmpty(dto.getAtUserIds())) {
+            msg.setAtUserIds(CharSequenceUtil.join(",", dto.getAtUserIds()));
         }
         this.save(msg);
         // 不用发给自己
@@ -284,8 +288,10 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         List<GroupMessageVO> vos = messages.stream().map(m -> {
             GroupMessageVO vo = BeanUtils.copyProperties(m, GroupMessageVO.class);
             // 被@用户列表
-            List<String> atIds = Arrays.asList(StrUtil.split(m.getAtUserIds(),","));
-            vo.setAtUserIds(atIds.stream().map(Long::parseLong).collect(Collectors.toList()));
+            if (StringUtils.isNotBlank(m.getAtUserIds())) {
+                List<String> atIds = Splitter.on(",").trimResults().splitToList(m.getAtUserIds());
+                vo.setAtUserIds(atIds.stream().map(Long::parseLong).collect(Collectors.toList()));
+            }
             return vo;
         }).collect(Collectors.toList());
         // 消息状态,数据库没有存群聊的消息状态，需要从redis取
@@ -343,7 +349,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         imClient.sendGroupMessage(sendMessage);
 
         // 记录已读位置
-        String key = StrUtil.join(":", RedisKey.IM_GROUP_READED_POSITION, groupId, session.getUserId());
+        String key = CharSequenceUtil.join(":", RedisKey.IM_GROUP_READED_POSITION, groupId, session.getUserId());
         redisTemplate.opsForValue().set(key, message.getId());
     }
 

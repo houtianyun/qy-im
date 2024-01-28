@@ -10,7 +10,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 @Slf4j
-public class ImageUtil {
+public final class ImageUtil {
+    public ImageUtil() {
+    }
+
     //以下是常量,按照阿里代码开发规范,不允许代码中出现魔法值
     private static final Integer ZERO = 0;
     private static final Integer ONE_ZERO_TWO_FOUR = 1024;

@@ -2,7 +2,10 @@ package xyz.qy.implatform.result;
 
 import xyz.qy.implatform.enums.ResultCode;
 
-public class ResultUtils {
+public final class ResultUtils {
+    public ResultUtils() {
+    }
+
     public static <T> Result<T> success() {
         Result<T> result = new Result<>();
         result.setCode(ResultCode.SUCCESS.getCode());

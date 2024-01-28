@@ -10,8 +10,8 @@ import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.enums.IMSendCode;
 import xyz.qy.imcommon.model.IMRecvInfo;
 import xyz.qy.imcommon.model.IMSendInfo;
-import xyz.qy.imcommon.model.IMUserInfo;
 import xyz.qy.imcommon.model.IMSendResult;
+import xyz.qy.imcommon.model.IMUserInfo;
 import xyz.qy.imserver.netty.UserChannelCtxMap;
 
 @Slf4j

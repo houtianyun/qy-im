@@ -49,7 +49,6 @@ public class HeartbeatProcessor extends AbstractMessageProcessor<IMHeartbeatInfo
     @Override
     public IMHeartbeatInfo transForm(Object o) {
         HashMap map = (HashMap) o;
-        IMHeartbeatInfo heartbeatInfo = BeanUtil.fillBeanWithMap(map, new IMHeartbeatInfo(), false);
-        return heartbeatInfo;
+        return BeanUtil.fillBeanWithMap(map, new IMHeartbeatInfo(), false);
     }
 }

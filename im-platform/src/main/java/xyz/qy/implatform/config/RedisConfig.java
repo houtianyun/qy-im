@@ -26,6 +26,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import javax.annotation.Resource;
 import java.time.Duration;
+import java.util.Objects;
 
 @EnableCaching
 @Configuration
@@ -67,7 +68,7 @@ public class RedisConfig extends CachingConfigurerSupport {
     @Bean
     @Override
     public CacheResolver cacheResolver() {
-        return new SimpleCacheResolver(cacheManager());
+        return new SimpleCacheResolver(Objects.requireNonNull(cacheManager()));
     }
 
     @Bean

@@ -26,7 +26,7 @@ public enum ResultCode {
     MOBILE_ALREADY_REGISTER(10005,"该手机号码已注册"),
     XSS_PARAM_ERROR(10006,"请不要输入非法内容");
 
-    private int code;
-    private String msg;
+    private final int code;
+    private final String msg;
 }
 

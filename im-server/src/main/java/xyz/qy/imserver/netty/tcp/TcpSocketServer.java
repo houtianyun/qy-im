@@ -35,7 +35,6 @@ public class TcpSocketServer implements IMServer {
     @Value("${tcpsocket.port}")
     private int port;
 
-    private ServerBootstrap bootstrap;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workGroup;
 
@@ -46,7 +45,7 @@ public class TcpSocketServer implements IMServer {
 
     @Override
     public void start() {
-        bootstrap = new ServerBootstrap();
+        ServerBootstrap bootstrap = new ServerBootstrap();
         bossGroup = new NioEventLoopGroup();
         workGroup = new NioEventLoopGroup();
         // 设置为主从线程模型

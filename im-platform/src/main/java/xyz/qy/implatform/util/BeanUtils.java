@@ -5,13 +5,15 @@ import org.springframework.util.ReflectionUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BeanUtils {
+public final class BeanUtils {
+    public BeanUtils() {
+    }
+
     private static void handleReflectionException(Exception e) {
         ReflectionUtils.handleReflectionException(e);
     }
 
     public static <T, U> List<U> copyProperties(List<T> sourceList, Class<U> clazz) {
-
         if (sourceList == null || sourceList.size() <= 0) {
             return new ArrayList<>();
         }
@@ -20,7 +22,6 @@ public class BeanUtils {
         for (T source : sourceList) {
             result.add(copyProperties(source, clazz));
         }
-
         return result;
     }
 
@@ -75,7 +76,6 @@ public class BeanUtils {
     }
 
     public static <T, U> List<U> copyProperties(List<T> sourceList, Class<U> clazz, String... ignoreProperties) {
-
         if (sourceList == null || sourceList.size() <= 0) {
             return new ArrayList<U>();
         }
@@ -89,7 +89,6 @@ public class BeanUtils {
     }
 
     public static <T> T copyProperties(Object orig, Class<T> destClass, String... ignoreProperties) {
-
         if (orig == null) {
             return null;
         }

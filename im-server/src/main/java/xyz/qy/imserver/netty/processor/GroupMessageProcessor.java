@@ -11,8 +11,8 @@ import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.enums.IMSendCode;
 import xyz.qy.imcommon.model.IMRecvInfo;
 import xyz.qy.imcommon.model.IMSendInfo;
-import xyz.qy.imcommon.model.IMUserInfo;
 import xyz.qy.imcommon.model.IMSendResult;
+import xyz.qy.imcommon.model.IMUserInfo;
 import xyz.qy.imserver.netty.UserChannelCtxMap;
 
 import java.util.List;
@@ -57,7 +57,7 @@ public class GroupMessageProcessor extends AbstractMessageProcessor<IMRecvInfo> 
 
     private void sendResult(IMRecvInfo recvInfo, IMUserInfo receiver, IMSendCode sendCode) {
         if (recvInfo.getSendResult()) {
-            IMSendResult result = new IMSendResult();
+            IMSendResult<Object> result = new IMSendResult<>();
             result.setSender(recvInfo.getSender());
             result.setReceiver(receiver);
             result.setCode(sendCode.code());

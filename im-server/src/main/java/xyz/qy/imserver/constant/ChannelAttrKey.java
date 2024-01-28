@@ -1,6 +1,9 @@
 package xyz.qy.imserver.constant;
 
-public class ChannelAttrKey {
+public final class ChannelAttrKey {
+    private ChannelAttrKey() {
+    }
+
     // 用户ID
     public static final String USER_ID = "USER_ID";
     //  终端类型
