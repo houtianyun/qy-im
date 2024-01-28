@@ -1,8 +1,8 @@
 package xyz.qy.imclient.sender;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.collection.CollectionUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import xyz.qy.imclient.listener.MessageListenerMulticaster;
@@ -32,6 +32,9 @@ public class IMSender {
     @Resource(name = "IMRedisTemplate")
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Value("${spring.application.name}")
+    private String appName;
+
     private final MessageListenerMulticaster listenerMulticaster;
 
     public <T> void sendPrivateMessage(IMPrivateMessage<T> message) {
@@ -44,6 +47,7 @@ public class IMSender {
                 String sendKey = String.join(":", IMRedisKey.IM_MESSAGE_PRIVATE_QUEUE, serverId.toString());
                 IMRecvInfo recvInfo = new IMRecvInfo();
                 recvInfo.setCmd(IMCmdType.PRIVATE_MESSAGE.code());
+                recvInfo.setServiceName(appName);
                 recvInfo.setSendResult(message.getSendResult());
                 recvInfo.setSender(message.getSender());
                 recvInfo.setReceivers(Collections.singletonList(new IMUserInfo(message.getRecvId(), terminal)));
@@ -117,6 +121,7 @@ public class IMSender {
             recvInfo.setCmd(IMCmdType.GROUP_MESSAGE.code());
             recvInfo.setReceivers(new LinkedList<>(entry.getValue()));
             recvInfo.setSender(message.getSender());
+            recvInfo.setServiceName(appName);
             recvInfo.setSendResult(message.getSendResult());
             recvInfo.setData(message.getData());
             // 推送至队列
@@ -162,7 +167,7 @@ public class IMSender {
     }
 
     public Map<Long, List<IMTerminalType>> getOnlineTerminal(List<Long> userIds) {
-        if(CollUtil.isEmpty(userIds)){
+        if (CollUtil.isEmpty(userIds)) {
             return Collections.emptyMap();
         }
         // 把所有用户的key都存起来

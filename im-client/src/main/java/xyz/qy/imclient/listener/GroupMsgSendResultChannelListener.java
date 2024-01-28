@@ -3,7 +3,7 @@ package xyz.qy.imclient.listener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import xyz.qy.imclient.task.GroupMessageResultResultTask;
+import xyz.qy.imclient.task.GroupMessageResultTask;
 
 /**
  * @description: 群聊消息发送结果redis通道监听
@@ -12,10 +12,10 @@ import xyz.qy.imclient.task.GroupMessageResultResultTask;
  **/
 public class GroupMsgSendResultChannelListener implements MessageListener {
     @Autowired
-    private GroupMessageResultResultTask groupMessageResultResultTask;
+    private GroupMessageResultTask groupMessageResultTask;
 
     @Override
     public void onMessage(Message message, byte[] bytes) {
-        groupMessageResultResultTask.pullMessage();
+        groupMessageResultTask.pullMessage();
     }
 }

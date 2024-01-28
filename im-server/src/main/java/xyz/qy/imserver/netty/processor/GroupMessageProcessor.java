@@ -1,5 +1,6 @@
 package xyz.qy.imserver.netty.processor;
 
+import cn.hutool.core.util.StrUtil;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +64,7 @@ public class GroupMessageProcessor extends AbstractMessageProcessor<IMRecvInfo> 
             result.setCode(sendCode.code());
             result.setData(recvInfo.getData());
             // 推送到结果队列
-            String key = IMRedisKey.IM_RESULT_GROUP_QUEUE;
+            String key = StrUtil.join(":", IMRedisKey.IM_RESULT_GROUP_QUEUE, recvInfo.getServiceName());
             redisTemplate.opsForList().rightPush(key, result);
         }
     }
