@@ -300,6 +300,7 @@ public class PrivateMessageServiceImpl extends ServiceImpl<PrivateMessageMapper,
         LambdaQueryWrapper<PrivateMessage> wrapper = Wrappers.lambdaQuery();
         wrapper.eq(PrivateMessage::getSendId, session.getUserId())
                 .eq(PrivateMessage::getRecvId, friendId)
+                .eq(PrivateMessage::getStatus, MessageStatus.READED.code())
                 .orderByDesc(PrivateMessage::getId)
                 .select(PrivateMessage::getId)
                 .last("limit 1");
