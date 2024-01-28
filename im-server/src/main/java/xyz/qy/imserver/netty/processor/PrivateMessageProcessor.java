@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import xyz.qy.imcommon.contant.IMConstant;
 import xyz.qy.imcommon.contant.IMRedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
 import xyz.qy.imcommon.enums.IMSendCode;
@@ -59,6 +60,7 @@ public class PrivateMessageProcessor extends AbstractMessageProcessor<IMRecvInfo
             // 推送到结果队列
             String key = StrUtil.join(":", IMRedisKey.IM_RESULT_PRIVATE_QUEUE, recvInfo.getServiceName());
             redisTemplate.opsForList().rightPush(key, result);
+            redisTemplate.convertAndSend(IMConstant.PRIVATE_MSG_SEND_RESULT_TOPIC, key);
         }
     }
 }
