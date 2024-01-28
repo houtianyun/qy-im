@@ -313,6 +313,9 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         int idx = 0;
         for (Long id : ids) {
             Object o = sendPos.get(idx);
+            if (Objects.isNull(o)) {
+                o = getGroupMsgReadId(id, session.getUserId());
+            }
             Integer sendMaxId = Objects.isNull(o) ? -1 : (Integer) o;
             vos.stream().filter(vo -> vo.getGroupId().equals(id)).forEach(vo -> {
                 if (vo.getId() <= sendMaxId) {
