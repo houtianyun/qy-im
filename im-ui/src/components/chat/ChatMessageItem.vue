@@ -47,10 +47,10 @@
                @click="onPlayVoice()">
 						<audio controls :src="JSON.parse(msgInfo.content).url"></audio>
 					</div>
-          <span class="chat-readed" v-show="msgInfo.selfSend && !msgInfo.groupId
+<!--          <span class="chat-readed" v-show="msgInfo.selfSend && !msgInfo.groupId
 						&& msgInfo.status==$enums.MESSAGE_STATUS.READED">已读</span>
           <span class="chat-unread" v-show="msgInfo.selfSend && !msgInfo.groupId
-						&& msgInfo.status!=$enums.MESSAGE_STATUS.READED">未读</span>
+						&& msgInfo.status!=$enums.MESSAGE_STATUS.READED">未读</span>-->
 				</div>
 			</div>
 
