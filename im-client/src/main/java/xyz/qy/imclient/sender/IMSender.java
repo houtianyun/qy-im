@@ -38,6 +38,7 @@ public class IMSender {
     private final MessageListenerMulticaster listenerMulticaster;
 
     public <T> void sendPrivateMessage(IMPrivateMessage<T> message) {
+        List<IMSendResult> results = new LinkedList<>();
         for (Integer terminal : message.getRecvTerminals()) {
             // 获取对方连接的channelId
             String key = String.join(":", IMRedisKey.IM_USER_SERVER_ID, message.getRecvId().toString(), terminal.toString());
@@ -54,14 +55,14 @@ public class IMSender {
                 recvInfo.setData(message.getData());
                 redisTemplate.opsForList().rightPush(sendKey, recvInfo);
                 redisTemplate.convertAndSend(IMConstant.PRIVATE_MSG_TOPIC, sendKey);
-            } else if (message.getSendResult()) {
+            } else {
                 // 回复消息状态
                 IMSendResult result = new IMSendResult();
                 result.setSender(message.getSender());
                 result.setReceiver(new IMUserInfo(message.getRecvId(), terminal));
                 result.setCode(IMSendCode.NOT_ONLINE.code());
                 result.setData(message.getData());
-                listenerMulticaster.multicast(IMListenerType.PRIVATE_MESSAGE, result);
+                results.add(result);
             }
         }
         // 推送给自己的其他终端
@@ -87,6 +88,10 @@ public class IMSender {
                     redisTemplate.convertAndSend(IMConstant.PRIVATE_MSG_TOPIC, sendKey);
                 }
             }
+        }
+        // 对离线用户回复消息状态
+        if (message.getSendResult() && !results.isEmpty()) {
+            listenerMulticaster.multicast(IMListenerType.PRIVATE_MESSAGE, results);
         }
     }
 
@@ -129,17 +134,6 @@ public class IMSender {
             redisTemplate.opsForList().rightPush(key, recvInfo);
             redisTemplate.convertAndSend(IMConstant.GROUP_MSG_TOPIC, key);
         }
-        // 对离线用户回复消息状态
-        if (message.getSendResult()) {
-            for (IMUserInfo offLineUser : offLineUsers) {
-                IMSendResult result = new IMSendResult();
-                result.setSender(message.getSender());
-                result.setReceiver(offLineUser);
-                result.setCode(IMSendCode.NOT_ONLINE.code());
-                result.setData(message.getData());
-                listenerMulticaster.multicast(IMListenerType.GROUP_MESSAGE, result);
-            }
-        }
         // 推送给自己的其他终端
         if (message.getSendToSelf()) {
             for (Integer terminal : IMTerminalType.codes()) {
@@ -163,6 +157,19 @@ public class IMSender {
                     redisTemplate.convertAndSend(IMConstant.GROUP_MSG_TOPIC, key);
                 }
             }
+        }
+        // 对离线用户回复消息状态
+        if (message.getSendResult() && !offLineUsers.isEmpty()) {
+            List<IMSendResult> results = new LinkedList<>();
+            for (IMUserInfo offLineUser : offLineUsers) {
+                IMSendResult result = new IMSendResult();
+                result.setSender(message.getSender());
+                result.setReceiver(offLineUser);
+                result.setCode(IMSendCode.NOT_ONLINE.code());
+                result.setData(message.getData());
+                results.add(result);
+            }
+            listenerMulticaster.multicast(IMListenerType.GROUP_MESSAGE, results);
         }
     }
 

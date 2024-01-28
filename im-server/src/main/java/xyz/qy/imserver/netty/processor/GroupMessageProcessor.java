@@ -5,7 +5,6 @@ import io.netty.channel.ChannelHandlerContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import xyz.qy.imcommon.contant.IMRedisKey;
 import xyz.qy.imcommon.enums.IMCmdType;
@@ -25,7 +24,6 @@ public class GroupMessageProcessor extends AbstractMessageProcessor<IMRecvInfo> 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
-    @Async
     @Override
     public void process(IMRecvInfo recvInfo) {
         IMUserInfo sender = recvInfo.getSender();

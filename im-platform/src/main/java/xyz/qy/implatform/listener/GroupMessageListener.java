@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import xyz.qy.implatform.vo.GroupMessageVO;
 
+import java.util.List;
+
 @Slf4j
 @IMListener(type = IMListenerType.GROUP_MESSAGE)
 public class GroupMessageListener implements MessageListener<GroupMessageVO> {
@@ -18,12 +20,12 @@ public class GroupMessageListener implements MessageListener<GroupMessageVO> {
     private RedisTemplate<String,Object> redisTemplate;
 
     @Override
-    public void process(IMSendResult<GroupMessageVO> result){
-        GroupMessageVO messageInfo = result.getData();
-        // 保存该用户已拉取的最大消息id
-        if(result.getCode().equals(IMSendCode.SUCCESS.code())) {
-            String key = String.join(":",RedisKey.IM_GROUP_READED_POSITION,messageInfo.getGroupId().toString(),result.getReceiver().getId().toString());
-            redisTemplate.opsForValue().set(key, messageInfo.getId());
+    public void process(List<IMSendResult<GroupMessageVO>> results) {
+        for(IMSendResult<GroupMessageVO> result:results){
+            GroupMessageVO messageInfo = result.getData();
+            if (result.getCode().equals(IMSendCode.SUCCESS.code())) {
+                log.info("消息送达，消息id:{}，发送者:{},接收者:{},终端:{}", messageInfo.getId(), result.getSender().getId(), result.getReceiver().getId(), result.getReceiver().getTerminal());
+            }
         }
     }
 }
