@@ -35,6 +35,7 @@ import xyz.qy.implatform.mapper.GroupMessageMapper;
 import xyz.qy.implatform.mapper.GroupMsgReadPositionMapper;
 import xyz.qy.implatform.service.IGroupMemberService;
 import xyz.qy.implatform.service.IGroupMessageService;
+import xyz.qy.implatform.service.IGroupMsgReadPositionService;
 import xyz.qy.implatform.service.IGroupService;
 import xyz.qy.implatform.session.SessionContext;
 import xyz.qy.implatform.session.UserSession;
@@ -70,6 +71,9 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
 
     @Resource
     private GroupMsgReadPositionMapper groupMsgReadPositionMapper;
+
+    @Resource
+    private IGroupMsgReadPositionService groupMsgReadPositionService;
 
     /**
      * 发送群聊消息(高并发接口，查询mysql接口都要进行缓存)
@@ -314,7 +318,7 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         for (Long id : ids) {
             Object o = sendPos.get(idx);
             if (Objects.isNull(o)) {
-                o = getGroupMsgReadId(id, session.getUserId());
+                o = groupMsgReadPositionService.getGroupMsgReadId(id, session.getUserId());
             }
             Integer sendMaxId = Objects.isNull(o) ? -1 : (Integer) o;
             vos.stream().filter(vo -> vo.getGroupId().equals(id)).forEach(vo -> {
