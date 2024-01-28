@@ -7,6 +7,11 @@
                @click="onClickEmo(emoText)" v-html="$emo.textToImg(emoText)">
           </div>
         </div>
+        <div class="emotion-item-list">
+          <div class="emotion-item" v-for="(emoText, i) in $emo.originalEmoTextList" :key="i"
+               @click="onClickEmo(emoText)" v-html="$emo.textToImg(emoText)">
+          </div>
+        </div>
       </el-scrollbar>
     </div>
   </div>
