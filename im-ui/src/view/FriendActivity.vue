@@ -101,7 +101,7 @@
                       <avatar :url="comment.replyUserAvatar" :userId="comment.replyUserId" :size="'small'" class="comment-avatar"></avatar>
                       <span class="username" @click="showUserInfo($event, comment.replyUserId)">{{ comment.replyUserNickname }}：</span>
                     </span>
-                    <span class="content point" v-html="comment.content"
+                    <span class="content point" v-html="$emo.transform(comment.content)"
                           @click="handleShowCommentBox(comment, item.id, index)">
                     </span>
                     <span class="del-btn" v-if="comment.isOwner">
@@ -124,7 +124,7 @@
                     <div ref="textareaRef" contenteditable="true" @input="onInput"
                          @paste="optimizePasteEvent" :data-placeholder="placeholder"
                          class="comment-textarea"></div>
-                    <span class="point" @click="showEmoji = !showEmoji">
+                    <span class="point biaoqing-point" @click="showEmoji = !showEmoji">
                         <i class="icon iconfont icon-biaoqing"></i>
                     </span>
                     <a class="sendBtn point" @click="sayComment(item)">发送</a>
@@ -270,7 +270,11 @@ export default {
         this.$message.warning("请输入评论内容");
         return
       }
-      this.comment.content = el.innerHTML
+      let sendText = this.createSendText();
+      if (!sendText.trim()) {
+        return
+      }
+      this.comment.content = sendText
       let params = {
         talkId: talk.id,
         content: this.comment.content,
@@ -545,16 +549,16 @@ export default {
       })
     },
     //添加表情
-    handleChooseEmoji(value) {
+    handleChooseEmoji(emoText) {
       // 创建一个img标签（表情）
       let img = document.createElement('img');
-      img.src = value.url;
+      img.src = this.$emo.textToUrl(emoText);
       img.style.verticalAlign = 'middle';
       img.style.marginLeft = "2px"
       img.style.marginRight = "2px"
-      img.style.maxHeight = value.maxHeight;
-      img.style.height = value.height
-      img.style.width = value.width
+      img.style.height = "25px"
+      img.style.width = "25px"
+      img.dataset.code = emoText;
 
       let edit = this.$refs.textareaRef[this.commentLastIndex];
       edit.focus()
@@ -583,6 +587,29 @@ export default {
         selection.collapseToEnd()
       }
       this.showEmoji = false
+    },
+    createSendText() {
+      let sendText = ""
+      this.$refs.textareaRef[this.commentLastIndex].childNodes.forEach((node) => {
+        if (node.nodeName == "#text") {
+          sendText += this.html2Escape(node.textContent);
+        } else if (node.nodeName == "SPAN") {
+          sendText += node.innerText;
+        } else if (node.nodeName == "IMG") {
+          sendText += node.dataset.code;
+        }
+      })
+      return sendText;
+    },
+    html2Escape(strHtml) {
+      return strHtml.replace(/[<>&"]/g, function(c) {
+        return {
+          '<': '&lt;',
+          '>': '&gt;',
+          '&': '&amp;',
+          '"': '&quot;'
+        }[c];
+      });
     },
   }
 }
@@ -904,11 +931,16 @@ export default {
                   }
                 }
 
+                .biaoqing-point {
+                  cursor: pointer;
+                  display: inline-block;
+                }
+
                 i {
                   font-size: 1.3rem;
                   position: absolute;
                   right: 80px;
-                  bottom: 20px;
+                  bottom: 12px;
                 }
 
                 .sendBtn {
@@ -920,7 +952,7 @@ export default {
                   border-radius: 5px;
                   position: absolute;
                   right: 20px;
-                  bottom: 15px;
+                  bottom: 5px;
                 }
               }
             }
