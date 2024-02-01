@@ -79,7 +79,7 @@
         </el-container>
       </el-main>
       <emotion ref="emoBox" @emotion="onEmotion"></Emotion>
-      <chat-at-box ref="atBox" :members="groupMembers" :search-text="atSearchText"
+      <chat-at-box ref="atBox" :ownerId="group.ownerId" :members="groupMembers" :search-text="atSearchText"
                    @select="onAtSelect"></chat-at-box>
       <chat-voice :visible="showVoice" @close="closeVoiceBox" @send="onSendVoice"></chat-voice>
       <chat-history :visible="showHistory" :chat="chat" :friend="friend" :group="group" :groupMembers="groupMembers" @close="closeHistoryBox"></chat-history>
