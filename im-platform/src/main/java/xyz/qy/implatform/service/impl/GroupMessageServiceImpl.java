@@ -142,6 +142,9 @@ public class GroupMessageServiceImpl extends ServiceImpl<GroupMessageMapper, Gro
         GroupMessage msg = BeanUtils.copyProperties(dto, GroupMessage.class);
         msg.setSendId(sendUserId);
         msg.setSendTime(new Date());
+        if (CollUtil.isNotEmpty(dto.getAtUserIds())) {
+            msg.setAtUserIds(StrUtil.join(",", dto.getAtUserIds()));
+        }
         this.save(msg);
         // 不用发给自己
         //userIds = userIds.stream().filter(id-> !sendUserId.equals(id)).collect(Collectors.toList());

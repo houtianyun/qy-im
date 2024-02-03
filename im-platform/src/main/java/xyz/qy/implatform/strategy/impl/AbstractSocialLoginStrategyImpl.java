@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import java.util.Collections;
 
 @Slf4j
 @Service
@@ -139,6 +140,7 @@ public abstract class AbstractSocialLoginStrategyImpl implements SocialLoginStra
             GroupMember groupMember = groupService.addToCommonGroup(user);
             if (ObjectUtil.isNotNull(groupMember)) {
                 GroupMessageDTO groupMessageVO = CommonUtils.buildGroupMessageVO(Constant.COMMON_GROUP_ID, CommonUtils.buildWelcomeMessage(user, groupMember), MessageType.TEXT.code());
+                groupMessageVO.setAtUserIds(Collections.singletonList(user.getId()));
                 groupMessageService.sendGroupMessage(groupMessageVO, Constant.ADMIN_USER_ID);
             }
             if (!user.getId().equals(Constant.ADMIN_USER_ID)) {

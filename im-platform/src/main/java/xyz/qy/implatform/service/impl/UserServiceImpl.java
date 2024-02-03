@@ -218,6 +218,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             GroupMember groupMember = groupService.addToCommonGroup(user);
             if (ObjectUtil.isNotNull(groupMember)) {
                 GroupMessageDTO groupMessageVO = CommonUtils.buildGroupMessageVO(Constant.COMMON_GROUP_ID, CommonUtils.buildWelcomeMessage(user, groupMember), MessageType.TEXT.code());
+                groupMessageVO.setAtUserIds(Collections.singletonList(user.getId()));
                 groupMessageService.sendGroupMessage(groupMessageVO, Constant.ADMIN_USER_ID);
             }
             if (!user.getId().equals(Constant.ADMIN_USER_ID)) {

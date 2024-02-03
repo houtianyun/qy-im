@@ -113,10 +113,10 @@ public class CommonUtils {
     }
 
     public static String buildWelcomeMessage(User user, GroupMember groupMember) {
-        if (groupMember.getIsTemplate() == Constant.YES) {
-            return "欢迎" + user.getNickName() + "（" + groupMember.getAliasName() + "）" + "加入群聊#鼓掌;";
+        if (groupMember.getIsTemplate().equals(Constant.YES)) {
+            return "@" + groupMember.getAliasName() + "（" +user.getNickName() + ") 欢迎加入群聊#鼓掌;";
         } else {
-            return "欢迎" + user.getNickName() + "加入群聊#鼓掌;";
+            return "@" + user.getNickName() + " 欢迎加入群聊#鼓掌;";
         }
     }
 }
