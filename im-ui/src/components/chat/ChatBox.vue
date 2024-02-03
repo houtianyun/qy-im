@@ -755,6 +755,7 @@
 
 					li {
 						list-style-type: none;
+            margin-bottom: 20px;
 					}
 				}
 			}

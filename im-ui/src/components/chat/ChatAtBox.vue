@@ -51,12 +51,12 @@ export default {
       this.showMembers = [];
       let userId = this.$store.state.userStore.userInfo.id;
       let name = "全体成员";
-      if (this.ownerId == userId && name.startsWith(this.searchText)) {
+      //if (this.ownerId == userId && name.startsWith(this.searchText)) {
         this.showMembers.push({
           userId: -1,
           aliasName: name
         })
-      }
+      //}
       this.members.forEach((m) => {
         if (m.userId != userId && m.aliasName.startsWith(this.searchText)) {
           this.showMembers.push(m);
