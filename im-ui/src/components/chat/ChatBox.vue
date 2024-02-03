@@ -748,14 +748,12 @@
 		.im-chat-main {
 			padding: 0;
 			border: #dddddd solid 1px;
-
 			.im-chat-box {
 				>ul {
-					padding: 0 20px;
+					padding: 0px 20px 20px 20px;
 
 					li {
 						list-style-type: none;
-            margin-bottom: 20px;
 					}
 				}
 			}
